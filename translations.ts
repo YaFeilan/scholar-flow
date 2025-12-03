@@ -1,0 +1,175 @@
+
+export const TRANSLATIONS = {
+  EN: {
+    appName: 'Research Assistant',
+    nav: { search: 'Search', review: 'Review Gen', track: 'Tracking', trends: 'Trends', advisor: 'Advisor', peer: 'Peer Review', polish: 'Polish' },
+    search: { 
+      title: 'Research Assistant', 
+      subtitle: 'Search and select papers to generate a structured academic review.', 
+      placeholder: 'Search academic literature...', 
+      btn: 'Search', 
+      filters: { db: 'Databases', time: 'Time Range', partition: 'JCR Partition', custom: 'Custom' }, 
+      sort: { label: 'Sort By', relevance: 'Relevance', date: 'Date', if: 'Impact Factor' },
+      results: 'Relevant Results',
+      smartReview: 'Smart Review',
+      smartReviewDesc: 'Generate structured academic reviews instantly based on selected literature.',
+      generateBtn: 'Generate Review →',
+      topicAnalysis: 'Topic Analysis',
+      topJournals: 'Top Journals',
+      paperDetails: 'Paper Details',
+      download: 'Download PDF',
+      interpret: 'AI Interpret',
+      interpreting: 'Interpreting...',
+      interpretationResult: 'AI Interpretation Result'
+    },
+    trends: {
+      title: 'Trend Analyzer',
+      subtitle: 'Enter a research field to analyze emerging methodologies and hotspots.',
+      placeholder: 'e.g. Quantum Computing...',
+      analyze: 'Analyze',
+      emerging: 'Emerging Tech',
+      hotspots: 'Research Hotspots',
+      methodologies: 'Methodology Rankings',
+      yoy: 'YoY Growth'
+    },
+    peer: {
+      title: 'AI Peer Reviewer',
+      subtitle: 'Simulate a senior expert review process. Check for innovation, methodology feasibility, and reference authenticity.',
+      uploadTitle: 'Upload Manuscript',
+      uploadDesc: 'PDF, Word, or Text files supported',
+      contentLabel: 'Paper Content / Abstract',
+      startBtn: 'Start Peer Review Process',
+      pending: 'Review Pending',
+      pendingDesc: 'Upload a document to receive a comprehensive evaluation from our AI expert panel.'
+    },
+    review: {
+      steps: { 1: 'Search Strategy', 2: 'Select Papers', 3: 'Configuration', 4: 'Result' },
+      scopeTitle: 'Define Review Scope',
+      topicLabel: 'Research Direction / Keywords',
+      dbLabel: 'Databases',
+      timeLabel: 'Time Range',
+      searchBtn: 'Search Literature',
+      selectTitle: 'Select Literature',
+      configTitle: 'Output Configuration',
+      wordCount: 'Word Count Target',
+      langLabel: 'Output Language',
+      genBtn: 'Generate Review',
+      complete: 'Generation Complete'
+    },
+    track: {
+      title: 'Citation Network Tracker',
+      subtitle: 'Analyze and classify the reference landscape. Identify methodologies, datasets, and baselines.',
+      tabSearch: 'Title Search',
+      tabUpload: 'File Upload',
+      placeholder: 'Enter paper title...',
+      btn: 'Track',
+      dragDrop: 'Click to upload or drag and drop',
+      resultsTitle: 'Citation Classification'
+    },
+    polish: {
+      title: 'Academic English Polish',
+      subtitle: 'Enhance the clarity, tone, and grammar of your academic writing.',
+      tabText: 'Text Input',
+      tabFile: 'File Upload',
+      placeholder: 'Paste your abstract or paragraph here...',
+      btn: 'Polish Text',
+      revisionNotes: 'Revision Notes',
+      outputTitle: 'Polished Output',
+      feedback: 'Overall Feedback'
+    },
+    advisor: {
+      title: 'Publication Advisor',
+      subtitle: 'Evaluate your manuscript\'s fit for target journals and get title optimization suggestions.',
+      paperTitle: 'Paper Title',
+      journalTitle: 'Target Journal',
+      btn: 'Evaluate Match',
+      reportTitle: 'Evaluation Report'
+    }
+  },
+  ZH: {
+    appName: '科研助手',
+    nav: { search: '文献检索', review: '综述生成', track: '引用追踪', trends: '趋势分析', advisor: '投稿顾问', peer: '智能审稿', polish: '论文润色' },
+    search: { 
+      title: '科研助手', 
+      subtitle: '检索并选择文献以生成结构化综述', 
+      placeholder: '搜索学术文献...', 
+      btn: '搜索', 
+      filters: { db: '数据库', time: '时间范围', partition: 'JCR分区', custom: '自定义' }, 
+      sort: { label: '排序方式', relevance: '相关度', date: '时间 (最新)', if: '影响因子 (IF)' },
+      results: '相关结果',
+      smartReview: '智能综述',
+      smartReviewDesc: '基于所选文献即时生成结构化综述。',
+      generateBtn: '生成综述 →',
+      topicAnalysis: '主题分析',
+      topJournals: '顶级期刊',
+      paperDetails: '论文详情',
+      download: '下载 PDF',
+      interpret: 'AI 一键解读',
+      interpreting: '解读中...',
+      interpretationResult: 'AI 解读报告'
+    },
+    trends: {
+      title: '趋势分析',
+      subtitle: '输入研究领域以分析新兴方法论和研究热点。',
+      placeholder: '例如：量子计算...',
+      analyze: '分析',
+      emerging: '新兴技术',
+      hotspots: '研究热点',
+      methodologies: '方法论排名',
+      yoy: '同比增长'
+    },
+    peer: {
+      title: '智能审稿人',
+      subtitle: '模拟资深专家审稿流程。检查创新性、方法论可行性及参考文献真实性。',
+      uploadTitle: '上传稿件',
+      uploadDesc: '支持 PDF, Word 或文本文件',
+      contentLabel: '论文内容 / 摘要',
+      startBtn: '开始审稿流程',
+      pending: '等待审稿',
+      pendingDesc: '上传文档以获取 AI 专家组的全面评估。'
+    },
+    review: {
+      steps: { 1: '检索策略', 2: '选择文献', 3: '配置参数', 4: '生成结果' },
+      scopeTitle: '定义综述范围',
+      topicLabel: '研究方向 / 关键词',
+      dbLabel: '数据库',
+      timeLabel: '时间范围',
+      searchBtn: '检索文献',
+      selectTitle: '选择文献',
+      configTitle: '输出配置',
+      wordCount: '目标字数',
+      langLabel: '输出语言',
+      genBtn: '生成综述',
+      complete: '生成完成'
+    },
+    track: {
+      title: '引用网络追踪',
+      subtitle: '分析并分类参考文献全景。快速识别方法论基础、数据集和基线模型。',
+      tabSearch: '标题搜索',
+      tabUpload: '文件上传',
+      placeholder: '输入论文标题...',
+      btn: '开始追踪',
+      dragDrop: '点击上传或拖拽文件至此',
+      resultsTitle: '引用分类'
+    },
+    polish: {
+      title: '学术润色',
+      subtitle: '提升学术写作的清晰度、语气和语法。',
+      tabText: '文本输入',
+      tabFile: '文件上传',
+      placeholder: '在此粘贴摘要或段落...',
+      btn: '开始润色',
+      revisionNotes: '修改说明',
+      outputTitle: '润色结果',
+      feedback: '整体反馈'
+    },
+    advisor: {
+      title: '投稿顾问',
+      subtitle: '评估稿件与目标期刊的匹配度，并获取标题优化建议。',
+      paperTitle: '论文标题',
+      journalTitle: '目标期刊',
+      btn: '评估匹配度',
+      reportTitle: '评估报告'
+    }
+  }
+};
