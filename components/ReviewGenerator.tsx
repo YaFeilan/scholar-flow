@@ -80,6 +80,7 @@ const ReviewGenerator: React.FC<ReviewGeneratorProps> = ({ language: globalLangu
   const dbOptions = [
     { id: 'Google Scholar', label: globalLanguage === 'ZH' ? '谷歌学术' : 'Google Scholar' },
     { id: 'Sci-Hub', label: 'Sci-Hub' },
+    { id: 'CNKI', label: globalLanguage === 'ZH' ? '中国知网' : 'CNKI' },
     { id: 'SCI', label: 'SCI' },
     { id: 'SSCI', label: 'SSCI' },
     { id: 'EI', label: 'EI' },

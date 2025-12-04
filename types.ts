@@ -9,11 +9,13 @@ export interface Paper {
   year: number;
   citations: number;
   badges: {
-    type: 'SCI' | 'SSCI' | 'EI' | 'Q1' | 'Q2' | 'Q3' | 'Q4';
+    type: 'SCI' | 'SSCI' | 'EI' | 'CNKI' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'LOCAL';
     partition?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
     if?: number;
   }[];
   abstract?: string;
+  source?: 'online' | 'local';
+  file?: File;
 }
 
 export interface SearchFilters {

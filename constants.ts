@@ -1,3 +1,4 @@
+
 import { Paper, TrendItem, HotspotItem } from './types';
 
 export const MOCK_PAPERS: Paper[] = [
@@ -50,6 +51,47 @@ export const MOCK_PAPERS: Paper[] = [
     citations: 150,
     badges: [{ type: 'SCI' }, { type: 'Q1', if: 6.2 }],
     abstract: 'Comparing XGBoost and LightGBM within hierarchical contexts...'
+  },
+  {
+    id: '6',
+    title: 'Quantum Machine Learning: A Review and New Perspectives',
+    authors: ['S. Hawking', 'A. Einstein (Simulated)', 'R. Penrose'],
+    journal: 'Nature Physics',
+    year: 2024,
+    citations: 89,
+    badges: [{ type: 'SCI' }, { type: 'Q1', if: 19.6 }],
+    abstract: 'We review the current state of Quantum Machine Learning algorithms, focusing on variational quantum circuits...'
+  },
+  // CNKI (Chinese) Mock Papers
+  {
+    id: 'cnki-1',
+    title: '基于深度强化学习的智能电网调度策略研究', // Research on Smart Grid Scheduling Strategy Based on DRL
+    authors: ['张伟', '李强', '王芳'],
+    journal: '中国电机工程学报',
+    year: 2023,
+    citations: 28,
+    badges: [{ type: 'CNKI' }, { type: 'EI' }],
+    abstract: '为解决高比例新能源接入下的电网调度难题，本文提出了一种基于改进DQN的实时调度策略...'
+  },
+  {
+    id: 'cnki-2',
+    title: '大语言模型在医学自然语言处理中的应用综述', // Survey of LLMs in Medical NLP
+    authors: ['刘洋', '陈静'],
+    journal: '计算机学报',
+    year: 2024,
+    citations: 15,
+    badges: [{ type: 'CNKI' }],
+    abstract: '大语言模型展现出强大的文本理解与生成能力。本文综述了其在电子病历分析、辅助诊断等领域的最新进展...'
+  },
+  {
+    id: 'cnki-3',
+    title: '面向自动驾驶的多传感器融合感知技术', // Multi-sensor Fusion Perception for Autonomous Driving
+    authors: ['赵铁柱', '孙悟空'],
+    journal: '自动化学报',
+    year: 2022,
+    citations: 56,
+    badges: [{ type: 'CNKI' }, { type: 'EI' }],
+    abstract: '针对复杂交通场景，提出了一种基于Transformer的激光雷达与摄像头特征级融合算法...'
   }
 ];
 

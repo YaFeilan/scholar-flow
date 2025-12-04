@@ -1,10 +1,121 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { TrackedReference, PolishResult, Language, Paper } from "../types";
+// @ts-ignore
+import mammoth from "mammoth";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const getLangInstruction = (lang: Language) => {
   return lang === 'ZH' ? 'Respond in Simplified Chinese.' : 'Respond in English.';
+};
+
+// Helper to convert File to Base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove Data URL prefix (e.g., "data:application/pdf;base64,")
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = error => reject(error);
+  });
+};
+
+export const searchAcademicPapers = async (query: string, lang: Language = 'EN', limit: number = 20): Promise<Paper[]> => {
+  try {
+    const model = 'gemini-2.5-flash';
+    // Use Google Search to find real papers
+    // Prompt engineered to strictly enforce JSON output even with Search tool enabled
+    const prompt = `
+      You are a high-performance academic search engine. 
+      Your task is to find ${limit} DISTINCT, high-quality academic papers related to: "${query}".
+      
+      SEARCH STRATEGY:
+      - USE THE GOOGLE SEARCH TOOL.
+      - Prioritize results from major databases (Google Scholar, arXiv, IEEE, ScienceDirect).
+      - **Use information indexed by sci-hub.org.cn to verify paper existence and metadata where possible.**
+      - ${lang === 'ZH' ? 'Include a mix of high-impact Chinese (CNKI) and English papers.' : 'Focus on high-impact international papers.'}
+
+      CRITICAL OUTPUT INSTRUCTIONS:
+      - Output ONLY a valid JSON array. No markdown formatting, no conversational text.
+      - Start directly with '[' and end with ']'.
+      - Ensure 'year' is a number and 'citations' is a number (estimate if necessary).
+      - Infer 'badges' (SCI, EI, Q1-Q4) based on the journal's reputation.
+      - Be concise in abstracts to save tokens and speed up generation.
+
+      JSON Structure:
+      [
+        {
+          "title": "Paper Title",
+          "authors": ["Author A", "Author B"],
+          "journal": "Journal Name",
+          "year": 2024,
+          "citations": 15,
+          "abstract": "Brief summary...",
+          "badges": [{"type": "SCI", "partition": "Q1"}]
+        }
+      ]
+    `;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }], 
+        // Note: responseMimeType is intentionally omitted as it conflicts with tools in some versions
+      }
+    });
+
+    let jsonStr = response.text || '[]';
+    
+    // aggressive cleanup to find the JSON array
+    // 1. Try to find markdown code blocks
+    const codeBlockMatch = jsonStr.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+    if (codeBlockMatch) {
+      jsonStr = codeBlockMatch[1];
+    }
+
+    // 2. If no code block, or even inside code block, find the first '[' and last ']'
+    // Improved regex to capture nested arrays/objects properly within the bounds
+    const firstBracket = jsonStr.indexOf('[');
+    const lastBracket = jsonStr.lastIndexOf(']');
+    
+    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+      jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
+    } else {
+      console.warn("Gemini Search: Could not find JSON array brackets in response.", jsonStr);
+      // Fallback: try to see if it's a single object and wrap it
+      if (jsonStr.trim().startsWith('{')) {
+          jsonStr = `[${jsonStr}]`;
+      } else {
+          return []; // Return empty to trigger fallback
+      }
+    }
+
+    // Clean up any trailing commas before the closing bracket which is invalid JSON but common in LLM output
+    jsonStr = jsonStr.replace(/,\s*\]/g, ']');
+
+    const papers = JSON.parse(jsonStr);
+    
+    // Validation and ID assignment
+    if (Array.isArray(papers)) {
+      return papers.map((p: any, i: number) => ({
+        ...p,
+        id: p.id || `search-gen-${i}-${Date.now()}`,
+        badges: p.badges || [],
+        authors: Array.isArray(p.authors) ? p.authors : [p.authors || 'Unknown']
+      }));
+    }
+    
+    return [];
+  } catch (error) {
+    console.error("Gemini Search Error:", error);
+    return [];
+  }
 };
 
 export const generateLiteratureReview = async (papers: string[], lang: Language = 'EN'): Promise<string> => {
@@ -149,7 +260,7 @@ export const generateStructuredReview = async (
   topic: string, 
   papers: string[], 
   wordCount: number, 
-  language: string // This tracks the user setting in the review generator specifically (ZH/EN)
+  language: string 
 ): Promise<string> => {
   try {
     const model = 'gemini-2.5-flash';
@@ -344,22 +455,51 @@ export const generateAdvisorReport = async (title: string, journal: string, lang
 export const generatePaperInterpretation = async (paper: Paper, lang: Language = 'EN'): Promise<string> => {
   try {
     const model = 'gemini-2.5-flash';
-    // Instructions are always in Chinese as requested by user ("请用简洁、专业的中文")
-    const prompt = `
-    You are an AI research assistant. Please provide a concise, professional interpretation of the following paper in Chinese (under 300 words).
+    
+    let userContentPart: any = null;
+    let textContent = "";
 
-    PAPER INFORMATION:
-    Title: ${paper.title}
-    Authors: ${paper.authors.join(', ')}
-    Journal: ${paper.journal}
-    Year: ${paper.year}
-    Abstract: ${paper.abstract || 'Not provided'}
+    // Handle Local File Reading (Multimodal or Text extraction)
+    if (paper.source === 'local' && paper.file) {
+      const mimeType = paper.file.type;
+      
+      // 1. PDF Handling (Native Gemini Support)
+      if (mimeType === 'application/pdf') {
+        const base64Data = await fileToBase64(paper.file);
+        userContentPart = {
+          inlineData: {
+            mimeType: 'application/pdf',
+            data: base64Data
+          }
+        };
+      } 
+      // 2. DOCX Handling (Text Extraction via Mammoth)
+      else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || paper.file.name.endsWith('.docx')) {
+        try {
+           const arrayBuffer = await paper.file.arrayBuffer();
+           const result = await mammoth.extractRawText({ arrayBuffer });
+           textContent = `[Full Paper Content from ${paper.file.name}]:\n${result.value}`;
+        } catch (err) {
+           console.error("Mammoth extraction error:", err);
+           textContent = `[Error extracting DOCX content. Please verify file integrity.]\nFilename: ${paper.file.name}`;
+        }
+      }
+      // 3. Plain Text / Markdown Handling
+      else if (mimeType.startsWith('text/') || paper.file.name.endsWith('.md') || paper.file.name.endsWith('.txt')) {
+        const text = await paper.file.text();
+        textContent = `[Full Paper Content from ${paper.file.name}]:\n${text}`;
+      }
+    }
+
+    // Prepare Prompt
+    const systemInstruction = `
+    You are an AI research assistant. Please provide a concise, professional interpretation of the paper in Chinese (under 300 words).
 
     REQUIRED OUTPUT FORMAT (Markdown):
     
     ## 论文基本信息
     • 标题: "${paper.title}"
-    • 作者: ${paper.authors[0]} 等
+    • 作者: ${paper.authors.join(', ')} (or infer from content)
     • 发表: ${paper.journal} ${paper.year}
 
     ## 核心内容
@@ -381,16 +521,27 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
     • 方向: [Future direction]
 
     Keep English terms for key technical concepts but provide Chinese annotations.
+    If the file content is provided, base the interpretation strictly on it.
     `;
+
+    const parts = [];
+    // If we have a file part (PDF), add it
+    if (userContentPart) {
+      parts.push(userContentPart);
+    }
+    // Add text prompt (and text content if extracted from docx/txt)
+    parts.push({
+      text: `${systemInstruction}\n\n${textContent}`
+    });
 
     const response = await ai.models.generateContent({
       model,
-      contents: prompt,
+      contents: { parts },
     });
 
     return response.text || "无法生成解读。";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "解读服务暂时不可用，请检查网络设置。";
+    return "解读服务暂时不可用，请检查网络设置或文件格式。";
   }
 };

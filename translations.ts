@@ -8,7 +8,7 @@ export const TRANSLATIONS = {
       subtitle: 'Search and select papers to generate a structured academic review.', 
       placeholder: 'Search academic literature...', 
       btn: 'Search', 
-      filters: { db: 'Databases', time: 'Time Range', partition: 'JCR Partition', custom: 'Custom' }, 
+      filters: { db: 'Databases', time: 'Time Range', partition: 'JCR Partition', custom: 'Custom', allTime: 'All Time', resultCount: 'Result Count' }, 
       sort: { label: 'Sort By', relevance: 'Relevance', date: 'Date', if: 'Impact Factor' },
       results: 'Relevant Results',
       smartReview: 'Smart Review',
@@ -20,7 +20,11 @@ export const TRANSLATIONS = {
       download: 'Download PDF',
       interpret: 'AI Interpret',
       interpreting: 'Interpreting...',
-      interpretationResult: 'AI Interpretation Result'
+      interpretationResult: 'AI Interpretation Result',
+      source: { online: 'Online Search', local: 'Local Library' },
+      upload: { btn: 'Upload Folder / Files', tip: 'Support PDF, Word (.docx), TXT, MD (Folder Upload Supported)', drag: 'Click to select folder or drag files here' },
+      batchInterpret: 'Batch Interpret',
+      localBadge: 'LOCAL FILE'
     },
     trends: {
       title: 'Trend Analyzer',
@@ -97,7 +101,7 @@ export const TRANSLATIONS = {
       subtitle: '检索并选择文献以生成结构化综述', 
       placeholder: '搜索学术文献...', 
       btn: '搜索', 
-      filters: { db: '数据库', time: '时间范围', partition: 'JCR分区', custom: '自定义' }, 
+      filters: { db: '数据库', time: '时间范围', partition: 'JCR分区', custom: '自定义', allTime: '全部时间', resultCount: '检索数量' }, 
       sort: { label: '排序方式', relevance: '相关度', date: '时间 (最新)', if: '影响因子 (IF)' },
       results: '相关结果',
       smartReview: '智能综述',
@@ -109,7 +113,11 @@ export const TRANSLATIONS = {
       download: '下载 PDF',
       interpret: 'AI 一键解读',
       interpreting: '解读中...',
-      interpretationResult: 'AI 解读报告'
+      interpretationResult: 'AI 解读报告',
+      source: { online: '联网检索', local: '本地文献库' },
+      upload: { btn: '上传文件夹 / 文献', tip: '支持 PDF, Word (.docx), TXT, MD (支持文件夹上传)', drag: '点击选择文件夹或拖拽文件至此' },
+      batchInterpret: '批量解读',
+      localBadge: '本地文件'
     },
     trends: {
       title: '趋势分析',
