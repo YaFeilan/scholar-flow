@@ -30,7 +30,10 @@ export const TRANSLATIONS = {
       emerging: 'Emerging Tech',
       hotspots: 'Research Hotspots',
       methodologies: 'Methodology Rankings',
-      yoy: 'YoY Growth'
+      yoy: 'YoY Growth',
+      keywordStats: 'Keyword Frequency Stats',
+      frequency: 'Frequency',
+      extracting: 'Extracting Keywords...'
     },
     peer: {
       title: 'AI Peer Reviewer',
@@ -116,7 +119,10 @@ export const TRANSLATIONS = {
       emerging: '新兴技术',
       hotspots: '研究热点',
       methodologies: '方法论排名',
-      yoy: '同比增长'
+      yoy: '同比增长',
+      keywordStats: '关键词词频统计',
+      frequency: '词频/热度',
+      extracting: '正在提取关键词...'
     },
     peer: {
       title: '智能审稿人',

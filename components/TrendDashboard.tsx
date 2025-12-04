@@ -4,8 +4,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import * as d3 from 'd3';
 import { EMERGING_TECH, HOTSPOTS } from '../constants';
 import { analyzeResearchTrends } from '../services/geminiService';
-import { Search, Loader2, Move } from 'lucide-react';
-import { Language } from '../types';
+import { Search, Loader2, Move, BarChart2, Tag } from 'lucide-react';
+import { Language, HotspotItem } from '../types';
 import { TRANSLATIONS } from '../translations';
 
 interface TrendDashboardProps {
@@ -18,6 +18,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
   const cloudRef = useRef<HTMLDivElement>(null);
   const [topic, setTopic] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
   
   // Initial State with mocked data
   const [trendData, setTrendData] = useState({
@@ -35,6 +36,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
   const handleAnalyze = async () => {
     if (!topic.trim()) return;
     setIsLoading(true);
+    setSelectedKeyword(null);
     const result = await analyzeResearchTrends(topic, language);
     if (result && result.emergingTech && result.hotspots && result.methodologies) {
       setTrendData(result);
@@ -49,7 +51,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
     container.selectAll("*").remove(); // Clear previous
 
     const width = cloudRef.current.clientWidth;
-    const height = 450;
+    const height = 500;
 
     const rawData = trendData.hotspots || [];
     if (rawData.length === 0) return;
@@ -60,7 +62,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
     // Scale for font size
     const sizeScale = d3.scaleLinear()
       .domain([d3.min(data, d => d.value) || 0, d3.max(data, d => d.value) || 100])
-      .range([12, 36]);
+      .range([14, 42]);
 
     // Create SVG
     const svg = container.append("svg")
@@ -73,17 +75,17 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
 
     // Simulation Setup
     const simulation = d3.forceSimulation(data as any)
-      .force("charge", d3.forceManyBody().strength(-15)) // Light repulsion
+      .force("charge", d3.forceManyBody().strength(-30)) // Increased repulsion
       .force("center", d3.forceCenter(0, 0)) // Pull to center
-      .force("y", d3.forceY(0).strength(0.05)) // Centering gravity Y
-      .force("x", d3.forceX(0).strength(0.05)) // Centering gravity X
+      .force("y", d3.forceY(0).strength(0.08)) // Centering gravity Y
+      .force("x", d3.forceX(0).strength(0.08)) // Centering gravity X
       .force("collide", d3.forceCollide().radius((d: any) => {
           // Estimate text width for collision radius
           const text = d.text.split('(')[0];
           const fontSize = sizeScale(d.value);
           // Heuristic: Roughly half text width + padding
-          return (text.length * fontSize * 0.35) + 8;
-      }).iterations(2));
+          return (text.length * fontSize * 0.35) + 12;
+      }).iterations(3));
 
     // Render Text Nodes
     const textNodes = g.selectAll("text")
@@ -92,11 +94,23 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
       .style("font-size", d => `${sizeScale(d.value)}px`)
       .style("font-family", "sans-serif")
       .style("font-weight", (d, i) => i < 3 ? "800" : "500")
-      .style("fill", (d, i) => i < 3 ? "#2563eb" : "#475569") // Primary blue for top 3, slate for others
-      .style("cursor", "grab")
+      .style("fill", (d) => {
+        // Highlighting logic
+        if (selectedKeyword && d.text === selectedKeyword) return "#e11d48"; // Red for selected
+        return selectedKeyword ? "#94a3b8" : (data.indexOf(d) < 3 ? "#2563eb" : "#475569"); // Dim others if one selected
+      }) 
+      .style("opacity", (d) => {
+         if (selectedKeyword && d.text !== selectedKeyword) return 0.4;
+         return 1;
+      })
+      .style("cursor", "pointer")
       .attr("text-anchor", "middle")
       .attr("dy", "0.35em")
       .text(d => d.text.split('(')[0]) // Show English text
+      .on("click", (event, d) => {
+        event.stopPropagation();
+        setSelectedKeyword(d.text === selectedKeyword ? null : d.text);
+      })
       .call(d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
@@ -105,13 +119,15 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
 
     // Hover effects
     textNodes
-      .on("mouseover", function() { 
+      .on("mouseover", function(event, d) { 
+        if (selectedKeyword) return; // Disable hover effect when selection is active
         d3.select(this)
           .transition().duration(200)
           .style("fill", "#7c3aed") // Purple on hover
-          .style("font-size", (d: any) => `${sizeScale(d.value) * 1.2}px`);
+          .style("font-size", (d: any) => `${sizeScale(d.value) * 1.1}px`);
       })
       .on("mouseout", function(event, d: any) { 
+        if (selectedKeyword) return;
         d3.select(this)
           .transition().duration(200)
           .style("fill", (d: any, i) => data.indexOf(d) < 3 ? "#2563eb" : "#475569")
@@ -130,7 +146,6 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
-      d3.select(this).style("cursor", "grabbing");
     }
 
     function dragged(event: any, d: any) {
@@ -142,14 +157,13 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
       if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
-      d3.select(this).style("cursor", "grab");
     }
 
     // Cleanup
     return () => {
       simulation.stop();
     };
-  }, [trendData.hotspots]);
+  }, [trendData.hotspots, selectedKeyword]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -207,31 +221,83 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-         {/* Left: Research Hotspots (Word Cloud) */}
-         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm min-h-[500px] flex flex-col">
-            <div className="flex items-center justify-between mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+         {/* Research Hotspots (Word Cloud + Stats) */}
+         <div className="lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
                <div className="flex items-center gap-2">
-                 <span className="text-blue-600"><Move size={20} /></span>
+                 <span className="text-blue-600 bg-blue-50 p-1.5 rounded"><Move size={18} /></span>
                  <h3 className="text-lg font-bold text-slate-800">{t.hotspots}</h3>
                </div>
-               <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">Drag to rearrange</span>
+               <div className="flex items-center gap-2">
+                  {isLoading && <span className="text-xs text-blue-600 flex items-center gap-1"><Loader2 size={12} className="animate-spin"/> {t.extracting}</span>}
+                  <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100">Interactive Visualization</span>
+               </div>
             </div>
             
-            {/* Interactive Force Layout Cloud */}
-            <div className="relative flex-grow bg-slate-50/50 rounded-lg border border-slate-100 overflow-hidden" ref={cloudRef}>
-                {/* D3 renders here */}
+            <div className="flex flex-grow gap-4 h-full overflow-hidden">
+                {/* Left: Interactive Force Layout Cloud */}
+                <div 
+                   className="flex-grow bg-slate-50/30 rounded-lg border border-slate-100 overflow-hidden relative" 
+                   ref={cloudRef}
+                   onClick={() => setSelectedKeyword(null)} // Click background to deselect
+                >
+                   {/* D3 renders here */}
+                   <div className="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">
+                      Force-Directed Layout
+                   </div>
+                </div>
+
+                {/* Right: Frequency Statistics Panel */}
+                <div className="w-64 flex-shrink-0 border-l border-slate-100 pl-4 flex flex-col">
+                   <div className="flex items-center gap-2 mb-3 text-sm font-bold text-slate-700">
+                      <BarChart2 size={16} /> {t.keywordStats}
+                   </div>
+                   <div className="flex-grow overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                      {[...trendData.hotspots].sort((a,b) => b.value - a.value).map((item, idx) => (
+                         <div 
+                           key={idx} 
+                           className={`group cursor-pointer rounded-lg p-2 transition-all border ${
+                              selectedKeyword === item.text 
+                              ? 'bg-blue-50 border-blue-200 shadow-sm' 
+                              : 'bg-white border-transparent hover:bg-slate-50'
+                           }`}
+                           onClick={() => setSelectedKeyword(item.text === selectedKeyword ? null : item.text)}
+                         >
+                            <div className="flex justify-between items-center mb-1">
+                               <span className={`text-xs font-bold truncate pr-2 ${selectedKeyword === item.text ? 'text-blue-700' : 'text-slate-700'}`}>
+                                  {item.text.split('(')[0]}
+                               </span>
+                               <span className="text-[10px] text-slate-400 font-mono">{item.value}</span>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                               <div 
+                                 className={`h-full rounded-full transition-all duration-500 ${selectedKeyword === item.text ? 'bg-blue-500' : 'bg-slate-300 group-hover:bg-blue-400'}`} 
+                                 style={{ width: `${item.value}%` }}
+                               ></div>
+                            </div>
+                            {item.category && (
+                              <div className="mt-1.5 flex justify-end">
+                                <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded flex items-center gap-1">
+                                   <Tag size={8} /> {item.category}
+                                </span>
+                              </div>
+                            )}
+                         </div>
+                      ))}
+                   </div>
+                </div>
             </div>
          </div>
 
-         {/* Right: Methodology Rankings */}
-         <div className="bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-8">
-               <span className="text-secondary"><svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg></span>
+         {/* Methodology Rankings (Sidebar) */}
+         <div className="lg:col-span-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
+            <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+               <span className="text-secondary bg-purple-50 p-1.5 rounded"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg></span>
                <h3 className="text-lg font-bold text-slate-800">{t.methodologies}</h3>
             </div>
 
-            <div className="h-96 relative">
+            <div className="flex-grow relative">
                {isLoading ? (
                  <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
                    <Loader2 className="animate-spin text-blue-600 h-8 w-8" />
@@ -239,7 +305,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
                ) : (
                 <>
                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={trendData.methodologies} margin={{ top: 5, right: 30, left: 20, bottom: 5 }} barSize={12}>
+                    <BarChart layout="vertical" data={trendData.methodologies} margin={{ top: 5, right: 30, left: 10, bottom: 5 }} barSize={12}>
                        <XAxis type="number" hide />
                        <YAxis type="category" dataKey="name" width={1} hide />
                        <Tooltip 
@@ -256,14 +322,14 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
                  
                  <div className="absolute top-0 right-0 left-0 bottom-0 flex flex-col justify-around pointer-events-none py-2">
                     {trendData.methodologies.map((item, idx) => (
-                       <div key={idx} className="relative flex justify-between items-center group mb-2 px-4">
-                          <div className="flex items-center gap-4 pr-2 bg-white/40 backdrop-blur-[1px] rounded p-1">
-                             <span className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
-                             <span className="text-sm font-medium text-slate-700 group-hover:text-blue-600 transition-colors">{item.name}</span>
+                       <div key={idx} className="relative flex justify-between items-center group mb-2 pl-2 pr-4">
+                          <div className="flex items-center gap-3 pr-2 bg-white/60 backdrop-blur-[1px] rounded p-1">
+                             <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
+                             <span className="text-xs font-bold text-slate-700 group-hover:text-blue-600 transition-colors line-clamp-1">{item.name}</span>
                           </div>
-                          <div className="flex items-center gap-4 pl-2 bg-white/40 backdrop-blur-[1px] rounded p-1">
-                             <span className="text-xs text-slate-400 font-mono hidden sm:inline">{item.value} papers</span>
-                             <span className="text-xs font-bold text-green-500">↑ {item.growth}%</span>
+                          <div className="flex items-center gap-2 pl-2 bg-white/60 backdrop-blur-[1px] rounded p-1">
+                             <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">{item.value}</span>
+                             <span className="text-[10px] font-bold text-green-500">↑ {item.growth}%</span>
                           </div>
                        </div>
                     ))}
