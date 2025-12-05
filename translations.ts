@@ -1,4 +1,3 @@
-
 export const TRANSLATIONS = {
   EN: {
     appName: 'Research Assistant',
@@ -21,7 +20,8 @@ export const TRANSLATIONS = {
       opening: 'Opening Review',
       data: 'Data Analyst',
       code: 'Code Assistant',
-      experimentDesign: 'Exp. Design'
+      experimentDesign: 'Exp. Design',
+      pdfChat: 'Chat with PDF'
     },
     search: { 
       title: 'Research Assistant', 
@@ -230,7 +230,36 @@ export const TRANSLATIONS = {
       models: 'Recommended Models',
       code: 'Implementation Code',
       columns: 'Variables',
-      limitNotice: 'Note: Only the first 50 rows are extracted as a sample for analysis.'
+      limitNotice: 'Note: Only the first 50 rows are extracted as a sample for analysis.',
+      limitBanner: '⚠️ For rapid processing, the system will only analyze the first 50 rows of data. Results are for reference or data structure validation only.',
+      downloadTemplate: 'Download Sample Template',
+      previewTitle: 'Data Preview',
+      setupTitle: 'Analysis Setup',
+      useHeader: 'First row contains column headers',
+      targetVar: 'Target Variable (Y)',
+      noTarget: 'None (Unsupervised)',
+      colName: 'Column Name',
+      colType: 'Data Type',
+      confirmBtn: 'Confirm & Analyze',
+      quickAnalysisBtn: 'Generate Quick Preview (Sample 50)',
+      reupload: 'Re-upload',
+      cleaning: 'Data Pre-processing',
+      cleaningStrategies: {
+        auto: 'Auto (AI)',
+        drop: 'Drop Rows',
+        mean: 'Fill Mean/Mode',
+        zero: 'Fill 0/Unknown'
+      },
+      progress: {
+        loading: 'Loading Data...',
+        cleaning: 'Handling Missing Values...',
+        stats: 'Calculating Statistics...',
+        ai: 'AI Modeling & Reasoning...'
+      },
+      featureImportance: 'Feature Importance',
+      exportReport: 'Export Report',
+      chatData: 'Chat with Data',
+      resultDisclaimer: 'Note: This analysis is generated based on the top 50 sample rows.',
     },
     code: {
       title: 'Code Assistant',
@@ -309,8 +338,22 @@ export const TRANSLATIONS = {
           memory: 'Cognitive Task',
           memoryDesc: 'Psychology • Within-Subjects'
       }
+    },
+    pdfChat: {
+      title: 'Chat with PDF',
+      subtitle: 'Immersive reading mode. Ask questions about details, formulas, and data in your document.',
+      upload: 'Upload PDF',
+      dragDrop: 'Drag & Drop PDF here',
+      placeholder: 'Ask about this paper (e.g. "What is the main contribution?", "Explain Eq. 3")...',
+      analyzing: 'Processing PDF...',
+      welcome: 'Document ready. I can help you understand specific details, methodologies, or data in this paper.',
+      clear: 'Clear Chat',
+      themes: { light: 'Light', dark: 'Dark', sepia: 'Eye Care' },
+      toggleSidebar: 'Toggle Sidebar',
+      chatPanel: 'Chat Panel'
     }
-  },
+  }
+  ,
   ZH: {
     appName: '科研助手',
     groups: {
@@ -332,7 +375,8 @@ export const TRANSLATIONS = {
       opening: '开题审查',
       data: '数据分析',
       code: '代码助手',
-      experimentDesign: '实验设计'
+      experimentDesign: '实验设计',
+      pdfChat: '沉浸式阅读'
     },
     search: { 
       title: '科研助手', 
@@ -541,7 +585,36 @@ export const TRANSLATIONS = {
       models: '推荐统计模型',
       code: '实现代码 (Python/R)',
       columns: '变量列表',
-      limitNotice: '注意：系统仅截取前 50 行数据作为样本进行分析，不发送完整数据。'
+      limitNotice: '注意：系统仅截取前 50 行数据作为样本进行分析，不发送完整数据。',
+      limitBanner: '⚠️ 为了快速处理，系统将仅分析数据的前 50 行。结果仅供参考或作为数据结构验证。',
+      downloadTemplate: '下载样本模板',
+      previewTitle: '数据预览',
+      setupTitle: '分析设置',
+      useHeader: '第一行作为列名 (变量名)',
+      targetVar: '目标变量 (Y值)',
+      noTarget: '无 (无监督学习)',
+      colName: '列名',
+      colType: '数据类型',
+      confirmBtn: '确认并分析',
+      quickAnalysisBtn: '生成快速预览 (基于样本)',
+      reupload: '重新上传',
+      cleaning: '数据预处理 (缺失值)',
+      cleaningStrategies: {
+        auto: '智能处理 (AI)',
+        drop: '删除缺失行',
+        mean: '填充均值/众数',
+        zero: '填充 0 / Unknown'
+      },
+      progress: {
+        loading: '加载数据源...',
+        cleaning: '处理缺失值与异常...',
+        stats: '统计特征计算...',
+        ai: 'AI 建模与推理...'
+      },
+      featureImportance: '特征重要性',
+      exportReport: '导出分析报告',
+      chatData: '与数据对话',
+      resultDisclaimer: '注意：此分析基于 Top 50 样本数据生成。',
     },
     code: {
       title: '代码助手',
@@ -620,6 +693,19 @@ export const TRANSLATIONS = {
           memory: '认知记忆实验',
           memoryDesc: '心理学 • 组内设计'
       }
+    },
+    pdfChat: {
+      title: '沉浸式阅读',
+      subtitle: '上传 PDF，AI 助你深度解读论文细节、公式含义及数据来源。',
+      upload: '上传 PDF 论文',
+      dragDrop: '拖拽文件至此',
+      placeholder: '询问论文细节 (例如: "本文的主要贡献是什么?", "解释公式3")...',
+      analyzing: '正在解析文档...',
+      welcome: '文档已就绪。我可以帮您解读这篇论文的具体细节、方法论或数据。',
+      clear: '清空对话',
+      themes: { light: '明亮 (Light)', dark: '深色 (Dark)', sepia: '护眼 (Eye Care)' },
+      toggleSidebar: '侧边栏',
+      chatPanel: '对话栏'
     }
   }
 };

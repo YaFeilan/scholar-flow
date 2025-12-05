@@ -38,7 +38,8 @@ export enum ViewState {
   OPENING_REVIEW = 'OPENING_REVIEW',
   DATA_ANALYSIS = 'DATA_ANALYSIS',
   CODE_ASSISTANT = 'CODE_ASSISTANT',
-  EXPERIMENT_DESIGN = 'EXPERIMENT_DESIGN', // New ViewState
+  EXPERIMENT_DESIGN = 'EXPERIMENT_DESIGN',
+  PDF_CHAT = 'PDF_CHAT', // New ViewState
 }
 
 // Trend Types
@@ -280,6 +281,8 @@ export interface AdvisorReport {
 }
 
 // Data Analysis Types
+export type CleaningStrategy = 'auto' | 'drop' | 'mean' | 'zero';
+
 export interface DataAnalysisResult {
   summary: string;
   columns: {
@@ -291,6 +294,11 @@ export interface DataAnalysisResult {
     pair: string;
     value: number; // -1 to 1
     insight: string;
+  }[];
+  featureImportance?: {
+    feature: string;
+    importance: number; // 0-1 or percentage
+    reason: string;
   }[];
   recommendedModels: {
     name: string; // e.g., ANOVA, Linear Regression

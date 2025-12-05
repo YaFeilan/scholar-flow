@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import SearchPanel from './components/SearchPanel';
@@ -14,6 +13,7 @@ import OpeningReview from './components/OpeningReview';
 import DataAnalysis from './components/DataAnalysis';
 import CodeAssistant from './components/CodeAssistant';
 import ExperimentDesign from './components/ExperimentDesign';
+import PDFChat from './components/PDFChat';
 import { ViewState, Paper, Language } from './types';
 import { generateLiteratureReview } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -25,6 +25,9 @@ const App: React.FC = () => {
   const [generatedReview, setGeneratedReview] = useState<string | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [ideaTopic, setIdeaTopic] = useState<string>('');
+  
+  // Sidebar State
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Dark Mode State
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -88,6 +91,8 @@ const App: React.FC = () => {
         setLanguage={setLanguage}
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
+        collapsed={sidebarCollapsed}
+        toggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       
       {/* Main Content Area */}
@@ -101,6 +106,13 @@ const App: React.FC = () => {
                 language={language} 
                 initialTopic={ideaTopic} 
                 onClearInitialTopic={() => setIdeaTopic('')}
+            />
+            )}
+            {currentView === ViewState.PDF_CHAT && (
+            <PDFChat 
+                language={language} 
+                sidebarCollapsed={sidebarCollapsed}
+                setSidebarCollapsed={setSidebarCollapsed}
             />
             )}
             {currentView === ViewState.REVIEW_GENERATION && (

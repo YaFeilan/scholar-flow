@@ -436,10 +436,38 @@ export const optimizeOpeningSection = async (section: string, context: string, l
 
 // --- Data Analysis ---
 
-export const performDataAnalysis = async (stats: any, language: Language, onUpdate?: (status: string, partial: string) => void): Promise<DataAnalysisResult | null> => {
-    const prompt = `Analyze this dataset stats: ${JSON.stringify(stats)}. Language: ${language}.
-    Return JSON matching DataAnalysisResult.`;
+export const performDataAnalysis = async (
+  stats: any, 
+  language: Language, 
+  targetVariable: string,
+  onUpdate?: (status: string, partial: string) => void
+): Promise<DataAnalysisResult | null> => {
+    
+    const targetInfo = targetVariable 
+      ? `Target Variable for Prediction/Analysis: "${targetVariable}". Focus the analysis on explaining or predicting this variable. Include 'featureImportance' in the output JSON.`
+      : `Target Variable: None (Unsupervised Analysis). Focus on clustering, patterns, or anomalies.`;
+
+    const prompt = `Act as an expert Data Scientist. Analyze this dataset statistics.
+    ${targetInfo}
+    Stats: ${JSON.stringify(stats)}. 
+    Language: ${language}.
+    
+    Return JSON matching DataAnalysisResult interface. Include:
+    1. Descriptive summary.
+    2. Column analysis.
+    3. Correlations (highlight meaningful ones relative to target if exists).
+    4. Feature Importance (if target variable exists, list top drivers with reason).
+    5. Recommended statistical models (regression/classification if target exists, otherwise clustering/PCA).
+    6. Python/R code snippet to perform the analysis.`;
+    
     return getJson(prompt, undefined, 'gemini-3-pro-preview');
+};
+
+export const chatWithDataAnalysis = async (query: string, stats: any, language: Language): Promise<string> => {
+    const prompt = `Context: Data Analysis stats: ${JSON.stringify(stats)}.
+    User Query: "${query}"
+    Answer as a data scientist. Language: ${language}.`;
+    return getText(prompt);
 };
 
 // --- Code Assistant ---
@@ -569,3 +597,75 @@ export const generateExperimentDesign = async (
   Return JSON matching ExperimentDesignResult interface.`;
   return getJson(prompt, undefined, 'gemini-3-pro-preview'); // Use smart model for reasoning
 };
+
+// --- PDF Chat / Immersive Reading ---
+
+export const performPDFChat = async (
+  input: string,
+  language: Language,
+  file: File,
+  history: { role: string; text: string }[],
+  onUpdate?: (partialText: string) => void,
+  abortSignal?: AbortSignal
+): Promise<string> => {
+  try {
+    const model = 'gemini-3-pro-preview';
+    const langInstr = language === 'ZH' ? 'Respond in Simplified Chinese.' : 'Respond in English.';
+    
+    const systemInstruction = `You are a helpful research assistant.
+    ${langInstr}
+    
+    FEATURES:
+    1. **Formula Parsing:** If the user asks about a formula or math concept, explain it clearly. Use LaTeX syntax for math equations (e.g., $E=mc^2$ or $$ ... $$).
+    2. **Source Sourcing:** If you reference specific content from the PDF to answer a question, you MUST provide a unique text snippet from that section.
+       Format the source link like this: \`[Source: "short unique text snippet..."](source:short unique text snippet...)\`.
+       The snippet should be long enough to be unique (5-10 words) but not a whole paragraph.
+    3. **Pre-reading:** If the user asks for a summary or guide, provide a structured breakdown: Core Contribution, Innovation, Methodology, Key Conclusion.
+    
+    Be precise and cite page numbers if possible.`;
+
+    const parts: any[] = [];
+
+    // Always re-attach file data for stateless context in this simplified architecture
+    // In production, we would use caching or chat sessions, but here we attach the file content.
+    const base64Data = await fileToBase64(file);
+    parts.push({
+        inlineData: {
+            mimeType: 'application/pdf',
+            data: base64Data
+        }
+    });
+
+    let historyContext = "";
+    if (history.length > 0) {
+        historyContext = "Chat History:\n" + history.map(h => `${h.role === 'user' ? 'User' : 'Model'}: ${h.text}`).join('\n\n') + "\n\n";
+    }
+
+    const prompt = `${systemInstruction}\n\n${historyContext}User Query: ${input}`;
+    parts.push({ text: prompt });
+
+    const responseStream = await ai.models.generateContentStream({
+      model,
+      contents: { parts },
+    });
+
+    let fullText = "";
+    for await (const chunk of responseStream) {
+      if (abortSignal?.aborted) {
+          break;
+      }
+      const text = chunk.text;
+      fullText += text;
+      if (onUpdate) onUpdate(fullText);
+    }
+
+    return fullText;
+
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      return "Generation stopped.";
+    }
+    console.error("PDF Chat Error:", error);
+    return "Error interpreting document.";
+  }
+}

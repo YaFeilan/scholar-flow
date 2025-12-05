@@ -14,11 +14,14 @@
     "lucide-react": "0.294.0",
     "recharts": "2.12.7",
     "react-markdown": "9.0.1",
+    "remark-math": "6.0.0",
+    "rehype-katex": "7.0.0",
     "d3": "^7.9.0",
     "react-dom": "^19.2.1",
     "mammoth": "1.8.0",
     "jspdf": "2.5.1",
-    "xlsx": "0.18.5"
+    "xlsx": "0.18.5",
+    "pdfjs-dist": "3.11.174"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
