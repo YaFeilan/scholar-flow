@@ -681,29 +681,43 @@ export const runCodeSimulation = async (code: string, language: Language): Promi
     return getText(prompt, 'gemini-2.5-flash');
 };
 
-// --- NEW: Scientific Figure Generation ---
+// --- NEW: Scientific Figure Generation & Inpainting ---
 export const generateScientificFigure = async (
     prompt: string, 
     style: string, 
     mode: 'generate' | 'polish',
-    imageFile?: File
+    imageFile?: File,
+    backgroundOnly: boolean = false,
+    maskImageFile?: File, // New: Optional mask for inpainting
+    imageSize: '1K' | '2K' | '4K' = '1K' // New param
 ): Promise<string | null> => {
     try {
-        // Mode 1: Polish (Sketch to Figure) - Image Editing
+        const bgInstruction = backgroundOnly 
+            ? " IMPORTANT: Create a clean background structure ONLY. Do NOT include any text, labels, numbers, or letters in the generated image. Focus on lines, shapes, and structural composition. The user will add labels manually later." 
+            : "";
+
+        // Mode 1: Polish / Local Edit (Inpainting)
         if (mode === 'polish' && imageFile) {
-            const base64Data = await fileToBase64(imageFile);
-            // Use gemini-2.5-flash-image for editing as per guidelines
+            const parts: any[] = [];
+            const base64Image = await fileToBase64(imageFile);
+            parts.push({ inlineData: { mimeType: imageFile.type, data: base64Image } });
+            
+            // If mask is provided, include it and update instructions
+            let instruction = `Turn this rough sketch/image into a high-quality scientific figure. Style: ${style}. Details: ${prompt}. Maintain the structural logic but make it publication-ready.${bgInstruction}`;
+            
+            if (maskImageFile) {
+                const base64Mask = await fileToBase64(maskImageFile);
+                parts.push({ inlineData: { mimeType: 'image/png', data: base64Mask } });
+                instruction = `Edit the first image based on the user request. The second image is a location mask (white/colored areas indicate the active area). Only modify the masked region. Change Request: ${prompt}. Style: ${style}.`;
+            }
+
+            parts.push({ text: instruction });
+
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash-image',
-                contents: {
-                    parts: [
-                        { inlineData: { mimeType: imageFile.type, data: base64Data } },
-                        { text: `Turn this rough sketch into a high-quality scientific figure. Style: ${style}. Details: ${prompt}. Maintain the structural logic but make it publication-ready.` }
-                    ]
-                }
+                contents: { parts }
             });
             
-            // Extract image from response
             if (response.candidates?.[0]?.content?.parts) {
                 for (const part of response.candidates[0].content.parts) {
                     if (part.inlineData) {
@@ -714,19 +728,25 @@ export const generateScientificFigure = async (
             return null;
         } 
         
-        // Mode 2: Generate (Text to Figure) - High Quality Generation
+        // Mode 2: Generate (Text to Figure)
         else {
-            // Use gemini-3-pro-image-preview for high quality generation
+            const parts: any[] = [];
+            
+            // Handle Reference Image for Generate Mode
+            if (imageFile) {
+                const base64Image = await fileToBase64(imageFile);
+                parts.push({ inlineData: { mimeType: imageFile.type, data: base64Image } });
+                prompt += " [STRICT INSTRUCTION: Use the attached image solely as a composition/layout reference. Do not copy the content pixel-by-pixel, but follow the spatial arrangement.]";
+            }
+
+            parts.push({ text: `Create a scientific figure. Description: ${prompt}. Style: ${style}. High resolution, professional, academic journal standard.${bgInstruction}` });
+
             const response = await ai.models.generateContent({
                 model: 'gemini-3-pro-image-preview',
-                contents: {
-                    parts: [
-                        { text: `Create a scientific figure. Description: ${prompt}. Style: ${style}. High resolution, professional, academic journal standard.` }
-                    ]
-                },
+                contents: { parts },
                 config: {
                     imageConfig: {
-                        imageSize: "2K",
+                        imageSize: imageSize,
                         aspectRatio: "4:3"
                     }
                 }

@@ -80,7 +80,7 @@ export const TRANSLATIONS = {
       coverLetterBtn: 'Draft Cover Letter',
       checklist: 'Pre-submission Checklist',
       targets: {
-        SCI: 'SCI/EI (Science/Eng)',
+        SCI: 'SCI/EI (Science & Eng)',
         SSCI: 'SSCI (Social Science)',
         Coursework: 'Coursework / Assignment'
       }
@@ -289,7 +289,7 @@ export const TRANSLATIONS = {
       subtitle: 'Design experimental flow and calculate sample size based on research hypotheses.',
       hypothesisLabel: 'Research Hypothesis',
       hypothesisPlaceholder: 'e.g., Using spaced repetition significantly improves long-term memory retention compared to massed practice.',
-      optimizeBtn: 'AI Optimize',
+      optimizeBtn: 'AI 优化',
       optimizing: 'Optimizing...',
       ivLabel: 'Independent Variable (IV)',
       dvLabel: 'Dependent Variable (DV)',
@@ -382,13 +382,62 @@ export const TRANSLATIONS = {
       subtitle: 'Generate high-quality mechanism diagrams or polish rough sketches into publication-standard figures.',
       mode: {
         generate: 'Text-to-Figure',
-        polish: 'Sketch-to-Figure'
+        polish: 'Image-to-Figure'
+      },
+      polishTasks: {
+        general: 'General Polish',
+        sketchTo3D: 'Sketch to 3D',
+        chartBeautify: 'Chart Beautification'
+      },
+      polishTaskDesc: {
+        general: 'Refine details and style',
+        sketchTo3D: 'Render line art into 3D',
+        chartBeautify: 'Professional redesign'
       },
       input: {
         promptLabel: 'Describe your figure',
         promptPlaceholder: 'e.g. A mechanism diagram showing how drug X inhibits protein Y in the mitochondria...',
-        uploadLabel: 'Upload Sketch/Chart',
-        styleLabel: 'Target Journal Style'
+        uploadLabel: 'Upload Image',
+        referenceLabel: 'Reference (Composition)',
+        sourceLabel: 'Source Image (Required)',
+        chartTypeLabel: 'Chart Type',
+        styleLabel: 'Target Journal Style',
+        colorPaletteLabel: 'Color Palette',
+        backgroundOnly: 'Generate Structure Only (No Text)',
+        backgroundOnlyTip: 'AI often generates garbled text. Check this to generate a clean base map, then use the "Add Labels" tool.',
+        dpiLabel: 'Resolution (DPI)',
+        sizeLabel: 'Layout Size (Width)',
+        sizes: {
+            single: 'Single Column (8.5 cm)',
+            double: 'Double Column (17 cm)'
+        }
+      },
+      template: {
+        title: 'Structured Prompt Template',
+        subject: 'Subject',
+        subjectPh: 'e.g. Mouse, Nanoparticle',
+        action: 'Action/Relation',
+        actionPh: 'e.g. Engulfing, Inhibiting',
+        environment: 'Environment',
+        environmentPh: 'e.g. Tumor Microenvironment',
+        perspective: 'Perspective',
+        perspectivePh: 'e.g. Cross-section, 3D',
+        apply: 'Apply to Prompt'
+      },
+      chartTypes: {
+        Mechanism: 'Mechanism Pathway',
+        Anatomical: 'Anatomical Diagram',
+        Chart: 'Data Chart Beautification',
+        Flowchart: 'Protocol Flowchart',
+        NeuralNetwork: 'Neural Network Arch.'
+      },
+      colorPalettes: {
+        Default: 'Default',
+        NatureClassic: 'Nature Red/Blue',
+        Morandi: 'Morandi (Muted)',
+        ColorblindSafe: 'Colorblind Safe',
+        Cool: 'Cool Tones',
+        Warm: 'Warm Tones'
       },
       styles: {
         Nature: 'Nature (Clean, Serif)',
@@ -397,12 +446,18 @@ export const TRANSLATIONS = {
         IEEE: 'IEEE (Technical, B&W)',
         Flat: 'Flat Vector'
       },
+      tools: {
+          addLabel: 'Add Label',
+          clearLabels: 'Clear Labels',
+          saveWithLabels: 'Download with Labels'
+      },
       btn: 'Generate Figure',
       generating: 'Rendering...',
       download: 'Download Image',
       refine: 'Refine (Chat)',
       result: 'Figure Result',
-      refinePlaceholder: 'e.g. Make the arrows thicker, change background to white...'
+      refinePlaceholder: 'e.g. Make the arrows thicker, change background to white...',
+      history: 'History / Versions'
     }
   }
   ,
@@ -790,11 +845,60 @@ export const TRANSLATIONS = {
         generate: '文生图',
         polish: '图生图 (美化)'
       },
+      polishTasks: {
+        general: '常规美化',
+        sketchTo3D: '草图转3D',
+        chartBeautify: '图表美化'
+      },
+      polishTaskDesc: {
+        general: '优化细节和风格',
+        sketchTo3D: '将线条渲染为3D模型',
+        chartBeautify: '数据图表专业重绘'
+      },
       input: {
         promptLabel: '描述图片内容',
         promptPlaceholder: '例如：一张展示药物X在线粒体中抑制蛋白Y的机制图...',
         uploadLabel: '上传手绘/图表',
-        styleLabel: '目标期刊风格'
+        referenceLabel: '构图参考图 (可选)',
+        sourceLabel: '原图上传 (必填)',
+        chartTypeLabel: '图表类型',
+        styleLabel: '目标期刊风格',
+        colorPaletteLabel: '配色方案',
+        backgroundOnly: '仅生成底图 (无文字)',
+        backgroundOnlyTip: 'AI 生成文字易乱码。建议勾选此项生成结构图，再使用“添加标签”工具。',
+        dpiLabel: '分辨率 (DPI)',
+        sizeLabel: '版面尺寸 (宽度)',
+        sizes: {
+            single: '单栏图 (8.5 cm)',
+            double: '双栏图 (17 cm)'
+        }
+      },
+      template: {
+        title: '结构化提示词模版',
+        subject: '主体对象',
+        subjectPh: '如：小鼠、纳米颗粒',
+        action: '动作/关系',
+        actionPh: '如：吞噬、抑制、催化',
+        environment: '环境背景',
+        environmentPh: '如：肿瘤微环境、血管内',
+        perspective: '视角构图',
+        perspectivePh: '如：截面图、3D透视',
+        apply: '生成提示词'
+      },
+      chartTypes: {
+        Mechanism: '机理图 (Mechanism)',
+        Anatomical: '解剖示意图 (Anatomical)',
+        Chart: '数据可视化美化 (Chart)',
+        Flowchart: '实验流程图 (Flowchart)',
+        NeuralNetwork: '机器学习架构图 (Neural Net)'
+      },
+      colorPalettes: {
+        Default: '默认 (Default)',
+        NatureClassic: 'Nature 红蓝经典',
+        Morandi: '莫兰迪色系',
+        ColorblindSafe: '色盲友好 (Safe)',
+        Cool: '冷色调 (Cool)',
+        Warm: '暖色调 (Warm)'
       },
       styles: {
         Nature: 'Nature (衬线体/简洁)',
@@ -803,12 +907,18 @@ export const TRANSLATIONS = {
         IEEE: 'IEEE (技术/黑白)',
         Flat: '扁平矢量风'
       },
+      tools: {
+          addLabel: '添加文本标签',
+          clearLabels: '清空标签',
+          saveWithLabels: '下载 (含标签)'
+      },
       btn: '生成配图',
       generating: '绘图中...',
-      download: '下载图片',
+      download: '下载原图',
       refine: '调整 (对话)',
       result: '生成结果',
-      refinePlaceholder: '例如：把箭头变粗一点，背景换成白色...'
+      refinePlaceholder: '例如：把箭头变粗一点，背景换成白色...',
+      history: '历史版本'
     }
   }
 };
