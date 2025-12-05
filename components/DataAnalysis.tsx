@@ -10,11 +10,127 @@ interface DataAnalysisProps {
   language: Language;
 }
 
+// Helper: Calculate Basic Stats locally to save Tokens/Time
+const calculateLocalStats = (data: any[]) => {
+  if (!data || data.length === 0) return { rowCount: 0, columns: [], correlations: [] };
+
+  const columns = Object.keys(data[0]);
+  const columnStats: any[] = [];
+  const numericData: Record<string, number[]> = {};
+
+  columns.forEach(col => {
+    const rawValues = data.map(row => row[col]);
+    const validValues = rawValues.filter(v => v !== null && v !== undefined && v !== '');
+    
+    // Type detection: If >80% are numbers, treat as numeric
+    const numValues = validValues.map(v => Number(v)).filter(v => !isNaN(v));
+    const isNumeric = validValues.length > 0 && numValues.length / validValues.length > 0.8;
+
+    if (isNumeric) {
+        const sorted = numValues.sort((a, b) => a - b);
+        const sum = sorted.reduce((a, b) => a + b, 0);
+        const mean = sum / sorted.length;
+        const min = sorted[0];
+        const max = sorted[sorted.length - 1];
+        const median = sorted[Math.floor(sorted.length / 2)];
+        
+        columnStats.push({
+            name: col,
+            type: 'Numeric',
+            min, 
+            max, 
+            mean: mean.toFixed(2), 
+            median,
+            missing: rawValues.length - validValues.length
+        });
+        
+        // Store for correlation (fill missing with mean for simple correlation calc)
+        numericData[col] = rawValues.map(v => {
+            const n = Number(v);
+            return isNaN(n) ? mean : n;
+        });
+    } else {
+        // Categorical Stats
+        const counts: Record<string, number> = {};
+        validValues.forEach(v => {
+            const s = String(v);
+            counts[s] = (counts[s] || 0) + 1;
+        });
+        const distinct = Object.keys(counts).length;
+        const top3 = Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([k, v]) => `${k}(${v})`)
+            .join(', ');
+            
+        columnStats.push({
+            name: col,
+            type: 'Categorical',
+            distinct,
+            topValues: top3,
+            missing: rawValues.length - validValues.length
+        });
+    }
+  });
+
+  // Calculate Correlations (Pearson) for numeric columns
+  const correlations: any[] = [];
+  const numCols = Object.keys(numericData);
+  
+  if (numCols.length > 1) {
+      for (let i = 0; i < numCols.length; i++) {
+          for (let j = i + 1; j < numCols.length; j++) {
+              const colA = numCols[i];
+              const colB = numCols[j];
+              const arrA = numericData[colA];
+              const arrB = numericData[colB];
+              
+              const n = arrA.length;
+              // Re-calc means for the filled arrays
+              const meanA = arrA.reduce((a, b) => a + b, 0) / n;
+              const meanB = arrB.reduce((a, b) => a + b, 0) / n;
+              
+              let num = 0, denA = 0, denB = 0;
+              for (let k = 0; k < n; k++) {
+                  const da = arrA[k] - meanA;
+                  const db = arrB[k] - meanB;
+                  num += da * db;
+                  denA += da * da;
+                  denB += db * db;
+              }
+              
+              const r = (denA > 0 && denB > 0) ? num / Math.sqrt(denA * denB) : 0;
+              
+              // Only keep significant correlations
+              if (Math.abs(r) > 0.3) { 
+                  correlations.push({
+                      pair: `${colA} vs ${colB}`,
+                      value: r.toFixed(2),
+                      strength: Math.abs(r) > 0.7 ? 'Strong' : 'Moderate'
+                  });
+              }
+          }
+      }
+  }
+  
+  // Return summary object
+  return {
+      rowCount: data.length,
+      columns: columnStats,
+      correlations: correlations.sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 10)
+  };
+};
+
 const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
   const t = TRANSLATIONS[language].data;
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DataAnalysisResult | null>(null);
+  
+  // Streaming States
+  const [loadingStatus, setLoadingStatus] = useState<string>('');
+  const [streamingSummary, setStreamingSummary] = useState<string>('');
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,10 +138,45 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       setLoading(true);
+      setResult(null);
+      setLoadingStatus("Parsing file...");
+      setStreamingSummary('');
       
       try {
-        const data = await parseFile(selectedFile);
-        const analysis = await performDataAnalysis(data, language);
+        // 1. Parse File to JSON
+        const jsonData = await parseFile(selectedFile);
+        
+        // 2. Slice Data (Limit to 50 rows as per requirements)
+        const SAMPLE_SIZE = 50;
+        const sampleData = jsonData.slice(0, SAMPLE_SIZE);
+        const fullCount = jsonData.length;
+        
+        setLoadingStatus(language === 'ZH' ? '正在提取前50行样本及结构...' : 'Extracting first 50 rows sample & structure...');
+        
+        // 3. Calculate Stats Locally on SAMPLE
+        const statsSummary = calculateLocalStats(sampleData);
+        
+        // 4. Inject Metadata & Raw Sample into Stats Payload
+        (statsSummary as any).meta = {
+            totalRows: fullCount,
+            sampleSize: sampleData.length,
+            note: "Analysis based on top 50 rows sample."
+        };
+        (statsSummary as any).rawSample = sampleData; // Attach sample rows
+        
+        setLoadingStatus("Connecting to AI Analyst...");
+        
+        // 5. Send Payload to AI
+        const analysis = await performDataAnalysis(statsSummary, language, (status, partialText) => {
+            setLoadingStatus(status);
+            const summaryMatch = partialText.match(/"summary":\s*"(.*?)(?:"|$)/s);
+            if (summaryMatch && summaryMatch[1]) {
+                let rawSum = summaryMatch[1];
+                if (rawSum.endsWith('\\')) rawSum = rawSum.slice(0, -1);
+                setStreamingSummary(rawSum);
+            }
+        });
+        
         setResult(analysis);
       } catch (err) {
         console.error("Analysis Failed", err);
@@ -35,19 +186,27 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
     }
   };
 
-  const parseFile = (file: File): Promise<string> => {
+  const parseFile = (file: File): Promise<any[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
-          const workbook = XLSX.read(data, { type: 'binary' });
+          let workbook;
+          
+          if (file.name.endsWith('.csv')) {
+             // Read CSV as string
+             workbook = XLSX.read(data, { type: 'string' });
+          } else {
+             // Read Excel as ArrayBuffer
+             workbook = XLSX.read(data, { type: 'array' });
+          }
+          
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
-          // Convert to CSV string to send to Gemini
-          const csv = XLSX.utils.sheet_to_csv(sheet);
-          resolve(csv);
+          const json = XLSX.utils.sheet_to_json(sheet);
+          resolve(json);
         } catch (error) {
           reject(error);
         }
@@ -56,7 +215,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
       if (file.name.endsWith('.csv')) {
          reader.readAsText(file);
       } else {
-         reader.readAsBinaryString(file);
+         reader.readAsArrayBuffer(file);
       }
     });
   };
@@ -84,16 +243,33 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
           </div>
        )}
 
-       {loading && (
+       {loading && !result && (
           <div className="flex-grow flex flex-col items-center justify-center">
              <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-4" />
              <p className="text-lg font-bold text-slate-800">{t.analyzing}</p>
-             <p className="text-slate-500">Generating statistical insights...</p>
+             <p className="text-blue-600 font-medium mt-2">{loadingStatus}</p>
+             
+             {/* Limit Notice */}
+             <p className="text-xs text-slate-400 mt-2 max-w-md text-center bg-slate-50 p-2 rounded border border-slate-100">
+                {t.limitNotice}
+             </p>
+             
+             {/* Streaming Preview of Summary */}
+             {streamingSummary && (
+                 <div className="mt-8 max-w-2xl w-full bg-white p-6 rounded-xl border border-slate-200 shadow-sm opacity-80">
+                     <h3 className="font-bold text-slate-800 mb-2 text-sm flex items-center gap-2">
+                         <FileText size={14} className="text-emerald-500" /> Previewing Insights...
+                     </h3>
+                     <p className="text-sm text-slate-600 leading-relaxed font-mono">
+                         {streamingSummary}<span className="inline-block w-2 h-4 bg-blue-500 ml-1 animate-pulse align-middle"></span>
+                     </p>
+                 </div>
+             )}
           </div>
        )}
 
        {result && (
-          <div className="flex-grow overflow-y-auto grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20">
+          <div className="flex-grow overflow-y-auto grid grid-cols-1 lg:grid-cols-12 gap-6 pb-20 animate-fadeIn">
              {/* Left Panel: Stats & Correlations */}
              <div className="lg:col-span-4 space-y-6">
                  {/* Summary Card */}
@@ -110,7 +286,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
                        <Table size={18} className="text-blue-500" /> {t.columns}
                     </h3>
                     <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-                       {result.columns.map((col, i) => (
+                       {result.columns?.map((col, i) => (
                           <div key={i} className="flex justify-between items-center p-2 bg-slate-50 rounded border border-slate-100">
                              <div>
                                 <span className="font-bold text-xs text-slate-700 block">{col.name}</span>
@@ -128,7 +304,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
                        <Zap size={18} className="text-amber-500" /> {t.correlations}
                     </h3>
                     <div className="space-y-3">
-                       {result.correlations.map((corr, i) => (
+                       {result.correlations?.map((corr, i) => (
                           <div key={i} className="p-3 bg-slate-50 rounded border border-slate-100">
                              <div className="flex justify-between mb-1">
                                 <span className="font-bold text-xs text-slate-700">{corr.pair}</span>
@@ -150,7 +326,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
                  </h3>
                  
                  <div className="space-y-6">
-                    {result.recommendedModels.map((model, i) => (
+                    {result.recommendedModels?.map((model, i) => (
                        <div key={i} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                           <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                              <h4 className="font-bold text-slate-800">{model.name}</h4>
@@ -179,7 +355,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
                  
                  <div className="flex justify-end">
                      <button 
-                        onClick={() => { setFile(null); setResult(null); }}
+                        onClick={() => { setFile(null); setResult(null); setStreamingSummary(''); }}
                         className="text-slate-500 hover:text-blue-600 text-sm font-bold flex items-center gap-1"
                      >
                         Analyze Another Dataset <ArrowRight size={14} />

@@ -230,7 +230,20 @@ export const performPeerReview = async (
       }
     });
 
-    return JSON.parse(response.text || 'null');
+    const parsed = JSON.parse(response.text || 'null');
+    if (!parsed) return null;
+    
+    // Sanitize to ensure arrays
+    return {
+        checklist: parsed.checklist || {
+            originality: 'Low',
+            soundness: 'No',
+            clarity: 'Needs Improvement',
+            recommendation: 'Reject'
+        },
+        summary: parsed.summary || "",
+        reviewers: Array.isArray(parsed.reviewers) ? parsed.reviewers : []
+    };
   } catch (error) {
     console.error("Gemini API Error:", error);
     return null;
@@ -884,8 +897,21 @@ export const generateAdvisorReport = async (title: string, journal: string, abst
       }
     });
 
-    const report = JSON.parse(response.text || '{}');
-    return { ...report, timestamp: Date.now() };
+    const parsed = JSON.parse(response.text || '{}');
+    return { 
+        ...parsed, 
+        matchScore: parsed.matchScore || 0,
+        matchLevel: parsed.matchLevel || 'Low',
+        radar: parsed.radar || { topic:0, method:0, novelty:0, scope:0, style:0 },
+        analysis: parsed.analysis || '',
+        titleSuggestions: Array.isArray(parsed.titleSuggestions) ? parsed.titleSuggestions : [],
+        keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
+        riskAssessment: Array.isArray(parsed.riskAssessment) ? parsed.riskAssessment : [],
+        alternatives: Array.isArray(parsed.alternatives) ? parsed.alternatives : [],
+        references: Array.isArray(parsed.references) ? parsed.references : [],
+        improvementSuggestions: Array.isArray(parsed.improvementSuggestions) ? parsed.improvementSuggestions : [],
+        timestamp: Date.now() 
+    };
   } catch (error) {
     console.error("Gemini API Error:", error);
     return null;
@@ -893,28 +919,38 @@ export const generateAdvisorReport = async (title: string, journal: string, abst
 };
 
 export const performDataAnalysis = async (
-  csvData: string, 
-  lang: Language = 'EN'
+  stats: any, 
+  lang: Language = 'EN',
+  onUpdate?: (status: string, partialText: string) => void
 ): Promise<DataAnalysisResult | null> => {
     try {
         const model = 'gemini-2.5-flash';
-        const prompt = `You are an expert Data Scientist.
-        I will provide you with the first 50 rows of a dataset.
         
-        Your task is to perform an initial EDA (Exploratory Data Analysis) and suggest statistical models.
+        // Pass only the pre-calculated summary stats to LLM to save tokens and improve speed.
+        // Also inject raw sample rows if present in stats object (custom payload from component)
+        const statsStr = JSON.stringify(stats, null, 2);
+
+        const prompt = `You are an expert Data Scientist.
+        I have provided a dataset sample (first 50 rows) and a structural summary.
+        
+        Data Context:
+        ${JSON.stringify((stats as any).meta || {}, null, 2)}
+        
+        Data Structure & Sample:
+        ${statsStr.substring(0, 30000)}
+        
+        Your task is to analyze this metadata and sample to provide insights.
+        IMPORTANT: Explicitly mention in your summary that the analysis is based on a sample of the first 50 rows.
         ${getLangInstruction(lang)}
         
         Required Output JSON:
-        1. 'summary': A descriptive summary paragraph of the data.
-        2. 'columns': List of columns with their inferred type and basic stats (mean/max or unique counts).
-        3. 'correlations': Identify top 3 potential correlations or interesting relationships.
-        4. 'recommendedModels': Suggest 3 statistical models (e.g., ANOVA, Regression, Clustering) suitable for this data. Include a 'codeSnippet' in Python (pandas/statsmodels/sklearn) for each.
-
-        Data Sample:
-        ${csvData.substring(0, 30000)}
+        1. 'summary': A descriptive summary paragraph of the data (distribution, missing values, outliers).
+        2. 'columns': Formatted list of columns based on the input stats (include name, type, and a brief string of key stats like Mean/Max).
+        3. 'correlations': Analyze the provided correlation data. Identify interesting relationships.
+        4. 'recommendedModels': Suggest 3 statistical models (e.g., ANOVA, Regression, Clustering) suitable for this data structure. Include a 'codeSnippet' in Python (pandas/statsmodels/sklearn) for each.
         `;
 
-        const response = await ai.models.generateContent({
+        const responseStream = await ai.models.generateContentStream({
             model,
             contents: prompt,
             config: {
@@ -961,7 +997,32 @@ export const performDataAnalysis = async (
             }
         });
 
-        return JSON.parse(response.text || 'null');
+        let accumulatedText = "";
+        for await (const chunk of responseStream) {
+            const chunkText = chunk.text;
+            accumulatedText += chunkText;
+            
+            // Simple heuristic updates based on content presence
+            let status = "Initializing analysis...";
+            if (accumulatedText.includes('"summary":')) status = "Drafting insights summary...";
+            if (accumulatedText.includes('"columns":')) status = "Analyzing variable distributions...";
+            if (accumulatedText.includes('"correlations":')) status = "Identifying correlations...";
+            if (accumulatedText.includes('"recommendedModels":')) status = "Generating model suggestions...";
+
+            if (onUpdate) {
+                onUpdate(status, accumulatedText);
+            }
+        }
+
+        const parsed = JSON.parse(accumulatedText || 'null');
+        if (!parsed) return null;
+
+        return {
+            summary: parsed.summary || "No summary available.",
+            columns: Array.isArray(parsed.columns) ? parsed.columns : [],
+            correlations: Array.isArray(parsed.correlations) ? parsed.correlations : [],
+            recommendedModels: Array.isArray(parsed.recommendedModels) ? parsed.recommendedModels : []
+        };
     } catch (error) {
         console.error("Data Analysis Error:", error);
         return null;
@@ -1507,7 +1568,44 @@ export const generateOpeningReview = async (
       }
     });
 
-    return JSON.parse(response.text || 'null');
+    const parsed = JSON.parse(response.text || 'null');
+    if (!parsed) return null;
+
+    // Ensure nested objects exist to avoid undefined access before map
+    const safeRadar = parsed.radarMap || { topic:0, method:0, data:0, theory:0, language:0 };
+    const safeTitleAnalysis = parsed.titleAnalysis || { critique: '', suggestions: [] };
+    const safeMethodAnalysis = parsed.methodologyAnalysis || { critique: '', suggestions: [] };
+    const safeLogicAnalysis = parsed.logicAnalysis || { critique: '', gaps: [] };
+    const safeJournalFit = parsed.journalFit || { score: 0, analysis: '', alternativeJournals: [] };
+    const safeFormatCheck = parsed.formatCheck || { status: 'Warning', issues: [] };
+
+    return {
+        overallScore: parsed.overallScore || 0,
+        radarMap: safeRadar,
+        executiveSummary: parsed.executiveSummary || '',
+        titleAnalysis: {
+            critique: safeTitleAnalysis.critique || '',
+            suggestions: Array.isArray(safeTitleAnalysis.suggestions) ? safeTitleAnalysis.suggestions : []
+        },
+        methodologyAnalysis: {
+            critique: safeMethodAnalysis.critique || '',
+            suggestions: Array.isArray(safeMethodAnalysis.suggestions) ? safeMethodAnalysis.suggestions : []
+        },
+        logicAnalysis: {
+            critique: safeLogicAnalysis.critique || '',
+            gaps: Array.isArray(safeLogicAnalysis.gaps) ? safeLogicAnalysis.gaps : []
+        },
+        journalFit: {
+            score: safeJournalFit.score || 0,
+            analysis: safeJournalFit.analysis || '',
+            alternativeJournals: Array.isArray(safeJournalFit.alternativeJournals) ? safeJournalFit.alternativeJournals : []
+        },
+        formatCheck: {
+            status: safeFormatCheck.status || 'Warning',
+            issues: Array.isArray(safeFormatCheck.issues) ? safeFormatCheck.issues : []
+        },
+        literature: Array.isArray(parsed.literature) ? parsed.literature : []
+    };
   } catch (error) {
     console.error("Opening Review Error:", error);
     return null;

@@ -227,7 +227,8 @@ export const TRANSLATIONS = {
       correlations: 'Correlations',
       models: 'Recommended Models',
       code: 'Implementation Code',
-      columns: 'Variables'
+      columns: 'Variables',
+      limitNotice: 'Note: Only the first 50 rows are extracted as a sample for analysis.'
     }
   },
   ZH: {
@@ -457,7 +458,8 @@ export const TRANSLATIONS = {
       correlations: '相关性分析',
       models: '推荐统计模型',
       code: '实现代码 (Python/R)',
-      columns: '变量列表'
+      columns: '变量列表',
+      limitNotice: '注意：系统仅截取前 50 行数据作为样本进行分析，不发送完整数据。'
     }
   }
 };
