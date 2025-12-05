@@ -25,6 +25,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   const [sortBy, setSortBy] = useState<'relevance' | 'date' | 'if'>('relevance');
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultLimit, setResultLimit] = useState(20);
+  const [minCitations, setMinCitations] = useState<string>('');
+  const [filterYear, setFilterYear] = useState<string>('');
   
   // Search Mode State
   const [searchSource, setSearchSource] = useState<'online' | 'local'>('online');
@@ -188,6 +190,22 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }
     }
 
+    // Apply specific year filter
+    if (filterYear) {
+      const y = parseInt(filterYear);
+      if (!isNaN(y)) {
+        papers = papers.filter(p => p.year === y);
+      }
+    }
+
+    // Apply minimum citations filter
+    if (minCitations) {
+      const min = parseInt(minCitations);
+      if (!isNaN(min)) {
+        papers = papers.filter(p => p.citations >= min);
+      }
+    }
+
     // Sort
     return papers.sort((a, b) => {
       if (sortBy === 'date') {
@@ -199,7 +217,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }
       return 0; // Relevance
     });
-  }, [sortBy, results, localPapers, filters, searchSource]);
+  }, [sortBy, results, localPapers, filters, searchSource, filterYear, minCitations]);
 
   const FilterButton: React.FC<{ active: boolean; label: string; onClick?: () => void }> = ({ active, label, onClick }) => (
     <button
@@ -308,6 +326,31 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                         </select>
                         <ChevronDown size={14} className="text-slate-400 pointer-events-none" />
                      </div>
+                     
+                     {/* Specific Year Filter */}
+                     <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                        <span className="font-medium">{language === 'ZH' ? '年份' : 'Year'}:</span>
+                        <input
+                           type="number"
+                           value={filterYear}
+                           onChange={(e) => setFilterYear(e.target.value)}
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 font-bold text-sm w-16 p-0 placeholder-slate-400"
+                           placeholder={language === 'ZH' ? '全部' : 'All'}
+                        />
+                     </div>
+
+                     {/* Citation Count Filter */}
+                     <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                        <span className="font-medium">{language === 'ZH' ? '引用 >' : 'Cited >'}</span>
+                        <input
+                           type="number"
+                           min="0"
+                           value={minCitations}
+                           onChange={(e) => setMinCitations(e.target.value)}
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 font-bold text-sm w-12 p-0 placeholder-slate-400"
+                           placeholder="0"
+                        />
+                     </div>
 
                      {/* Result Limit Filter */}
                      <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
@@ -396,7 +439,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
         {sortedPapers.length === 0 && hasSearched && (
            <div className="text-center py-20 text-slate-400">
               <Search size={48} className="mx-auto mb-4 opacity-20" />
-              <p>No results found for "{query}". Try different keywords.</p>
+              <p>No results found for "{query}". Try different keywords or filters.</p>
            </div>
         )}
         
@@ -510,3 +553,4 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
 };
 
 export default SearchPanel;
+    

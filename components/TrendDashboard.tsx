@@ -1,10 +1,10 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import * as d3 from 'd3';
 import { EMERGING_TECH, HOTSPOTS } from '../constants';
 import { analyzeResearchTrends } from '../services/geminiService';
-import { Search, Loader2, Move, BarChart2, Tag } from 'lucide-react';
+import { Search, Loader2, Move, BarChart2, Tag, X, Filter } from 'lucide-react';
 import { Language, HotspotItem } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -20,17 +20,42 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
   
-  // Initial State with mocked data
+  // Initial State with mocked data including relationships
   const [trendData, setTrendData] = useState({
     emergingTech: EMERGING_TECH,
     hotspots: HOTSPOTS,
     methodologies: [
-      { name: 'Transformer Architecture', value: 10500, growth: 180.1 },
-      { name: 'Diffusion Models', value: 8900, growth: 210.3 },
-      { name: 'Generative AI', value: 7800, growth: 165.9 },
-      { name: 'Graph Neural Networks', value: 6100, growth: 62.5 },
-      { name: 'Federated Learning', value: 4900, growth: 40.8 },
-    ]
+      { 
+        name: 'Transformer Architecture', 
+        value: 10500, 
+        growth: 180.1, 
+        relatedHotspots: ['Large Language Models (大规模语言模型)', 'Natural Language Processing (自然语言处理)', 'Generative AI'] 
+      },
+      { 
+        name: 'Diffusion Models', 
+        value: 8900, 
+        growth: 210.3,
+        relatedHotspots: ['Generative AI', 'Computer Vision (计算机视觉)', 'Deep Learning (深度学习)']
+      },
+      { 
+        name: 'Generative AI', 
+        value: 7800, 
+        growth: 165.9,
+        relatedHotspots: ['Large Language Models (大规模语言模型)', 'Generative AI', 'Natural Language Processing (自然语言处理)']
+      },
+      { 
+        name: 'Graph Neural Networks', 
+        value: 6100, 
+        growth: 62.5,
+        relatedHotspots: ['Graph Neural Networks', 'Deep Learning (深度学习)']
+      },
+      { 
+        name: 'Federated Learning', 
+        value: 4900, 
+        growth: 40.8,
+        relatedHotspots: ['Deep Learning (深度学习)', 'Reinforcement Learning (强化学习)']
+      },
+    ] as any[]
   });
 
   const handleAnalyze = async () => {
@@ -43,6 +68,26 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
     }
     setIsLoading(false);
   };
+
+  // Filter methodologies based on selected keyword using fuzzy matching on the `relatedHotspots` list
+  const displayedMethodologies = useMemo(() => {
+    if (!selectedKeyword) return trendData.methodologies;
+    
+    // Simple text matching to find relevant methodologies
+    const filtered = trendData.methodologies.filter(m => {
+        if (!m.relatedHotspots || !Array.isArray(m.relatedHotspots)) return false;
+        // Check if the selected keyword is in the list, or if it is a substring of any related hotspot
+        const kw = selectedKeyword.toLowerCase();
+        return m.relatedHotspots.some((h: string) => {
+           const hStr = h.toLowerCase();
+           return hStr.includes(kw) || kw.includes(hStr);
+        });
+    });
+
+    // If filter returns nothing, fallback to showing all but maybe with a visual cue (or just return empty to show "No direct links")
+    // Let's return filtered list. If empty, UI handles it.
+    return filtered;
+  }, [selectedKeyword, trendData.methodologies]);
 
   // Improved Force-Directed Word Cloud using D3
   useEffect(() => {
@@ -244,7 +289,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
                 >
                    {/* D3 renders here */}
                    <div className="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">
-                      Force-Directed Layout
+                      Force-Directed Layout • Click to Filter Methodologies
                    </div>
                 </div>
 
@@ -291,21 +336,51 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
          </div>
 
          {/* Methodology Rankings (Sidebar) */}
-         <div className="lg:col-span-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
-            <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-               <span className="text-secondary bg-purple-50 p-1.5 rounded"><svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg></span>
-               <h3 className="text-lg font-bold text-slate-800">{t.methodologies}</h3>
+         <div className={`lg:col-span-4 bg-white p-6 rounded-xl border shadow-sm flex flex-col h-[600px] transition-all ${selectedKeyword ? 'border-blue-300 shadow-md ring-1 ring-blue-50' : 'border-slate-200'}`}>
+            <div className="flex items-center justify-between gap-2 mb-4 border-b border-slate-100 pb-3">
+               <div className="flex items-center gap-2">
+                 <span className={`p-1.5 rounded transition-colors ${selectedKeyword ? 'bg-blue-100 text-blue-600' : 'bg-purple-50 text-secondary'}`}>
+                   {selectedKeyword ? <Filter size={18} /> : <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
+                 </span>
+                 <h3 className="text-lg font-bold text-slate-800">
+                   {selectedKeyword ? 'Related Methods' : t.methodologies}
+                 </h3>
+               </div>
+               {selectedKeyword && (
+                 <button 
+                   onClick={() => setSelectedKeyword(null)}
+                   className="text-xs text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded flex items-center gap-1 transition-colors"
+                 >
+                   Clear <X size={12} />
+                 </button>
+               )}
             </div>
+
+            {selectedKeyword && (
+               <div className="mb-4 bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-800 flex items-start gap-2 animate-fadeIn">
+                  <div className="mt-0.5"><Filter size={12} /></div>
+                  <div>
+                    <span className="font-bold">Filtering by Hotspot:</span><br/>
+                    <span className="italic">"{selectedKeyword.split('(')[0]}"</span>
+                  </div>
+               </div>
+            )}
 
             <div className="flex-grow relative">
                {isLoading ? (
                  <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
                    <Loader2 className="animate-spin text-blue-600 h-8 w-8" />
                  </div>
+               ) : displayedMethodologies.length === 0 ? (
+                 <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-center p-4">
+                    <Filter size={32} className="mb-2 opacity-20" />
+                    <p className="text-sm">No direct methodology links found for this keyword.</p>
+                    <button onClick={() => setSelectedKeyword(null)} className="mt-4 text-blue-600 text-sm font-bold hover:underline">View All</button>
+                 </div>
                ) : (
                 <>
                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={trendData.methodologies} margin={{ top: 5, right: 30, left: 10, bottom: 5 }} barSize={12}>
+                    <BarChart layout="vertical" data={displayedMethodologies} margin={{ top: 5, right: 30, left: 10, bottom: 5 }} barSize={12}>
                        <XAxis type="number" hide />
                        <YAxis type="category" dataKey="name" width={1} hide />
                        <Tooltip 
@@ -313,15 +388,15 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
                          cursor={{fill: 'transparent'}}
                        />
                        <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                          {trendData.methodologies.map((entry, index) => (
-                             <Cell key={`cell-${index}`} fill={index < 2 ? '#4f46e5' : '#818cf8'} />
+                          {displayedMethodologies.map((entry, index) => (
+                             <Cell key={`cell-${index}`} fill={selectedKeyword ? '#2563eb' : (index < 2 ? '#4f46e5' : '#818cf8')} />
                           ))}
                        </Bar>
                     </BarChart>
                  </ResponsiveContainer>
                  
                  <div className="absolute top-0 right-0 left-0 bottom-0 flex flex-col justify-around pointer-events-none py-2">
-                    {trendData.methodologies.map((item, idx) => (
+                    {displayedMethodologies.map((item, idx) => (
                        <div key={idx} className="relative flex justify-between items-center group mb-2 pl-2 pr-4">
                           <div className="flex items-center gap-3 pr-2 bg-white/60 backdrop-blur-[1px] rounded p-1">
                              <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>

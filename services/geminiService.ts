@@ -201,6 +201,8 @@ export const analyzeResearchTrends = async (topic: string, lang: Language = 'EN'
     2. 8-10 Research Hotspots (keywords) with an importance value (1-100).
     3. Top 5 Research Methodologies used in this field, with approximate paper counts and growth percentages.
     
+    For each methodology, list 2-3 related hotspots from your hotspots list (exact text match if possible) to allow linking the visualization.
+    
     Ensure the data is realistic for the current year.`;
 
     const response = await ai.models.generateContent({
@@ -241,6 +243,11 @@ export const analyzeResearchTrends = async (topic: string, lang: Language = 'EN'
                   name: { type: Type.STRING },
                   value: { type: Type.NUMBER },
                   growth: { type: Type.NUMBER },
+                  relatedHotspots: { 
+                    type: Type.ARRAY, 
+                    items: { type: Type.STRING },
+                    description: "List of related hotspot text values exactly as they appear in the hotspots list"
+                  },
                 },
               },
             },
