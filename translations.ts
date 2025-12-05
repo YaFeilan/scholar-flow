@@ -19,7 +19,8 @@ export const TRANSLATIONS = {
       ppt: 'PPT Gen', 
       idea: 'Idea Guide', 
       opening: 'Opening Review',
-      data: 'Data Analyst' 
+      data: 'Data Analyst',
+      code: 'Code Assistant'
     },
     search: { 
       title: 'Research Assistant', 
@@ -229,6 +230,26 @@ export const TRANSLATIONS = {
       code: 'Implementation Code',
       columns: 'Variables',
       limitNotice: 'Note: Only the first 50 rows are extracted as a sample for analysis.'
+    },
+    code: {
+      title: 'Code Assistant',
+      subtitle: 'Generate, debug, and explain code for Python, R, and MATLAB.',
+      mode: 'Task',
+      language: 'Language',
+      modes: { generate: 'Generate Code', debug: 'Debug/Fix', explain: 'Explain Code' },
+      inputPlaceholder: {
+        generate: 'Describe what you want the code to do (e.g., "Plot a heatmap of correlations from data.csv")',
+        debug: 'Paste your code here for debugging.',
+        explain: 'Paste the code you want to understand.'
+      },
+      btn: 'Run Assistant',
+      stopBtn: 'Stop',
+      output: 'Assistant Chat',
+      history: 'History',
+      followUpPlaceholder: 'Ask a follow-up question...',
+      upload: 'Upload Code/Data',
+      shortcut: 'Ctrl + Enter to Run',
+      newSession: 'New Session'
     }
   },
   ZH: {
@@ -250,7 +271,8 @@ export const TRANSLATIONS = {
       ppt: 'PPT制作', 
       idea: '思路引导', 
       opening: '开题审查',
-      data: '数据分析'
+      data: '数据分析',
+      code: '代码助手'
     },
     search: { 
       title: '科研助手', 
@@ -460,6 +482,26 @@ export const TRANSLATIONS = {
       code: '实现代码 (Python/R)',
       columns: '变量列表',
       limitNotice: '注意：系统仅截取前 50 行数据作为样本进行分析，不发送完整数据。'
+    },
+    code: {
+      title: '代码助手',
+      subtitle: '针对 Python、R 和 MATLAB 提供代码生成、纠错和解释功能。',
+      mode: '任务模式',
+      language: '编程语言',
+      modes: { generate: '生成代码', debug: '纠错/调试', explain: '解释代码' },
+      inputPlaceholder: {
+        generate: '描述你希望代码完成什么功能 (例如：“绘制 data.csv 相关性的热力图”)',
+        debug: '在此粘贴你的代码以进行调试...',
+        explain: '在此粘贴代码以获取详细解释...'
+      },
+      btn: '运行助手',
+      stopBtn: '停止生成',
+      output: '助手对话',
+      history: '历史记录',
+      followUpPlaceholder: '追问或修改需求...',
+      upload: '上传代码/数据',
+      shortcut: 'Ctrl + Enter 运行',
+      newSession: '新会话'
     }
   }
 };

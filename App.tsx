@@ -12,6 +12,7 @@ import PPTGenerator from './components/PPTGenerator';
 import IdeaGuide from './components/IdeaGuide';
 import OpeningReview from './components/OpeningReview';
 import DataAnalysis from './components/DataAnalysis';
+import CodeAssistant from './components/CodeAssistant';
 import { ViewState, Paper, Language } from './types';
 import { generateLiteratureReview } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -127,6 +128,9 @@ const App: React.FC = () => {
             )}
             {currentView === ViewState.DATA_ANALYSIS && (
             <DataAnalysis language={language} />
+            )}
+            {currentView === ViewState.CODE_ASSISTANT && (
+            <CodeAssistant language={language} />
             )}
         </div>
       </main>

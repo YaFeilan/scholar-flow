@@ -36,7 +36,8 @@ export enum ViewState {
   PPT_GENERATION = 'PPT_GENERATION',
   IDEA_GUIDE = 'IDEA_GUIDE',
   OPENING_REVIEW = 'OPENING_REVIEW',
-  DATA_ANALYSIS = 'DATA_ANALYSIS', // New ViewState
+  DATA_ANALYSIS = 'DATA_ANALYSIS',
+  CODE_ASSISTANT = 'CODE_ASSISTANT', // New ViewState
 }
 
 // Trend Types
@@ -295,4 +296,20 @@ export interface DataAnalysisResult {
     reason: string;
     codeSnippet: string; // Python/R
   }[];
+}
+
+// Code Assistant Types
+export interface CodeMessage {
+  role: 'user' | 'model';
+  text: string;
+  timestamp: number;
+  attachments?: { name: string; type: string }[];
+}
+
+export interface CodeSession {
+  id: string;
+  title: string;
+  messages: CodeMessage[];
+  lastModified: number;
+  language: string;
 }
