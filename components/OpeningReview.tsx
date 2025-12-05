@@ -79,30 +79,38 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
       y += lines.length * 5 + 2;
     };
 
-    addLine("Executive Summary", 12, true);
-    addLine(report.executiveSummary);
-    y += 5;
+    if (report.executiveSummary) {
+        addLine("Executive Summary", 12, true);
+        addLine(report.executiveSummary);
+        y += 5;
+    }
     
-    addLine("Title Analysis", 12, true);
-    addLine(report.titleAnalysis.critique);
-    y += 5;
+    if (report.titleAnalysis?.critique) {
+        addLine("Title Analysis", 12, true);
+        addLine(report.titleAnalysis.critique);
+        y += 5;
+    }
 
-    addLine("Methodology Analysis", 12, true);
-    addLine(report.methodologyAnalysis.critique);
-    y += 5;
+    if (report.methodologyAnalysis?.critique) {
+        addLine("Methodology Analysis", 12, true);
+        addLine(report.methodologyAnalysis.critique);
+        y += 5;
+    }
 
     doc.save('Opening_Review_Report.pdf');
   };
 
   // Radar Data
   const radarData = useMemo(() => {
-    if (!report) return [];
+    if (!report || !report.radarMap) return [];
+    // Defensive coding for missing radarMap from AI response
+    const r = report.radarMap;
     return [
-      { subject: 'Topic', A: report.radarMap.topic, fullMark: 100 },
-      { subject: 'Method', A: report.radarMap.method, fullMark: 100 },
-      { subject: 'Data', A: report.radarMap.data, fullMark: 100 },
-      { subject: 'Theory', A: report.radarMap.theory, fullMark: 100 },
-      { subject: 'Language', A: report.radarMap.language, fullMark: 100 },
+      { subject: 'Topic', A: r.topic || 0, fullMark: 100 },
+      { subject: 'Method', A: r.method || 0, fullMark: 100 },
+      { subject: 'Data', A: r.data || 0, fullMark: 100 },
+      { subject: 'Theory', A: r.theory || 0, fullMark: 100 },
+      { subject: 'Language', A: r.language || 0, fullMark: 100 },
     ];
   }, [report]);
 
@@ -282,13 +290,14 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                   </section>
 
                   {/* Title Analysis */}
+                  {report.titleAnalysis && (
                   <section id="title" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                       <div className="flex justify-between items-start mb-4">
                          <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                             <FileText className="text-blue-500" /> Title Analysis
                          </h3>
                          <button 
-                           onClick={() => handleOptimize('Title', report.titleAnalysis.critique)}
+                           onClick={() => handleOptimize('Title', report.titleAnalysis?.critique || 'Improve this title')}
                            className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded flex items-center gap-1"
                          >
                             <RefreshCw size={12} /> Optimize
@@ -298,7 +307,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                       
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">AI Suggested Alternatives</h4>
                       <div className="space-y-2">
-                         {report.titleAnalysis.suggestions.map((sug, i) => (
+                         {report.titleAnalysis.suggestions?.map((sug, i) => (
                             <div key={i} className="flex items-center gap-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100 group cursor-pointer hover:bg-blue-100 transition-colors">
                                <span className="text-blue-500 font-bold text-sm">#{i+1}</span>
                                <span className="text-slate-800 font-medium text-sm flex-grow">{sug}</span>
@@ -307,8 +316,10 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                          ))}
                       </div>
                   </section>
+                  )}
 
                   {/* Methodology Analysis */}
+                  {report.methodologyAnalysis && (
                   <section id="method" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                       <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2 mb-4">
                          <Zap className="text-amber-500" /> Methodology & Logic
@@ -318,7 +329,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                       </div>
                       
                       <div className="space-y-4">
-                         {report.methodologyAnalysis.suggestions.map((item, i) => (
+                         {report.methodologyAnalysis.suggestions?.map((item, i) => (
                             <div key={i} className="border border-slate-200 rounded-lg overflow-hidden">
                                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
                                   <span className="text-xs font-bold text-slate-500 uppercase">Suggestion {i+1}</span>
@@ -336,8 +347,10 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                          ))}
                       </div>
                   </section>
+                  )}
 
                   {/* Journal Fit */}
+                  {report.journalFit && (
                   <section id="journal" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                       <div className="flex items-center justify-between mb-4">
                          <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
@@ -353,7 +366,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                          <div>
                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Recommended Alternatives</h4>
                             <div className="grid grid-cols-1 gap-3">
-                               {report.journalFit.alternativeJournals.map((j, i) => (
+                               {report.journalFit.alternativeJournals?.map((j, i) => (
                                   <div key={i} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-100">
                                      <div>
                                         <div className="font-bold text-purple-900">{j.name}</div>
@@ -366,6 +379,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                          </div>
                       )}
                   </section>
+                  )}
                   
                    {/* Citations */}
                   <section>
@@ -373,7 +387,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                         <BookOpen className="text-slate-500" /> Recommended Literature
                      </h3>
                      <div className="grid grid-cols-1 gap-3">
-                        {report.literature.map((lit, i) => (
+                        {report.literature?.map((lit, i) => (
                            <div key={i} className="p-4 rounded-lg border border-slate-200 hover:shadow-md transition-shadow bg-white group">
                               <h4 className="font-bold text-slate-800 text-sm mb-1 group-hover:text-blue-600">{lit.title}</h4>
                               <p className="text-xs text-slate-500 mb-2">{lit.author} • {lit.year}</p>
