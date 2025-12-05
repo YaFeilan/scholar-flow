@@ -22,7 +22,8 @@ import {
   GraphNode,
   GraphLink,
   KnowledgeGraphData,
-  GraphSuggestionsResult
+  GraphSuggestionsResult,
+  ChartExtractionResult
 } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -765,4 +766,31 @@ export const generateScientificFigure = async (
         console.error("Figure Generation Error:", e);
         return null;
     }
+};
+
+// --- NEW: Chart Extraction ---
+export const extractChartData = async (file: File, language: Language): Promise<ChartExtractionResult | null> => {
+  try {
+    const base64Data = await fileToBase64(file);
+    const prompt = `Analyze this chart image. Extract the underlying data into a structured JSON format.
+    Identify the chart title, type (Bar, Line, Scatter, Pie, etc.), and the data points.
+    
+    Return JSON:
+    {
+      "title": "Chart Title",
+      "type": "Chart Type",
+      "summary": "Brief description of trends",
+      "data": [
+        { "Label/X-Axis": "Value 1", "Series A": 10, "Series B": 20 },
+        ...
+      ]
+    }
+    
+    Language: ${language}. Ensure numeric values are numbers.`;
+
+    return getJson(prompt, undefined, 'gemini-2.5-flash');
+  } catch (error) {
+    console.error("Chart Extraction Error:", error);
+    return null;
+  }
 };

@@ -24,7 +24,8 @@ export const TRANSLATIONS = {
       experimentDesign: 'Exp. Design',
       pdfChat: 'AI Paper Guide',
       knowledge: 'Knowledge Graph',
-      figure: 'Sci-Figure Gen'
+      figure: 'Sci-Figure Gen',
+      chart: 'Chart Extractor'
     },
     search: { 
       title: 'Research Assistant', 
@@ -458,6 +459,19 @@ export const TRANSLATIONS = {
       result: 'Figure Result',
       refinePlaceholder: 'e.g. Make the arrows thicker, change background to white...',
       history: 'History / Versions'
+    },
+    chart: {
+      title: 'Chart Data Extraction',
+      subtitle: 'Upload chart images from literature to extract underlying data into editable tables.',
+      upload: 'Upload Chart Image',
+      extractBtn: 'Extract Data',
+      extracting: 'Extracting Data...',
+      resultTitle: 'Extracted Data',
+      downloadCsv: 'Download CSV',
+      copyTable: 'Copy Table',
+      chartType: 'Detected Chart Type',
+      columns: 'Columns',
+      rows: 'Rows'
     }
   }
   ,
@@ -485,7 +499,8 @@ export const TRANSLATIONS = {
       experimentDesign: '实验设计',
       pdfChat: 'AI论文导读',
       knowledge: '个人知识库',
-      figure: '科研绘图'
+      figure: '科研绘图',
+      chart: '图表提取'
     },
     search: { 
       title: '科研助手', 
@@ -919,6 +934,19 @@ export const TRANSLATIONS = {
       result: '生成结果',
       refinePlaceholder: '例如：把箭头变粗一点，背景换成白色...',
       history: '历史版本'
+    },
+    chart: {
+      title: '图表数据提取',
+      subtitle: '上传文献中的图表图片，一键提取底层数据并还原为可编辑表格。',
+      upload: '上传图表图片',
+      extractBtn: '提取数据',
+      extracting: '正在提取数据...',
+      resultTitle: '提取结果',
+      downloadCsv: '下载 CSV',
+      copyTable: '复制表格',
+      chartType: '检测图表类型',
+      columns: '列数',
+      rows: '行数'
     }
   }
 };

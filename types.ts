@@ -41,7 +41,8 @@ export enum ViewState {
   EXPERIMENT_DESIGN = 'EXPERIMENT_DESIGN',
   PDF_CHAT = 'PDF_CHAT',
   KNOWLEDGE_GRAPH = 'KNOWLEDGE_GRAPH',
-  FIGURE_GEN = 'FIGURE_GEN', // New
+  FIGURE_GEN = 'FIGURE_GEN',
+  CHART_EXTRACTION = 'CHART_EXTRACTION', // New
 }
 
 // Trend Types
@@ -377,4 +378,12 @@ export interface GraphSuggestionsResult {
 export interface KnowledgeGraphData {
   nodes: GraphNode[];
   links: GraphLink[];
+}
+
+// Chart Extraction Types
+export interface ChartExtractionResult {
+  title: string;
+  type: string;
+  summary: string;
+  data: any[]; // Array of objects representing rows
 }
