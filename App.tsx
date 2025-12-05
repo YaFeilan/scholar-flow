@@ -1,7 +1,6 @@
 
-
-import React, { useState } from 'react';
-import Navbar from './components/Navbar';
+import React, { useState, useEffect } from 'react';
+import Sidebar from './components/Sidebar';
 import SearchPanel from './components/SearchPanel';
 import TrendDashboard from './components/TrendDashboard';
 import PeerReview from './components/PeerReview';
@@ -12,17 +11,46 @@ import Advisor from './components/Advisor';
 import PPTGenerator from './components/PPTGenerator';
 import IdeaGuide from './components/IdeaGuide';
 import OpeningReview from './components/OpeningReview';
+import DataAnalysis from './components/DataAnalysis';
 import { ViewState, Paper, Language } from './types';
 import { generateLiteratureReview } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { X } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>(ViewState.SEARCH);
+  const [currentView, setCurrentView] = useState<ViewState>(ViewState.IDEA_GUIDE); // Start with Idea Guide in new flow
   const [language, setLanguage] = useState<Language>('EN');
   const [generatedReview, setGeneratedReview] = useState<string | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [ideaTopic, setIdeaTopic] = useState<string>('');
+  
+  // Dark Mode State
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    // Check local storage or system preference on initial load
+    if (typeof window !== 'undefined') {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            return savedTheme === 'dark';
+        }
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+
+  // Apply Dark Mode Class
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
+
+  const toggleDarkMode = () => {
+    setDarkMode(prev => !prev);
+  };
 
   const handleReviewRequest = async (papers: Paper[]) => {
     // Show modal immediately with loading state (handled inside by waiting for content)
@@ -49,61 +77,75 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
-      <Navbar currentView={currentView} setView={setCurrentView} language={language} setLanguage={setLanguage} />
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
+      {/* Sidebar Layout */}
+      <Sidebar 
+        currentView={currentView} 
+        setView={setCurrentView} 
+        language={language} 
+        setLanguage={setLanguage}
+        darkMode={darkMode}
+        toggleDarkMode={toggleDarkMode}
+      />
       
-      <main className="pt-4">
-        {currentView === ViewState.SEARCH && (
-          <SearchPanel onReviewRequest={handleReviewRequest} language={language} />
-        )}
-        {currentView === ViewState.IDEA_GUIDE && (
-          <IdeaGuide 
-            language={language} 
-            initialTopic={ideaTopic} 
-            onClearInitialTopic={() => setIdeaTopic('')}
-          />
-        )}
-        {currentView === ViewState.REVIEW_GENERATION && (
-          <ReviewGenerator language={language} />
-        )}
-        {currentView === ViewState.TRACK && (
-          <ReferenceTracker language={language} />
-        )}
-        {currentView === ViewState.TRENDS && (
-          <TrendDashboard language={language} onNavigateToIdea={handleNavigateToIdea} />
-        )}
-        {currentView === ViewState.ADVISOR && (
-          <Advisor language={language} />
-        )}
-        {currentView === ViewState.PEER_REVIEW && (
-          <PeerReview language={language} />
-        )}
-        {currentView === ViewState.POLISH && (
-          <PolishAssistant language={language} />
-        )}
-        {currentView === ViewState.PPT_GENERATION && (
-          <PPTGenerator language={language} />
-        )}
-        {currentView === ViewState.OPENING_REVIEW && (
-          <OpeningReview language={language} />
-        )}
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+        <div className="h-full">
+            {currentView === ViewState.SEARCH && (
+            <SearchPanel onReviewRequest={handleReviewRequest} language={language} />
+            )}
+            {currentView === ViewState.IDEA_GUIDE && (
+            <IdeaGuide 
+                language={language} 
+                initialTopic={ideaTopic} 
+                onClearInitialTopic={() => setIdeaTopic('')}
+            />
+            )}
+            {currentView === ViewState.REVIEW_GENERATION && (
+            <ReviewGenerator language={language} />
+            )}
+            {currentView === ViewState.TRACK && (
+            <ReferenceTracker language={language} />
+            )}
+            {currentView === ViewState.TRENDS && (
+            <TrendDashboard language={language} onNavigateToIdea={handleNavigateToIdea} />
+            )}
+            {currentView === ViewState.ADVISOR && (
+            <Advisor language={language} />
+            )}
+            {currentView === ViewState.PEER_REVIEW && (
+            <PeerReview language={language} />
+            )}
+            {currentView === ViewState.POLISH && (
+            <PolishAssistant language={language} />
+            )}
+            {currentView === ViewState.PPT_GENERATION && (
+            <PPTGenerator language={language} />
+            )}
+            {currentView === ViewState.OPENING_REVIEW && (
+            <OpeningReview language={language} />
+            )}
+            {currentView === ViewState.DATA_ANALYSIS && (
+            <DataAnalysis language={language} />
+            )}
+        </div>
       </main>
 
       {/* Modal for Generated Literature Review (From Search Panel) */}
       {showReviewModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100">
-              <h2 className="text-xl font-bold font-serif text-slate-800">Generated Review</h2>
-              <button onClick={closeModal} className="text-slate-400 hover:text-slate-600">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col border border-slate-200 dark:border-slate-700">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100 dark:border-slate-700">
+              <h2 className="text-xl font-bold font-serif text-slate-800 dark:text-slate-100">Generated Review</h2>
+              <button onClick={closeModal} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                 <X size={24} />
               </button>
             </div>
-            <div className="p-8 overflow-y-auto prose prose-slate max-w-none flex-grow">
+            <div className="p-8 overflow-y-auto prose prose-slate dark:prose-invert max-w-none flex-grow">
                <ReactMarkdown>{generatedReview || ''}</ReactMarkdown>
             </div>
-            <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-xl flex justify-end gap-2">
-              <button onClick={closeModal} className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">Close</button>
+            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-b-xl flex justify-end gap-2">
+              <button onClick={closeModal} className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">Close</button>
               <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Export PDF</button>
             </div>
           </div>

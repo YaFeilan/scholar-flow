@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType, OpeningReviewResponse, ReviewPersona, PolishConfig, AdvisorReport, GapAnalysisResult, TrendAnalysisResult, TrendTimeRange, TrendPersona } from "../types";
+import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType, OpeningReviewResponse, ReviewPersona, PolishConfig, AdvisorReport, GapAnalysisResult, TrendAnalysisResult, TrendTimeRange, TrendPersona, DataAnalysisResult } from "../types";
 // @ts-ignore
 import mammoth from "mammoth";
 
@@ -891,6 +891,82 @@ export const generateAdvisorReport = async (title: string, journal: string, abst
     return null;
   }
 };
+
+export const performDataAnalysis = async (
+  csvData: string, 
+  lang: Language = 'EN'
+): Promise<DataAnalysisResult | null> => {
+    try {
+        const model = 'gemini-2.5-flash';
+        const prompt = `You are an expert Data Scientist.
+        I will provide you with the first 50 rows of a dataset.
+        
+        Your task is to perform an initial EDA (Exploratory Data Analysis) and suggest statistical models.
+        ${getLangInstruction(lang)}
+        
+        Required Output JSON:
+        1. 'summary': A descriptive summary paragraph of the data.
+        2. 'columns': List of columns with their inferred type and basic stats (mean/max or unique counts).
+        3. 'correlations': Identify top 3 potential correlations or interesting relationships.
+        4. 'recommendedModels': Suggest 3 statistical models (e.g., ANOVA, Regression, Clustering) suitable for this data. Include a 'codeSnippet' in Python (pandas/statsmodels/sklearn) for each.
+
+        Data Sample:
+        ${csvData.substring(0, 30000)}
+        `;
+
+        const response = await ai.models.generateContent({
+            model,
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        summary: { type: Type.STRING },
+                        columns: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    name: { type: Type.STRING },
+                                    type: { type: Type.STRING },
+                                    stats: { type: Type.STRING }
+                                }
+                            }
+                        },
+                        correlations: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    pair: { type: Type.STRING },
+                                    value: { type: Type.NUMBER },
+                                    insight: { type: Type.STRING }
+                                }
+                            }
+                        },
+                        recommendedModels: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    name: { type: Type.STRING },
+                                    reason: { type: Type.STRING },
+                                    codeSnippet: { type: Type.STRING }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        return JSON.parse(response.text || 'null');
+    } catch (error) {
+        console.error("Data Analysis Error:", error);
+        return null;
+    }
+}
 
 export const generatePaperInterpretation = async (paper: Paper, lang: Language = 'EN'): Promise<string> => {
   try {

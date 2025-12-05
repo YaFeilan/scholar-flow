@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck } from 'lucide-react';
+import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -9,9 +9,11 @@ interface NavbarProps {
   setView: (view: ViewState) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
+  darkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ currentView, setView, language, setLanguage }) => {
+const Navbar: React.FC<NavbarProps> = ({ currentView, setView, language, setLanguage, darkMode, toggleDarkMode }) => {
   const t = TRANSLATIONS[language].nav;
   const appName = TRANSLATIONS[language].appName;
 
@@ -33,29 +35,37 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView, language, setLang
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Row 1: Branding and Global Actions */}
-        <div className="flex justify-between items-center py-3 border-b border-slate-50">
+        <div className="flex justify-between items-center py-3 border-b border-slate-50 dark:border-slate-800">
           <div className="flex items-center cursor-pointer group" onClick={() => setView(ViewState.SEARCH)}>
-            <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2 rounded-lg mr-3 shadow-lg shadow-blue-200 group-hover:shadow-blue-300 transition-all">
+            <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2 rounded-lg mr-3 shadow-lg shadow-blue-200 dark:shadow-blue-900/50 group-hover:shadow-blue-300 dark:group-hover:shadow-blue-900 transition-all">
               <BookOpen className="text-white h-5 w-5" />
             </div>
             <div className="flex flex-col">
-              <span className="font-serif font-bold text-2xl text-slate-900 tracking-tight leading-none">{appName}</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block mt-0.5">AI Research Platform</span>
+              <span className="font-serif font-bold text-2xl text-slate-900 dark:text-slate-100 tracking-tight leading-none">{appName}</span>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest hidden sm:block mt-0.5">AI Research Platform</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+             <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-all mr-1"
+                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+             >
+                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+             </button>
+
              <button 
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 transition-colors border border-slate-200"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700"
               onClick={toggleLanguage}
              >
                <Globe size={14} />
                <span>{language === 'ZH' ? '中文' : 'English'}</span>
              </button>
-             <div className="h-9 w-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-md border-2 border-white ring-1 ring-slate-100 cursor-pointer">
+             <div className="h-9 w-9 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center font-bold text-xs shadow-md border-2 border-white dark:border-slate-700 ring-1 ring-slate-100 dark:ring-slate-800 cursor-pointer ml-1">
                 RA
              </div>
           </div>
@@ -74,8 +84,8 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView, language, setLang
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 whitespace-nowrap
                   ${currentView === item.id 
-                    ? 'text-blue-700 bg-blue-50 ring-1 ring-blue-200 shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
+                    ? 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 ring-1 ring-blue-200 dark:ring-blue-800 shadow-sm' 
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
               >
                 {item.icon}
                 <span>{item.text}</span>

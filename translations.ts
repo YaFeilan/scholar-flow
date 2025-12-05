@@ -1,9 +1,26 @@
 
-
 export const TRANSLATIONS = {
   EN: {
     appName: 'Research Assistant',
-    nav: { search: 'Search', review: 'Review Gen', track: 'Tracking', trends: 'Trends', advisor: 'Advisor', peer: 'Peer Review', polish: 'Polish', ppt: 'PPT Gen', idea: 'Idea Guide', opening: 'Opening Review' },
+    groups: {
+      planning: '1. Selection & Planning',
+      experiment: '2. Experiment & Data',
+      writing: '3. Writing & Polish',
+      publish: '4. Publication'
+    },
+    nav: { 
+      search: 'Search', 
+      review: 'Review Gen', 
+      track: 'Tracking', 
+      trends: 'Trends', 
+      advisor: 'Advisor', 
+      peer: 'Peer Review', 
+      polish: 'Polish', 
+      ppt: 'PPT Gen', 
+      idea: 'Idea Guide', 
+      opening: 'Opening Review',
+      data: 'Data Analyst' 
+    },
     search: { 
       title: 'Research Assistant', 
       subtitle: 'Search and select papers to generate a structured academic review.', 
@@ -200,11 +217,40 @@ export const TRANSLATIONS = {
         journalMatch: 'Journal Alignment',
         literatureRec: 'Literature Recommendation'
       }
+    },
+    data: {
+      title: 'Intelligent Data Analyst',
+      subtitle: 'Upload CSV/Excel data for automated statistical analysis and model recommendations.',
+      upload: 'Upload Data File',
+      analyzing: 'Analyzing Data Structure...',
+      summary: 'Descriptive Summary',
+      correlations: 'Correlations',
+      models: 'Recommended Models',
+      code: 'Implementation Code',
+      columns: 'Variables'
     }
   },
   ZH: {
     appName: '科研助手',
-    nav: { search: '文献检索', review: '综述生成', track: '引用追踪', trends: '趋势分析', advisor: '投稿顾问', peer: '智能审稿', polish: '论文润色', ppt: 'PPT制作', idea: '思路引导', opening: '开题审查' },
+    groups: {
+      planning: '1. 选题与策划阶段',
+      experiment: '2. 实验与数据阶段',
+      writing: '3. 写作与润色阶段',
+      publish: '4. 投稿与发表阶段'
+    },
+    nav: { 
+      search: '文献检索', 
+      review: '综述生成', 
+      track: '引用追踪', 
+      trends: '趋势分析', 
+      advisor: '投稿顾问', 
+      peer: '智能审稿', 
+      polish: '论文润色', 
+      ppt: 'PPT制作', 
+      idea: '思路引导', 
+      opening: '开题审查',
+      data: '数据分析'
+    },
     search: { 
       title: '科研助手', 
       subtitle: '检索并选择文献以生成结构化综述', 
@@ -401,6 +447,17 @@ export const TRANSLATIONS = {
         journalMatch: '期刊/目标匹配度',
         literatureRec: '相关文献推荐'
       }
+    },
+    data: {
+      title: '智能数据分析',
+      subtitle: '上传 CSV/Excel 数据，自动进行描述性统计、相关性分析与模型推荐。',
+      upload: '上传数据文件',
+      analyzing: '正在分析数据结构...',
+      summary: '描述性统计',
+      correlations: '相关性分析',
+      models: '推荐统计模型',
+      code: '实现代码 (Python/R)',
+      columns: '变量列表'
     }
   }
 };

@@ -238,8 +238,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       onClick={onClick}
       className={`px-3 py-1.5 text-sm rounded-md border transition-all ${
         active 
-        ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium' 
-        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+        ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium dark:bg-blue-900/30 dark:border-blue-600 dark:text-blue-400' 
+        : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-600'
       }`}
     >
       {label}
@@ -263,22 +263,22 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
     <div className="max-w-7xl mx-auto px-4 py-6">
       
       {/* Search Card */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-6">
-        <h2 className="text-2xl font-serif font-bold text-center text-slate-800 mb-2">{t.title}</h2>
-        <p className="text-center text-slate-500 mb-6 text-sm">{t.subtitle}</p>
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-6 transition-colors">
+        <h2 className="text-2xl font-serif font-bold text-center text-slate-800 dark:text-slate-100 mb-2">{t.title}</h2>
+        <p className="text-center text-slate-500 dark:text-slate-400 mb-6 text-sm">{t.subtitle}</p>
         
         {/* Source Toggle */}
         <div className="flex justify-center mb-6">
-           <div className="bg-slate-100 p-1 rounded-lg inline-flex">
+           <div className="bg-slate-100 dark:bg-slate-700 p-1 rounded-lg inline-flex">
               <button 
                  onClick={() => setSearchSource('online')}
-                 className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all ${searchSource === 'online' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                 className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all ${searchSource === 'online' ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
               >
                  <Cloud size={16} /> {t.source.online}
               </button>
               <button 
                  onClick={() => setSearchSource('local')}
-                 className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all ${searchSource === 'local' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                 className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all ${searchSource === 'local' ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-300 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
               >
                  <FolderOpen size={16} /> {t.source.local}
               </button>
@@ -290,14 +290,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
             <div className="flex gap-0 mb-6 max-w-4xl mx-auto">
               <div className="relative flex-grow">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-slate-400" />
+                  <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" />
                 </div>
                 <input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-l-lg leading-5 bg-white placeholder-slate-400 focus:outline-none focus:placeholder-slate-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-base"
+                  className="block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-l-lg leading-5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:placeholder-slate-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-base transition-colors"
                   placeholder={t.placeholder}
                 />
               </div>
@@ -331,7 +331,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
 
                 {/* Partition Filters */}
                 <div className="flex items-center gap-2 flex-wrap justify-center">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide mr-1 flex items-center gap-1">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mr-1 flex items-center gap-1">
                         <Layers size={12} /> {t.filters.partition} (JCR/CAS/CJR):
                     </span>
                     {partitionOptions.map(opt => (
@@ -351,56 +351,56 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                 
                 <div className="flex flex-wrap items-center justify-center gap-4">
                      {/* Time Range */}
-                     <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="font-medium">{t.filters.time}:</span>
                         <select 
                            value={filters.timeRange}
                            onChange={(e) => setFilters({...filters, timeRange: e.target.value})}
-                           className="bg-transparent border-none focus:ring-0 text-slate-800 font-bold text-sm cursor-pointer p-0"
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm cursor-pointer p-0"
                         >
-                           <option>All Time</option>
-                           <option>Last 1 Year</option>
-                           <option>Last 3 Years</option>
-                           <option>Last 5 Years</option>
+                           <option className="dark:bg-slate-800">All Time</option>
+                           <option className="dark:bg-slate-800">Last 1 Year</option>
+                           <option className="dark:bg-slate-800">Last 3 Years</option>
+                           <option className="dark:bg-slate-800">Last 5 Years</option>
                         </select>
                         <ChevronDown size={14} className="text-slate-400 pointer-events-none" />
                      </div>
                      
                      {/* Specific Year Filter */}
-                     <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="font-medium">{language === 'ZH' ? '年份' : 'Year'}:</span>
                         <input
                            type="number"
                            value={filterYear}
                            onChange={(e) => setFilterYear(e.target.value)}
-                           className="bg-transparent border-none focus:ring-0 text-slate-800 font-bold text-sm w-16 p-0 placeholder-slate-400"
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm w-16 p-0 placeholder-slate-400"
                            placeholder={language === 'ZH' ? '全部' : 'All'}
                         />
                      </div>
 
                      {/* Citation Count Filter */}
-                     <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="font-medium">{language === 'ZH' ? '引用 >' : 'Cited >'}</span>
                         <input
                            type="number"
                            min="0"
                            value={minCitations}
                            onChange={(e) => setMinCitations(e.target.value)}
-                           className="bg-transparent border-none focus:ring-0 text-slate-800 font-bold text-sm w-12 p-0 placeholder-slate-400"
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm w-12 p-0 placeholder-slate-400"
                            placeholder="0"
                         />
                      </div>
 
                      {/* Result Limit Filter */}
-                     <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
+                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="font-medium">{t.filters.resultCount}:</span>
                         <select 
                            value={resultLimit}
                            onChange={(e) => setResultLimit(Number(e.target.value))}
-                           className="bg-transparent border-none focus:ring-0 text-slate-800 font-bold text-sm cursor-pointer p-0"
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm cursor-pointer p-0"
                         >
                            {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(val => (
-                              <option key={val} value={val}>{val}</option>
+                              <option key={val} value={val} className="dark:bg-slate-800">{val}</option>
                            ))}
                         </select>
                         <ChevronDown size={14} className="text-slate-400 pointer-events-none" />
@@ -410,7 +410,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
           </>
         ) : (
             <div 
-               className="max-w-2xl mx-auto border-2 border-dashed border-slate-300 rounded-xl p-10 text-center hover:bg-slate-50 transition-colors cursor-pointer relative"
+               className="max-w-2xl mx-auto border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-10 text-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer relative"
                onClick={() => fileInputRef.current?.click()}
             >
                <input 
@@ -422,9 +422,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                  accept=".pdf,.doc,.docx,.txt,.md,.jpg,.jpeg,.png,.webp"
                />
                <UploadCloud size={48} className="mx-auto text-blue-400 mb-4" />
-               <h3 className="text-lg font-bold text-slate-700">{t.upload.btn}</h3>
-               <p className="text-slate-400 text-sm mt-2">{t.upload.tip}</p>
-               <p className="text-xs text-slate-300 mt-4">{t.upload.drag}</p>
+               <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">{t.upload.btn}</h3>
+               <p className="text-slate-400 dark:text-slate-500 text-sm mt-2">{t.upload.tip}</p>
+               <p className="text-xs text-slate-300 dark:text-slate-600 mt-4">{t.upload.drag}</p>
             </div>
         )}
       </div>
@@ -432,23 +432,23 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       {/* Results Area */}
       {sortedPapers.length > 0 && (
          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                <FileText size={20} className="text-blue-600" /> 
                {searchSource === 'online' ? t.results : t.source.local} 
-               <span className="text-slate-400 text-sm font-normal">({sortedPapers.length})</span>
+               <span className="text-slate-400 dark:text-slate-500 text-sm font-normal">({sortedPapers.length})</span>
             </h3>
             <div className="flex gap-2">
                <div className="flex items-center gap-2 mr-4">
-                  <span className="text-sm text-slate-500">{t.sort.label}:</span>
+                  <span className="text-sm text-slate-500 dark:text-slate-400">{t.sort.label}:</span>
                   <select 
-                    className="text-sm border-none bg-transparent font-bold text-slate-700 focus:ring-0 cursor-pointer"
+                    className="text-sm border-none bg-transparent font-bold text-slate-700 dark:text-slate-300 focus:ring-0 cursor-pointer"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
                   >
-                     <option value="relevance">{t.sort.relevance}</option>
-                     <option value="date">{t.sort.date}</option>
-                     <option value="if">{t.sort.if}</option>
-                     <option value="added">{language === 'ZH' ? '加入时间' : 'Date Added'}</option>
+                     <option value="relevance" className="dark:bg-slate-800">{t.sort.relevance}</option>
+                     <option value="date" className="dark:bg-slate-800">{t.sort.date}</option>
+                     <option value="if" className="dark:bg-slate-800">{t.sort.if}</option>
+                     <option value="added" className="dark:bg-slate-800">{language === 'ZH' ? '加入时间' : 'Date Added'}</option>
                   </select>
                </div>
                
@@ -456,7 +456,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                  <button 
                     onClick={handleGenerateReview}
                     disabled={isGenerating}
-                    className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 transition-colors flex items-center gap-2"
+                    className="bg-slate-900 dark:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"
                  >
                     {isGenerating ? <Loader2 className="animate-spin h-4 w-4" /> : <Sparkles className="h-4 w-4 text-yellow-400" />}
                     {t.generateBtn}
@@ -465,7 +465,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                {searchSource === 'local' && selectedPapers.size > 0 && (
                   <button 
                     onClick={handleBatchInterpret}
-                    className="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors"
+                    className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                   >
                     {t.batchInterpret}
                   </button>
@@ -487,11 +487,11 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
           <div 
              key={paper.id} 
              onClick={() => handlePaperClick(paper)}
-             className={`bg-white p-5 rounded-xl border transition-all cursor-pointer hover:shadow-md group ${selectedPapers.has(paper.id) ? 'border-blue-500 bg-blue-50/10' : 'border-slate-200 hover:border-blue-300'}`}
+             className={`bg-white dark:bg-slate-800 p-5 rounded-xl border transition-all cursor-pointer hover:shadow-md group ${selectedPapers.has(paper.id) ? 'border-blue-500 bg-blue-50/10 dark:bg-blue-900/10' : 'border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600'}`}
           >
              <div className="flex items-start gap-4">
                 <div 
-                  className={`mt-1 w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selectedPapers.has(paper.id) ? 'bg-blue-600 border-blue-600' : 'border-slate-300 bg-white group-hover:border-blue-400'}`}
+                  className={`mt-1 w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selectedPapers.has(paper.id) ? 'bg-blue-600 border-blue-600' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-blue-400'}`}
                   onClick={(e) => togglePaperSelection(e, paper.id)}
                 >
                    {selectedPapers.has(paper.id) && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
@@ -499,40 +499,40 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                 
                 <div className="flex-grow">
                    <div className="flex justify-between items-start">
-                      <h4 className="text-lg font-bold text-slate-800 leading-tight mb-1 group-hover:text-blue-700 transition-colors">{paper.title}</h4>
+                      <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight mb-1 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{paper.title}</h4>
                       <div className="text-right">
-                         <span className="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded whitespace-nowrap">{paper.year}</span>
+                         <span className="text-xs font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/50 px-2 py-1 rounded whitespace-nowrap">{paper.year}</span>
                          {paper.addedDate && (
-                            <div className="text-[10px] text-slate-300 mt-1 flex items-center justify-end gap-1">
+                            <div className="text-[10px] text-slate-300 dark:text-slate-600 mt-1 flex items-center justify-end gap-1">
                                <Calendar size={10} /> {paper.addedDate}
                             </div>
                          )}
                       </div>
                    </div>
                    
-                   <p className="text-sm text-slate-600 mb-2 italic">
-                      {paper.authors.join(', ')} <span className="text-slate-300 mx-2">|</span> {paper.journal}
+                   <p className="text-sm text-slate-600 dark:text-slate-300 mb-2 italic">
+                      {paper.authors.join(', ')} <span className="text-slate-300 dark:text-slate-600 mx-2">|</span> {paper.journal}
                       {paper.citations > 0 && <span className="ml-2 text-slate-400">• {paper.citations} Citations</span>}
                    </p>
                    
                    <div className="flex gap-2 flex-wrap mb-3">
                       {paper.badges.map((b, i) => (
                          <span key={i} className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
-                            b.type === 'SCI' ? 'bg-green-50 text-green-700 border-green-200' :
-                            b.type === 'SSCI' ? 'bg-teal-50 text-teal-700 border-teal-200' :
-                            b.type === 'PubMed' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                            b.type === 'CJR' ? 'bg-red-50 text-red-700 border-red-200' :
-                            b.type === 'Q1' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                            b.type === 'Q2' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                            b.type === 'LOCAL' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                            'bg-slate-50 text-slate-600 border-slate-200'
+                            b.type === 'SCI' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' :
+                            b.type === 'SSCI' ? 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-900/20 dark:text-teal-400 dark:border-teal-800' :
+                            b.type === 'PubMed' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800' :
+                            b.type === 'CJR' ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800' :
+                            b.type === 'Q1' ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800' :
+                            b.type === 'Q2' ? 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' :
+                            b.type === 'LOCAL' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' :
+                            'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600'
                          }`}>
                             {b.type} {b.partition && `(${b.partition})`} {b.if && `IF: ${b.if}`}
                          </span>
                       ))}
                    </div>
                    
-                   <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
+                   <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                       {paper.abstract || "No abstract available."}
                    </p>
                 </div>
@@ -544,13 +544,13 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       {/* Detail Modal */}
       {viewingPaper && (
          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={closePaperModal}>
-            <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl animate-fadeIn" onClick={e => e.stopPropagation()}>
-               <div className="p-6 border-b border-slate-100 flex justify-between items-start">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl animate-fadeIn border border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+               <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start">
                   <div>
-                     <h2 className="text-xl font-bold text-slate-900 leading-tight mb-2">{viewingPaper.title}</h2>
-                     <p className="text-sm text-slate-500">{viewingPaper.authors.join(', ')} • {viewingPaper.year}</p>
+                     <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight mb-2">{viewingPaper.title}</h2>
+                     <p className="text-sm text-slate-500 dark:text-slate-400">{viewingPaper.authors.join(', ')} • {viewingPaper.year}</p>
                   </div>
-                  <button onClick={closePaperModal} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100">
+                  <button onClick={closePaperModal} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
                      <X size={24} />
                   </button>
                </div>
@@ -567,7 +567,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                      </button>
                      <button 
                         onClick={handleDownload}
-                        className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors flex items-center gap-2"
+                        className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"
                      >
                         <Download className="h-4 w-4" />
                         {t.download}
@@ -575,35 +575,35 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                   </div>
                   
                   {interpretation && (
-                     <div className="mb-6 bg-slate-50 rounded-xl p-5 border border-slate-200">
-                        <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                     <div className="mb-6 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-5 border border-slate-200 dark:border-slate-600">
+                        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
                            <Sparkles size={14} className="text-purple-500" /> {t.interpretationResult}
                         </h3>
-                        <div className="prose prose-sm prose-slate max-w-none">
+                        <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
                            <ReactMarkdown>{interpretation}</ReactMarkdown>
                         </div>
                      </div>
                   )}
                   
-                  <h3 className="text-sm font-bold text-slate-900 mb-2 uppercase tracking-wide opacity-50">Abstract</h3>
-                  <p className="text-slate-700 leading-relaxed text-base">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 mb-2 uppercase tracking-wide opacity-50">Abstract</h3>
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base">
                      {viewingPaper.abstract || "No abstract available for this paper."}
                   </p>
 
                   {/* Image Preview for Local Files */}
                   {viewingPaper.source === 'local' && viewingPaper.file && viewingPaper.file.type.startsWith('image/') && (
                      <div className="mt-6 mb-4">
-                        <h3 className="text-sm font-bold text-slate-900 mb-2 uppercase tracking-wide opacity-50">Image Preview</h3>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 mb-2 uppercase tracking-wide opacity-50">Image Preview</h3>
                         <img 
                           src={URL.createObjectURL(viewingPaper.file)} 
                           alt="Paper Content" 
-                          className="max-w-full rounded-lg border border-slate-200 shadow-sm max-h-64 object-contain bg-slate-50" 
+                          className="max-w-full rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm max-h-64 object-contain bg-slate-50 dark:bg-slate-900" 
                         />
                      </div>
                   )}
                   
                   {viewingPaper.source === 'local' && (
-                     <div className="mt-6 bg-amber-50 p-4 rounded-lg border border-amber-100 text-amber-800 text-sm">
+                     <div className="mt-6 bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-100 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm">
                         <span className="font-bold">Note:</span> This is a local file. AI analysis uses the extracted text content.
                      </div>
                   )}

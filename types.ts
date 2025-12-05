@@ -36,6 +36,7 @@ export enum ViewState {
   PPT_GENERATION = 'PPT_GENERATION',
   IDEA_GUIDE = 'IDEA_GUIDE',
   OPENING_REVIEW = 'OPENING_REVIEW',
+  DATA_ANALYSIS = 'DATA_ANALYSIS', // New ViewState
 }
 
 // Trend Types
@@ -274,4 +275,24 @@ export interface AdvisorReport {
     example: string;
   }[];
   timestamp: number; // for history
+}
+
+// Data Analysis Types
+export interface DataAnalysisResult {
+  summary: string;
+  columns: {
+    name: string;
+    type: string;
+    stats: string; // Concise stats summary string
+  }[];
+  correlations: {
+    pair: string;
+    value: number; // -1 to 1
+    insight: string;
+  }[];
+  recommendedModels: {
+    name: string; // e.g., ANOVA, Linear Regression
+    reason: string;
+    codeSnippet: string; // Python/R
+  }[];
 }
