@@ -1,14 +1,15 @@
 
+
 export const TRANSLATIONS = {
   EN: {
     appName: 'Research Assistant',
-    nav: { search: 'Search', review: 'Review Gen', track: 'Tracking', trends: 'Trends', advisor: 'Advisor', peer: 'Peer Review', polish: 'Polish' },
+    nav: { search: 'Search', review: 'Review Gen', track: 'Tracking', trends: 'Trends', advisor: 'Advisor', peer: 'Peer Review', polish: 'Polish', ppt: 'PPT Gen', idea: 'Idea Guide' },
     search: { 
       title: 'Research Assistant', 
       subtitle: 'Search and select papers to generate a structured academic review.', 
       placeholder: 'Search academic literature...', 
       btn: 'Search', 
-      filters: { db: 'Databases', time: 'Time Range', partition: 'Journal Partition (Q1-Q4)', custom: 'Custom', allTime: 'All Time', resultCount: 'Result Count' }, 
+      filters: { db: 'Databases', time: 'Time Range', partition: 'JCR/CAS Partition', custom: 'Custom', allTime: 'All Time', resultCount: 'Result Count' }, 
       sort: { label: 'Sort By', relevance: 'Relevance', date: 'Date', if: 'Impact Factor' },
       results: 'Relevant Results',
       smartReview: 'Smart Review',
@@ -37,7 +38,10 @@ export const TRANSLATIONS = {
       yoy: 'YoY Growth',
       keywordStats: 'Keyword Frequency Stats',
       frequency: 'Frequency',
-      extracting: 'Extracting Keywords...'
+      extracting: 'Extracting Keywords...',
+      relatedPapers: 'Related Recent Papers',
+      noPapers: 'No recent papers found for this topic.',
+      generateIdeas: 'Generate Research Ideas'
     },
     peer: {
       title: 'AI Peer Reviewer',
@@ -91,11 +95,44 @@ export const TRANSLATIONS = {
       journalTitle: 'Target Journal',
       btn: 'Evaluate Match',
       reportTitle: 'Evaluation Report'
+    },
+    ppt: {
+      title: 'AI PPT Generator',
+      subtitle: 'Turn your PDF research paper into a presentation in 4 steps.',
+      steps: { 1: 'Upload & Info', 2: 'Configuration', 3: 'Style Selection', 4: 'Generation' },
+      uploadLabel: 'Upload PDF Paper',
+      nameLabel: 'Your Name',
+      schoolLabel: 'School / Affiliation',
+      densityLabel: 'Information Density',
+      densityLow: 'Simple (Key Points)',
+      densityHigh: 'Rich (Detailed)',
+      pagesLabel: 'Number of Slides',
+      styleBtn: 'Analyze Content & Suggest Styles',
+      genBtn: 'Generate Presentation',
+      downloadBtn: 'Download Slides (Markdown)',
+      generating: 'Generating Slides...',
+      analyzing: 'Analyzing PDF style...'
+    },
+    idea: {
+      title: 'Research Idea Guide',
+      subtitle: 'Brainstorm research directions, titles, and journals based on your interests or current events.',
+      inputLabel: 'What are you interested in?',
+      placeholder: 'e.g., The application of Large Language Models in medical diagnosis, or the recent release of Sora...',
+      btn: 'Generate Ideas',
+      directions: 'Research Directions',
+      journals: 'Recommended Journals',
+      generating: 'Brainstorming Ideas...',
+      titles: 'Suggested Titles',
+      selectDirection: 'Select & Dig Deeper',
+      followUpPlaceholder: 'e.g., I want to focus on consumer behavior aspects...',
+      followUpBtn: 'Get Specific Advice',
+      deepDive: 'Deep Dive Analysis',
+      keywords: 'Search Keywords'
     }
   },
   ZH: {
     appName: '科研助手',
-    nav: { search: '文献检索', review: '综述生成', track: '引用追踪', trends: '趋势分析', advisor: '投稿顾问', peer: '智能审稿', polish: '论文润色' },
+    nav: { search: '文献检索', review: '综述生成', track: '引用追踪', trends: '趋势分析', advisor: '投稿顾问', peer: '智能审稿', polish: '论文润色', ppt: 'PPT制作', idea: '思路引导' },
     search: { 
       title: '科研助手', 
       subtitle: '检索并选择文献以生成结构化综述', 
@@ -130,7 +167,10 @@ export const TRANSLATIONS = {
       yoy: '同比增长',
       keywordStats: '关键词词频统计',
       frequency: '词频/热度',
-      extracting: '正在提取关键词...'
+      extracting: '正在提取关键词...',
+      relatedPapers: '相关最新论文',
+      noPapers: '未找到相关最新论文。',
+      generateIdeas: '生成研究思路'
     },
     peer: {
       title: '智能审稿人',
@@ -184,6 +224,39 @@ export const TRANSLATIONS = {
       journalTitle: '目标期刊',
       btn: '评估匹配度',
       reportTitle: '评估报告'
+    },
+    ppt: {
+      title: 'AI PPT 制作',
+      subtitle: '只需 4 步，即可将 PDF 论文转化为专业演示文稿。',
+      steps: { 1: '上传与信息', 2: '参数配置', 3: '风格选择', 4: '生成 PPT' },
+      uploadLabel: '上传 PDF 论文',
+      nameLabel: '汇报人姓名',
+      schoolLabel: '学校 / 单位',
+      densityLabel: '信息密度',
+      densityLow: '简洁 (大纲要点)',
+      densityHigh: '丰富 (详细内容)',
+      pagesLabel: '生成页数',
+      styleBtn: '分析内容并推荐风格',
+      genBtn: '生成 PPT',
+      downloadBtn: '下载演示大纲',
+      generating: '正在生成 PPT 内容...',
+      analyzing: '正在分析论文风格...'
+    },
+    idea: {
+      title: '科研思路引导',
+      subtitle: '输入您的研究兴趣或近期热点事件，AI 为您推荐研究方向、论文题目及合适期刊。',
+      inputLabel: '您对什么感兴趣？',
+      placeholder: '例如：大语言模型在医疗诊断中的应用，或者 Sora 发布带来的影响...',
+      btn: '生成研究思路',
+      directions: '推荐研究方向',
+      journals: '推荐投稿期刊',
+      generating: '正在头脑风暴...',
+      titles: '建议题目',
+      selectDirection: '选择并深入',
+      followUpPlaceholder: '例如：我想具体了解消费者行为方面的研究...',
+      followUpBtn: '获取具体建议',
+      deepDive: '深入分析',
+      keywords: '推荐关键词'
     }
   }
 };

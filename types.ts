@@ -9,17 +9,18 @@ export interface Paper {
   year: number;
   citations: number;
   badges: {
-    type: 'SCI' | 'SSCI' | 'EI' | 'CNKI' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'LOCAL';
+    type: 'SCI' | 'SSCI' | 'EI' | 'CNKI' | 'PubMed' | 'CJR' | 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'LOCAL';
     partition?: 'Q1' | 'Q2' | 'Q3' | 'Q4';
     if?: number;
   }[];
   abstract?: string;
   source?: 'online' | 'local';
   file?: File;
+  addedDate?: string; // New field for "Date Added"
 }
 
 export interface SearchFilters {
-  databases: string[]; // SCI, SSCI, EI
+  databases: string[]; // SCI, SSCI, EI, PubMed, CJR
   timeRange: string; // 'Last 3 Years', etc.
   partition: string[]; // Q1, Q2, etc.
 }
@@ -32,6 +33,8 @@ export enum ViewState {
   TRACK = 'TRACK',
   POLISH = 'POLISH',
   ADVISOR = 'ADVISOR',
+  PPT_GENERATION = 'PPT_GENERATION',
+  IDEA_GUIDE = 'IDEA_GUIDE',
 }
 
 export interface TrendItem {
@@ -65,4 +68,26 @@ export interface PolishResult {
     reason: string;
     category: 'Grammar' | 'Vocabulary' | 'Tone' | 'Structure';
   }[];
+}
+
+export interface IdeaGuideResult {
+  directions: {
+    angle: string;
+    description: string;
+    recommendedTitles: string[];
+  }[];
+  journals: {
+    name: string;
+    impactFactor: string;
+    reason: string;
+  }[];
+}
+
+export interface IdeaFollowUpResult {
+  analysis: string;
+  suggestions: {
+    title: string;
+    detail: string;
+  }[];
+  recommendedTerms: string[];
 }

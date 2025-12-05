@@ -69,12 +69,16 @@ const ReviewGenerator: React.FC<ReviewGeneratorProps> = ({ language: globalLangu
   };
 
   const handleDownload = (format: 'Word' | 'PDF') => {
-    const element = document.createElement("a");
-    const file = new Blob([reviewContent || ''], {type: 'text/plain'});
-    element.href = URL.createObjectURL(file);
-    element.download = `Literature_Review_${format}.${format === 'Word' ? 'doc' : 'pdf'}`;
-    document.body.appendChild(element);
-    element.click();
+    if (format === 'PDF') {
+        window.print(); // Using browser print as a reliable PDF export for this demo
+    } else {
+        const element = document.createElement("a");
+        const file = new Blob([reviewContent || ''], {type: 'text/plain'});
+        element.href = URL.createObjectURL(file);
+        element.download = `Literature_Review_${format}.${format === 'Word' ? 'doc' : 'pdf'}`;
+        document.body.appendChild(element);
+        element.click();
+    }
   };
 
   const dbOptions = [
@@ -88,7 +92,7 @@ const ReviewGenerator: React.FC<ReviewGeneratorProps> = ({ language: globalLangu
 
   // Render Helpers
   const StepIndicator = () => (
-    <div className="flex items-center justify-center mb-8 w-full max-w-4xl mx-auto">
+    <div className="flex items-center justify-center mb-8 w-full max-w-4xl mx-auto no-print">
       {[
         { num: 1, label: t.steps[1], icon: Search },
         { num: 2, label: t.steps[2], icon: CheckSquare },
@@ -116,7 +120,7 @@ const ReviewGenerator: React.FC<ReviewGeneratorProps> = ({ language: globalLangu
     <div className="max-w-6xl mx-auto px-4 py-8">
       <StepIndicator />
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[500px] flex flex-col">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[500px] flex flex-col print:border-none print:shadow-none">
         {/* Step 1: Search Strategy */}
         {step === 1 && (
           <div className="p-8 max-w-2xl mx-auto w-full flex-grow flex flex-col justify-center">
@@ -315,30 +319,24 @@ const ReviewGenerator: React.FC<ReviewGeneratorProps> = ({ language: globalLangu
                 </div>
              ) : (
                 <>
-                   <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                   <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center no-print">
                       <div className="flex items-center gap-2">
                          <div className="bg-green-100 p-1.5 rounded text-green-700"><CheckSquare size={16} /></div>
                          <span className="font-bold text-slate-700">{t.complete}</span>
                       </div>
                       <div className="flex gap-3">
                          <button 
-                           onClick={() => handleDownload('Word')}
-                           className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-blue-700 rounded-md hover:bg-blue-50 text-sm font-medium"
-                         >
-                            <FileBadge size={14} /> Word (.docx)
-                         </button>
-                         <button 
                            onClick={() => handleDownload('PDF')}
                            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
                          >
-                            <Download size={14} /> PDF
+                            <Download size={14} /> Download PDF
                          </button>
                       </div>
                    </div>
                    <div className="flex-grow p-8 overflow-y-auto prose prose-slate max-w-none prose-headings:font-serif">
                       <ReactMarkdown>{reviewContent || ''}</ReactMarkdown>
                    </div>
-                   <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-start">
+                   <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-start no-print">
                       <button onClick={() => setStep(1)} className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1">
                          <ChevronLeft size={14} /> Start New Review
                       </button>

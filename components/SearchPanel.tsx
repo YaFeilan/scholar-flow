@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef } from 'react';
-import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers } from 'lucide-react';
+import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
 import { MOCK_PAPERS } from '../constants';
 import { TRANSLATIONS } from '../translations';
@@ -18,11 +18,11 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   const [query, setQuery] = useState('');
   const [selectedPapers, setSelectedPapers] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<SearchFilters>({
-    databases: ['Google Scholar', 'SCI'],
+    databases: ['Google Scholar', 'SCI', 'SSCI', 'CJR'],
     timeRange: 'All Time',
     partition: [],
   });
-  const [sortBy, setSortBy] = useState<'relevance' | 'date' | 'if'>('relevance');
+  const [sortBy, setSortBy] = useState<'relevance' | 'date' | 'if' | 'added'>('relevance');
   const [isGenerating, setIsGenerating] = useState(false);
   const [resultLimit, setResultLimit] = useState(20);
   const [minCitations, setMinCitations] = useState<string>('');
@@ -138,7 +138,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
            badges: [{ type: 'LOCAL' }],
            abstract: 'Click to analyze content.',
            source: 'local',
-           file: file
+           file: file,
+           addedDate: new Date().toISOString().split('T')[0]
         }));
         setLocalPapers(prev => [...prev, ...newPapers]);
         return;
@@ -154,7 +155,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
         badges: [{ type: 'LOCAL' }],
         abstract: 'Click to analyze content.',
         source: 'local',
-        file: file
+        file: file,
+        addedDate: new Date().toISOString().split('T')[0]
       }));
       setLocalPapers(prev => [...prev, ...newPapers]);
     }
@@ -181,7 +183,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
         papers = papers.filter(p => p.year >= currentYear - 5);
       } 
       
-      const dbFilters = filters.databases.filter(d => ['SCI', 'SSCI', 'EI', 'CNKI'].includes(d));
+      // Database Filter (Expanded for CJR, SCI, SSCI)
+      const dbFilters = filters.databases.filter(d => ['SCI', 'SSCI', 'EI', 'CNKI', 'PubMed', 'CJR'].includes(d));
       if (dbFilters.length > 0) {
         papers = papers.filter(p => {
           if (!p.badges || p.badges.length === 0) return true;
@@ -219,6 +222,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       if (sortBy === 'date') {
         return b.year - a.year;
       }
+      if (sortBy === 'added') {
+        return (b.addedDate || '').localeCompare(a.addedDate || '');
+      }
       if (sortBy === 'if') {
         const getIf = (p: Paper) => p.badges?.find(badge => badge.if)?.if || 0;
         return getIf(b) - getIf(a);
@@ -242,11 +248,13 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
 
   const dbOptions = [
     { id: 'Google Scholar', label: language === 'ZH' ? '谷歌学术' : 'Google Scholar' },
+    { id: 'PubMed', label: 'PubMed' },
     { id: 'Sci-Hub', label: 'Sci-Hub' },
     { id: 'CNKI', label: language === 'ZH' ? '中国知网' : 'CNKI' },
     { id: 'SCI', label: 'SCI' },
     { id: 'SSCI', label: 'SSCI' },
     { id: 'EI', label: 'EI' },
+    { id: 'CJR', label: language === 'ZH' ? '中科院/CJR' : 'CJR/CAS' },
   ];
 
   const partitionOptions = ['Q1', 'Q2', 'Q3', 'Q4'];
@@ -324,7 +332,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                 {/* Partition Filters */}
                 <div className="flex items-center gap-2 flex-wrap justify-center">
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wide mr-1 flex items-center gap-1">
-                        <Layers size={12} /> {t.filters.partition}:
+                        <Layers size={12} /> {t.filters.partition} (JCR/CAS/CJR):
                     </span>
                     {partitionOptions.map(opt => (
                         <FilterButton 
@@ -440,6 +448,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                      <option value="relevance">{t.sort.relevance}</option>
                      <option value="date">{t.sort.date}</option>
                      <option value="if">{t.sort.if}</option>
+                     <option value="added">{language === 'ZH' ? '加入时间' : 'Date Added'}</option>
                   </select>
                </div>
                
@@ -491,7 +500,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                 <div className="flex-grow">
                    <div className="flex justify-between items-start">
                       <h4 className="text-lg font-bold text-slate-800 leading-tight mb-1 group-hover:text-blue-700 transition-colors">{paper.title}</h4>
-                      <span className="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded ml-2 whitespace-nowrap">{paper.year}</span>
+                      <div className="text-right">
+                         <span className="text-xs font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded whitespace-nowrap">{paper.year}</span>
+                         {paper.addedDate && (
+                            <div className="text-[10px] text-slate-300 mt-1 flex items-center justify-end gap-1">
+                               <Calendar size={10} /> {paper.addedDate}
+                            </div>
+                         )}
+                      </div>
                    </div>
                    
                    <p className="text-sm text-slate-600 mb-2 italic">
@@ -503,6 +519,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                       {paper.badges.map((b, i) => (
                          <span key={i} className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
                             b.type === 'SCI' ? 'bg-green-50 text-green-700 border-green-200' :
+                            b.type === 'SSCI' ? 'bg-teal-50 text-teal-700 border-teal-200' :
+                            b.type === 'PubMed' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                            b.type === 'CJR' ? 'bg-red-50 text-red-700 border-red-200' :
                             b.type === 'Q1' ? 'bg-rose-50 text-rose-700 border-rose-200' :
                             b.type === 'Q2' ? 'bg-orange-50 text-orange-700 border-orange-200' :
                             b.type === 'LOCAL' ? 'bg-amber-50 text-amber-700 border-amber-200' :

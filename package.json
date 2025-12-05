@@ -16,7 +16,8 @@
     "react-markdown": "9.0.1",
     "d3": "^7.9.0",
     "react-dom": "^19.2.1",
-    "mammoth": "1.8.0"
+    "mammoth": "1.8.0",
+    "jspdf": "2.5.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TrackedReference, PolishResult, Language, Paper } from "../types";
+import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult } from "../types";
 // @ts-ignore
 import mammoth from "mammoth";
 
@@ -36,16 +36,18 @@ export const searchAcademicPapers = async (query: string, lang: Language = 'EN',
       
       SEARCH STRATEGY:
       - USE THE GOOGLE SEARCH TOOL.
-      - Prioritize results from major databases (Google Scholar, arXiv, IEEE, ScienceDirect).
-      - **Use information indexed by sci-hub.org.cn to verify paper existence and metadata where possible.**
+      - Prioritize results from major databases (Google Scholar, PubMed, arXiv, IEEE, ScienceDirect).
+      - **Use information indexed by sci-hub.org.cn or pubmed.ncbi.nlm.nih.gov to verify paper existence and metadata where possible.**
       - ${lang === 'ZH' ? 'Include a mix of high-impact Chinese (CNKI) and English papers.' : 'Focus on high-impact international papers.'}
 
       CRITICAL OUTPUT INSTRUCTIONS:
       - Output ONLY a valid JSON array. No markdown formatting, no conversational text.
       - Start directly with '[' and end with ']'.
       - Ensure 'year' is a number and 'citations' is a number (estimate if necessary).
-      - Infer 'badges' (SCI, EI, Q1-Q4) based on the journal's reputation.
+      - Infer 'badges' (SCI, SSCI, EI, PubMed, CJR, Q1-Q4) based on the journal's reputation or source.
+      - **IMPORTANT:** For 'badges', specifically look for JCR Partition (Q1-Q4) or CJR (Chinese Journal Reports/CAS). Label distinctively.
       - Be concise in abstracts to save tokens and speed up generation.
+      - Add a 'addedDate' field (YYYY-MM-DD) representing today's date to simulate database addition.
 
       JSON Structure:
       [
@@ -56,7 +58,7 @@ export const searchAcademicPapers = async (query: string, lang: Language = 'EN',
           "year": 2024,
           "citations": 15,
           "abstract": "Brief summary...",
-          "badges": [{"type": "SCI", "partition": "Q1"}]
+          "badges": [{"type": "SCI", "partition": "Q1"}, {"type": "CJR"}]
         }
       ]
     `;
@@ -107,7 +109,8 @@ export const searchAcademicPapers = async (query: string, lang: Language = 'EN',
         ...p,
         id: p.id || `search-gen-${i}-${Date.now()}`,
         badges: p.badges || [],
-        authors: Array.isArray(p.authors) ? p.authors : [p.authors || 'Unknown']
+        authors: Array.isArray(p.authors) ? p.authors : [p.authors || 'Unknown'],
+        addedDate: p.addedDate || new Date().toISOString().split('T')[0]
       }));
     }
     
@@ -364,21 +367,48 @@ export const trackCitationNetwork = async (query: string, isFile: boolean = fals
   }
 };
 
-export const polishContent = async (content: string, lang: Language = 'EN'): Promise<PolishResult | null> => {
+export const polishContent = async (content: string | File, lang: Language = 'EN'): Promise<PolishResult | null> => {
   try {
     const model = 'gemini-2.5-flash';
-    const prompt = `Act as a professional academic editor. 
-    Polish the following text to improve its academic tone, clarity, and flow. 
-    ${getLangInstruction(lang)}
+    const instruction = getLangInstruction(lang);
+    
+    const promptText = `Act as a professional academic editor. 
+    Polish the provided content to improve its academic tone, clarity, and flow. 
+    ${instruction}
     Identify specific areas for improvement (Grammar, Vocabulary, Tone, or Structure) and explain why.
     
-    Original Text:
-    "${content.substring(0, 10000)}"
+    If the content is a full paper or long document, focus on improving the Abstract, Introduction, and Conclusion, or provide a representative polish of the key sections.
     `;
+
+    const parts: any[] = [];
+    
+    if (content instanceof File) {
+        const base64Data = await fileToBase64(content);
+        let mimeType = content.type;
+        // Basic fallback for common types if type is missing or generic
+        if (!mimeType || mimeType === '') {
+            if (content.name.endsWith('.pdf')) mimeType = 'application/pdf';
+            else if (content.name.endsWith('.png')) mimeType = 'image/png';
+            else if (content.name.endsWith('.jpg') || content.name.endsWith('.jpeg')) mimeType = 'image/jpeg';
+        }
+
+        // Only PDF and Image types are supported for inlineData in this context
+        // For text files passed as File, we should ideally read them, but here we assume PDF/Image
+        // if the component passed a File.
+        parts.push({
+            inlineData: {
+                mimeType: mimeType,
+                data: base64Data
+            }
+        });
+        parts.push({ text: promptText });
+    } else {
+        parts.push({ text: `${promptText}\n\nOriginal Text:\n"${content.substring(0, 25000)}"` });
+    }
 
     const response = await ai.models.generateContent({
       model,
-      contents: prompt,
+      contents: { parts },
       config: {
         responseMimeType: 'application/json',
         responseSchema: {
@@ -479,7 +509,7 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
             data: base64Data
           }
         };
-        textContent = "[Image uploaded by user. Interpret the diagram, chart, or text within this image.]";
+        textContent = "[Image uploaded by user. The user requested: 'Generate a including all in the picture'. You must EXTRACT EVERYTHING visible in the image: All Text, All Data Points, All Chart Titles, Legends, and Diagram details.]";
       }
       // 2. PDF Handling (Native Gemini Support)
       else if (mimeType === 'application/pdf') {
@@ -512,23 +542,26 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
     // Prepare Prompt
     const systemInstruction = `
     You are an AI research assistant. Please provide a concise, professional interpretation of the paper or content in Chinese (under 300 words).
+    
+    CRITICAL INSTRUCTION FOR IMAGES:
+    If the input is an image, you must perform FULL CONTENT EXTRACTION as requested by "including all in the picture". 
+    Do not summarize vaguely. List specific numbers, labels, and text found in the image.
 
     REQUIRED OUTPUT FORMAT (Markdown):
     
-    ## 论文基本信息 (or Content Summary)
+    ## 论文/图片 基本信息
     • 标题/主题: "${paper.title}"
     • 作者: ${paper.authors.join(', ')} (or infer from content)
     • 发表: ${paper.journal} ${paper.year}
 
-    ## 核心内容
+    ## 核心内容解析
     • 研究问题: [1-2 sentences]
-    • 研究方法:
-      - [Method Point 1]
-      - [Method Point 2]
-    • 主要发现/图表解读:
+    • 关键细节 (Image Extraction):
+      - [Extracted Text 1]
+      - [Extracted Data 1]
+    • 主要发现:
       - [Finding/Visual Detail 1]
       - [Finding/Visual Detail 2]
-      - [Finding/Visual Detail 3]
 
     ## 创新价值
     • 理论: [Theoretical contribution]
@@ -537,9 +570,6 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
     ## 局限与展望
     • 不足: [Limitation]
     • 方向: [Future direction]
-
-    Keep English terms for key technical concepts but provide Chinese annotations.
-    If an image is provided, detail the charts, axes, trends, or diagram structures visibly.
     `;
 
     const parts = [];
@@ -563,3 +593,266 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
     return "解读服务暂时不可用，请检查网络设置或文件格式。";
   }
 };
+
+// New Service: Generate PPT Style Suggestions
+export const generatePPTStyleSuggestions = async (file: File, lang: Language): Promise<any[]> => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const base64Data = await fileToBase64(file);
+    let mimeType = file.type;
+    
+    if (mimeType.startsWith('image/')) {
+        // keep image mimetype
+    } else {
+        mimeType = 'application/pdf'; // fallback default for docs passed to this specific endpoint usually
+    }
+
+    const prompt = `Analyze this academic content (Paper PDF or Image). 
+    Suggest 3 distinct visual presentation styles suitable for presenting this specific content.
+    ${getLangInstruction(lang)}
+    
+    Return a JSON array of objects with:
+    - id: string (unique)
+    - name: string (Style Name)
+    - description: string (Why it fits this paper)
+    - colorPalette: string[] (Array of 3 hex codes)
+    `;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: {
+        parts: [
+          { inlineData: { mimeType, data: base64Data } },
+          { text: prompt }
+        ]
+      },
+      config: {
+        responseMimeType: 'application/json',
+      }
+    });
+
+    return JSON.parse(response.text || '[]');
+  } catch (error) {
+    console.error("PPT Style Gen Error:", error);
+    // Fallback mocks
+    return [
+      { id: 'academic', name: 'Academic Clean', description: 'Standard, professional layout focusing on clarity.', colorPalette: ['#1e3a8a', '#ffffff', '#f1f5f9'] },
+      { id: 'modern', name: 'Modern Minimal', description: 'Sleek typography and whitespace for high impact.', colorPalette: ['#18181b', '#f4f4f5', '#a1a1aa'] },
+      { id: 'tech', name: 'Tech & Innovation', description: 'Bold colors suitable for engineering or CS topics.', colorPalette: ['#0f172a', '#3b82f6', '#10b981'] }
+    ];
+  }
+};
+
+// New Service: Generate PPT Content Slides
+export const generatePPTContent = async (
+  file: File, 
+  config: { name: string; school: string; density: string; pages: number; style: string },
+  lang: Language
+): Promise<any> => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const base64Data = await fileToBase64(file);
+    let mimeType = file.type;
+     if (!mimeType.startsWith('image/')) {
+        mimeType = 'application/pdf'; 
+    }
+
+    const prompt = `Create a presentation outline for this uploaded content (PDF or Image).
+    
+    User Settings:
+    - Presenter: ${config.name} (${config.school})
+    - Density: ${config.density}
+    - Target Slide Count: ~${config.pages} pages
+    - Style Theme: ${config.style}
+    
+    CRITICAL INSTRUCTIONS:
+    1. If the input is an IMAGE, you MUST extract ALL text, data points, and describe any diagrams/charts in the generated slides. The user wants "Generate a including all in the picture".
+    2. **VISUAL FOCUS:** The user wants "Pictures not just text". 
+       - Propose layouts that are visual (e.g., "ImageWithText", "SplitScreen", "DiagramFocused").
+       - In 'content', keep text as concise bullet points.
+       - Add a 'visualSuggestion' field to each slide describing what image/diagram should go there (referencing the uploaded image if applicable).
+    
+    ${getLangInstruction(lang)}
+
+    Output strictly in JSON format:
+    {
+      "title": "Main Presentation Title",
+      "slides": [
+        {
+          "title": "Slide Title",
+          "layout": "TitleOnly" | "BulletPoints" | "TwoColumn" | "ImageWithText" | "DiagramFocused",
+          "content": ["Point 1", "Point 2"],
+          "visualSuggestion": "Description of visual to include (e.g. 'Show the main architecture diagram from the source image')",
+          "speakerNotes": "Notes for the presenter..."
+        }
+      ]
+    }
+    
+    IMPORTANT: 'content' must be an Array of STRINGS.
+    `;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: {
+        parts: [
+          { inlineData: { mimeType, data: base64Data } },
+          { text: prompt }
+        ]
+      },
+      config: {
+        responseMimeType: 'application/json',
+      }
+    });
+
+    return JSON.parse(response.text || '{}');
+  } catch (error) {
+    console.error("PPT Content Gen Error:", error);
+    return { title: "Error Generating PPT", slides: [] };
+  }
+};
+
+export const generateSlideImage = async (prompt: string, style: string): Promise<string | null> => {
+  try {
+    // Nano banana model
+    const model = 'gemini-2.5-flash-image';
+    const finalPrompt = `Create a professional presentation slide illustration. 
+    Subject: ${prompt}. 
+    Style: ${style}. 
+    Do not include text in the image if possible.`;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: {
+        parts: [{ text: finalPrompt }]
+      }
+    });
+
+    if (response.candidates?.[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+          return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        }
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error("Slide Image Gen Error:", error);
+    return null;
+  }
+}
+
+export const generateResearchIdeas = async (topic: string, lang: Language = 'EN'): Promise<IdeaGuideResult | null> => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const prompt = `
+    Role: Senior Academic Research Mentor.
+    Task: The user is interested in "${topic}". Help them brainstorm research directions.
+    ${getLangInstruction(lang)}
+    
+    Please provide:
+    1. 3 distinct, innovative research directions/angles based on this topic. For each, suggest 2 potential paper titles.
+    2. 3 suitable academic journals for this field. Provide an estimated impact factor and a brief reason why it fits.
+
+    Output as JSON.
+    `;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            directions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  angle: { type: Type.STRING },
+                  description: { type: Type.STRING },
+                  recommendedTitles: { type: Type.ARRAY, items: { type: Type.STRING } }
+                }
+              }
+            },
+            journals: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  impactFactor: { type: Type.STRING },
+                  reason: { type: Type.STRING }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return JSON.parse(response.text || 'null');
+  } catch (error) {
+    console.error("Idea Guide Error:", error);
+    return null;
+  }
+};
+
+export const generateIdeaFollowUp = async (
+  topic: string, 
+  direction: string, 
+  followUp: string, 
+  lang: Language = 'EN'
+): Promise<IdeaFollowUpResult | null> => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const prompt = `
+    Role: Expert Research Mentor.
+    Context: 
+    - Main Topic: "${topic}"
+    - Selected Direction: "${direction}"
+    - User's Specific Question/Focus: "${followUp}"
+    
+    Task: Provide a deep-dive analysis and actionable advice.
+    ${getLangInstruction(lang)}
+    
+    Output JSON with:
+    1. Analysis (A paragraph analyzing this specific intersection).
+    2. Suggestions (3 specific sub-angles or methodological approaches).
+    3. RecommendedTerms (5 search keywords for databases like Scopus/Web of Science).
+    `;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            analysis: { type: Type.STRING },
+            suggestions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  detail: { type: Type.STRING },
+                }
+              }
+            },
+            recommendedTerms: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            }
+          }
+        }
+      }
+    });
+    
+    return JSON.parse(response.text || 'null');
+  } catch (error) {
+    console.error("Idea Follow Up Error:", error);
+    return null;
+  }
+}

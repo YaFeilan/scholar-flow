@@ -22,22 +22,43 @@ const PolishAssistant: React.FC<PolishAssistantProps> = ({ language }) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        if (ev.target?.result) setInputText(ev.target.result as string);
-      };
-      if (selectedFile.type.includes('text') || selectedFile.name.endsWith('.md') || selectedFile.name.endsWith('.tex')) {
-         reader.readAsText(selectedFile);
+      
+      // If it is PDF or Image, we use the file directly via Gemini multimodal
+      if (selectedFile.type === 'application/pdf' || selectedFile.type.startsWith('image/')) {
+          setInputText(''); // Clear text to indicate file mode
       } else {
-         setInputText(`[Simulated Content for ${selectedFile.name}]: The study investigates the effect of AI on...`);
+          // For legacy support of text/md files, we read content
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            if (ev.target?.result) setInputText(ev.target.result as string);
+          };
+          if (selectedFile.type.includes('text') || selectedFile.name.endsWith('.md') || selectedFile.name.endsWith('.tex') || selectedFile.name.endsWith('.txt')) {
+             reader.readAsText(selectedFile);
+          } else {
+             // Fallback for unknown types if needed
+             setInputText(`[File ${selectedFile.name} selected]`);
+          }
       }
     }
   };
 
   const handlePolish = async () => {
-    if (!inputText) return;
+    if (activeTab === 'text' && !inputText) return;
+    if (activeTab === 'file' && !file && !inputText) return;
+
     setLoading(true);
-    const data = await polishContent(inputText, language);
+    
+    // Determine what to send: File object or Text string
+    let contentToPolish: string | File = inputText;
+    
+    if (activeTab === 'file') {
+        if (file && (!inputText || inputText.startsWith('[File'))) {
+             // Use the file object for PDF/Images
+             contentToPolish = file;
+        }
+    }
+
+    const data = await polishContent(contentToPolish, language);
     setResult(data);
     setLoading(false);
   };
@@ -85,7 +106,7 @@ const PolishAssistant: React.FC<PolishAssistantProps> = ({ language }) => {
                         onClick={() => fileInputRef.current?.click()}
                         className="h-64 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
                      >
-                        <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+                        <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.txt,.md,.tex" onChange={handleFileChange} />
                         <Upload size={32} className="text-slate-400 mb-4" />
                         {file ? (
                            <div className="text-center">
@@ -95,7 +116,7 @@ const PolishAssistant: React.FC<PolishAssistantProps> = ({ language }) => {
                         ) : (
                            <div className="text-center text-slate-500">
                               <p className="font-medium">Click to upload file</p>
-                              <p className="text-xs mt-1">.txt, .md, .tex supported</p>
+                              <p className="text-xs mt-1">PDF, .txt, .md, .tex supported</p>
                            </div>
                         )}
                      </div>
@@ -104,7 +125,7 @@ const PolishAssistant: React.FC<PolishAssistantProps> = ({ language }) => {
                   <div className="mt-4 flex justify-end">
                      <button 
                         onClick={handlePolish}
-                        disabled={loading || !inputText}
+                        disabled={loading || (activeTab === 'text' && !inputText) || (activeTab === 'file' && !file)}
                         className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                      >
                         {loading ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} />}

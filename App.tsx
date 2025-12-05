@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import SearchPanel from './components/SearchPanel';
@@ -8,6 +9,8 @@ import ReviewGenerator from './components/ReviewGenerator';
 import ReferenceTracker from './components/ReferenceTracker';
 import PolishAssistant from './components/PolishAssistant';
 import Advisor from './components/Advisor';
+import PPTGenerator from './components/PPTGenerator';
+import IdeaGuide from './components/IdeaGuide';
 import { ViewState, Paper, Language } from './types';
 import { generateLiteratureReview } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -18,6 +21,7 @@ const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>('EN');
   const [generatedReview, setGeneratedReview] = useState<string | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [ideaTopic, setIdeaTopic] = useState<string>('');
 
   const handleReviewRequest = async (papers: Paper[]) => {
     // Show modal immediately with loading state (handled inside by waiting for content)
@@ -38,6 +42,11 @@ const App: React.FC = () => {
     setGeneratedReview(null);
   };
 
+  const handleNavigateToIdea = (topic: string) => {
+    setIdeaTopic(topic);
+    setCurrentView(ViewState.IDEA_GUIDE);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       <Navbar currentView={currentView} setView={setCurrentView} language={language} setLanguage={setLanguage} />
@@ -46,6 +55,13 @@ const App: React.FC = () => {
         {currentView === ViewState.SEARCH && (
           <SearchPanel onReviewRequest={handleReviewRequest} language={language} />
         )}
+        {currentView === ViewState.IDEA_GUIDE && (
+          <IdeaGuide 
+            language={language} 
+            initialTopic={ideaTopic} 
+            onClearInitialTopic={() => setIdeaTopic('')}
+          />
+        )}
         {currentView === ViewState.REVIEW_GENERATION && (
           <ReviewGenerator language={language} />
         )}
@@ -53,7 +69,7 @@ const App: React.FC = () => {
           <ReferenceTracker language={language} />
         )}
         {currentView === ViewState.TRENDS && (
-          <TrendDashboard language={language} />
+          <TrendDashboard language={language} onNavigateToIdea={handleNavigateToIdea} />
         )}
         {currentView === ViewState.ADVISOR && (
           <Advisor language={language} />
@@ -63,6 +79,9 @@ const App: React.FC = () => {
         )}
         {currentView === ViewState.POLISH && (
           <PolishAssistant language={language} />
+        )}
+        {currentView === ViewState.PPT_GENERATION && (
+          <PPTGenerator language={language} />
         )}
       </main>
 
