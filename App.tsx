@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import SearchPanel from './components/SearchPanel';
@@ -29,6 +28,7 @@ const App: React.FC = () => {
   const [generatedReview, setGeneratedReview] = useState<string | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [ideaTopic, setIdeaTopic] = useState<string>('');
+  const [analysisData, setAnalysisData] = useState<any[][] | null>(null); // Shared data for DataAnalysis
   
   // Sidebar State
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -83,6 +83,11 @@ const App: React.FC = () => {
   const handleNavigateToIdea = (topic: string) => {
     setIdeaTopic(topic);
     setCurrentView(ViewState.IDEA_GUIDE);
+  };
+
+  const handleSendDataToAnalysis = (data: any[][]) => {
+      setAnalysisData(data);
+      setCurrentView(ViewState.DATA_ANALYSIS);
   };
 
   return (
@@ -144,7 +149,10 @@ const App: React.FC = () => {
             <FigureGenerator language={language} />
             )}
             {currentView === ViewState.CHART_EXTRACTION && (
-            <ChartExtraction language={language} />
+            <ChartExtraction 
+                language={language} 
+                onSendDataToAnalysis={handleSendDataToAnalysis}
+            />
             )}
             {currentView === ViewState.PPT_GENERATION && (
             <PPTGenerator language={language} />
@@ -153,7 +161,7 @@ const App: React.FC = () => {
             <OpeningReview language={language} />
             )}
             {currentView === ViewState.DATA_ANALYSIS && (
-            <DataAnalysis language={language} />
+            <DataAnalysis language={language} initialData={analysisData} />
             )}
             {currentView === ViewState.CODE_ASSISTANT && (
             <CodeAssistant language={language} />

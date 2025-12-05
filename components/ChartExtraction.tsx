@@ -1,40 +1,236 @@
 
-import React, { useState, useRef } from 'react';
-import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle, Crop, Check, RotateCcw, MousePointer2, Plus, Trash2, LayoutGrid, Edit2, GripVertical, ScanEye, TrendingUp, BarChart as BarChartIcon, Code, ArrowRight, Sparkles, MessageSquare } from 'lucide-react';
 import { Language, ChartExtractionResult } from '../types';
 import { TRANSLATIONS } from '../translations';
-import { extractChartData } from '../services/geminiService';
+import { extractChartData, generateChartTrendAnalysis } from '../services/geminiService';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import ReactMarkdown from 'react-markdown';
 
 interface ChartExtractionProps {
   language: Language;
+  onSendDataToAnalysis?: (data: any[][]) => void;
 }
 
-const ChartExtraction: React.FC<ChartExtractionProps> = ({ language }) => {
+interface ChartFile {
+  id: string;
+  file: File;
+  previewUrl: string;
+  result?: ChartExtractionResult;
+  trendAnalysis?: string;
+}
+
+const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataToAnalysis }) => {
   const t = TRANSLATIONS[language].chart;
-  const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState<ChartExtractionResult | null>(null);
+  
+  // State for multiple files
+  const [chartFiles, setChartFiles] = useState<ChartFile[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [analyzingTrend, setAnalyzingTrend] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Derived active state
+  const activeFile = chartFiles.find(f => f.id === activeId) || null;
+  const result = activeFile?.result || null;
+
+  // Cropping State
+  const [isCropping, setIsCropping] = useState(false);
+  const [selection, setSelection] = useState<{x: number, y: number, w: number, h: number} | null>(null);
+  const [dragStart, setDragStart] = useState<{x: number, y: number} | null>(null);
+  const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
+  const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
+
+  // Overlay & Replot Interaction State
+  const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
+  const [showOverlay, setShowOverlay] = useState(true);
+  const [showReplot, setShowReplot] = useState(true);
+
+  // Code Generation State
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const [codeLang, setCodeLang] = useState<'Python' | 'R'>('Python');
+
+  // --- Data Editing Handlers ---
+
+  const updateCell = (fileId: string, rowIndex: number, key: string, value: string) => {
+    setChartFiles(prev => prev.map(f => {
+        if (f.id === fileId && f.result && f.result.data) {
+            const newData = [...f.result.data];
+            // Update the specific row's property
+            newData[rowIndex] = { ...newData[rowIndex], [key]: value };
+            return { ...f, result: { ...f.result, data: newData } };
+        }
+        return f;
+    }));
+  };
+
+  const updateHeader = (fileId: string, oldKey: string, newKey: string) => {
+    if (!newKey.trim() || oldKey === newKey) return;
+    setChartFiles(prev => prev.map(f => {
+        if (f.id === fileId && f.result && f.result.data) {
+            const newData = f.result.data.map(row => {
+                const newRow: any = {};
+                // Preserve order of keys (columns)
+                Object.keys(row).forEach(k => {
+                    if (k === oldKey) {
+                        newRow[newKey] = row[oldKey];
+                    } else {
+                        newRow[k] = row[k];
+                    }
+                });
+                return newRow;
+            });
+            return { ...f, result: { ...f.result, data: newData } };
+        }
+        return f;
+    }));
+  };
+
+  const deleteRow = (fileId: string, rowIndex: number) => {
+    setChartFiles(prev => prev.map(f => {
+        if (f.id === fileId && f.result && f.result.data) {
+            const newData = f.result.data.filter((_, i) => i !== rowIndex);
+            return { ...f, result: { ...f.result, data: newData } };
+        }
+        return f;
+    }));
+  };
+
+  const addRow = (fileId: string) => {
+    setChartFiles(prev => prev.map(f => {
+        if (f.id === fileId && f.result && f.result.data) {
+            const keys = f.result.data.length > 0 ? Object.keys(f.result.data[0]) : ['Column 1', 'Column 2'];
+            const newRow: any = {};
+            keys.forEach(k => newRow[k] = "");
+            return { ...f, result: { ...f.result, data: [...f.result.data, newRow] } };
+        }
+        return f;
+    }));
+  };
+
+  const resetCrop = () => {
+      setCroppedImageUrl(null);
+      setCroppedBlob(null);
+      setSelection(null);
+      setIsCropping(false);
+  };
+
+  const handleSwitchFile = (id: string) => {
+      if (id === activeId) return;
+      setActiveId(id);
+      resetCrop();
+      setHoveredRowIndex(null);
+  };
+
+  const handleRemoveFile = (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      const newFiles = chartFiles.filter(f => f.id !== id);
+      setChartFiles(newFiles);
+      if (activeId === id) {
+          setActiveId(newFiles.length > 0 ? newFiles[0].id : null);
+          resetCrop();
+          setHoveredRowIndex(null);
+      }
+  };
+
+  // Handle Paste Event
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (e.clipboardData && e.clipboardData.items) {
+        const items = e.clipboardData.items;
+        const newFiles: ChartFile[] = [];
+        
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type.indexOf('image') !== -1) {
+            const blob = item.getAsFile();
+            if (blob) {
+                const file = new File([blob], "pasted_image.png", { type: item.type });
+                newFiles.push({
+                    id: Math.random().toString(36).substring(2, 9),
+                    file: file,
+                    previewUrl: URL.createObjectURL(file)
+                });
+            }
+          }
+        }
+
+        if (newFiles.length > 0) {
+            setChartFiles(prev => [...prev, ...newFiles]);
+            if (!activeId) setActiveId(newFiles[0].id);
+            if (chartFiles.length === 0) resetCrop();
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('paste', handlePaste);
+    };
+  }, [activeId, chartFiles.length]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setResult(null);
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles: ChartFile[] = Array.from(e.target.files).map(f => ({
+          id: Math.random().toString(36).substring(2, 9),
+          file: f,
+          previewUrl: URL.createObjectURL(f)
+      }));
+      
+      setChartFiles(prev => [...prev, ...newFiles]);
+      if (!activeId && newFiles.length > 0) setActiveId(newFiles[0].id);
+      if (chartFiles.length === 0) resetCrop();
     }
   };
 
   const handleExtract = async () => {
-    if (!file) return;
+    if (!activeFile) return;
+
+    const fileToUpload = croppedBlob || activeFile.file;
+    
     setLoading(true);
-    const data = await extractChartData(file, language);
-    setResult(data);
+    let uploadFile = fileToUpload;
+    if (fileToUpload instanceof Blob && !(fileToUpload instanceof File)) {
+        uploadFile = new File([fileToUpload], "cropped_chart.png", { type: "image/png" });
+    }
+
+    const data = await extractChartData(uploadFile as File, language);
+    
+    setChartFiles(prev => prev.map(f => 
+        f.id === activeId ? { ...f, result: data } : f
+    ));
+    
     setLoading(false);
+  };
+
+  const handleGenerateTrend = async () => {
+      if (!result || !result.data || !activeId) return;
+      setAnalyzingTrend(true);
+      const text = await generateChartTrendAnalysis(result.data, language);
+      setChartFiles(prev => prev.map(f => 
+          f.id === activeId ? { ...f, trendAnalysis: text } : f
+      ));
+      setAnalyzingTrend(false);
+  };
+
+  const handleSendToAnalysis = () => {
+      if (!result || !result.data || result.data.length === 0 || !onSendDataToAnalysis) return;
+      
+      const keys = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
+      const matrix = [keys];
+      result.data.forEach(row => {
+          matrix.push(keys.map(k => row[k]));
+      });
+      
+      onSendDataToAnalysis(matrix);
   };
 
   const handleDownloadCSV = () => {
     if (!result || !result.data || result.data.length === 0) return;
     
-    const headers = Object.keys(result.data[0]);
+    // Exclude internal props like _box_2d
+    const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
     const csvRows = [headers.join(',')];
     
     result.data.forEach(row => {
@@ -58,7 +254,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language }) => {
   const copyTableToClipboard = () => {
       if (!result || !result.data || result.data.length === 0) return;
       
-      const headers = Object.keys(result.data[0]);
+      const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
       let text = headers.join('\t') + '\n';
       
       result.data.forEach(row => {
@@ -67,6 +263,268 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language }) => {
       
       navigator.clipboard.writeText(text);
       alert(language === 'ZH' ? '表格已复制到剪贴板' : 'Table copied to clipboard');
+  };
+
+  // --- New Export Functions ---
+  const handleCopyLatex = () => {
+      if (!result || !result.data || result.data.length === 0) return;
+      
+      const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
+      // Basic LaTeX table structure
+      let latex = `\\begin{table}[htbp]\n  \\centering\n  \\caption{${result.title || 'Extracted Data'}}\n  \\label{tab:data}\n  \\begin{tabular}{|${headers.map(() => 'c').join('|')}|}\n    \\hline\n`;
+      
+      // Header row
+      latex += `    ${headers.map(h => h.replace(/_/g, '\\_')).join(' & ')} \\\\\n    \\hline\n`;
+      
+      // Data rows
+      result.data.forEach(row => {
+          const rowStr = headers.map(h => {
+              const val = row[h] !== undefined ? String(row[h]) : '';
+              // Escape special LaTeX characters: & % $ # _ { } ~ ^ \
+              return val.replace(/([&%$#_{}])/g, '\\$1');
+          }).join(' & ');
+          latex += `    ${rowStr} \\\\\n    \\hline\n`;
+      });
+      
+      latex += `  \\end{tabular}\n\\end{table}`;
+      
+      navigator.clipboard.writeText(latex);
+      alert(language === 'ZH' ? 'LaTeX 表格代码已复制' : 'LaTeX table code copied');
+  };
+
+  const handleCopyMarkdown = () => {
+      if (!result || !result.data || result.data.length === 0) return;
+      
+      const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
+      let md = `| ${headers.join(' | ')} |\n`;
+      md += `| ${headers.map(() => '---').join(' | ')} |\n`;
+      
+      result.data.forEach(row => {
+          const rowStr = headers.map(h => {
+              const val = row[h] !== undefined ? String(row[h]) : '';
+              return val;
+          }).join(' | ');
+          md += `| ${rowStr} |\n`;
+      });
+      
+      navigator.clipboard.writeText(md);
+      alert(language === 'ZH' ? 'Markdown 表格已复制' : 'Markdown table copied');
+  };
+
+  // --- Code Generation Logic ---
+  const generateCode = (lang: 'Python' | 'R') => {
+      if (!result || !result.data || result.data.length === 0) return "";
+
+      const keys = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
+      if (keys.length < 2) return "# Not enough data to generate plot code.";
+
+      const xKey = keys[0];
+      const yKeys = keys.slice(1);
+      const title = result.title || "Extracted Chart";
+      const type = (result.type || '').toLowerCase();
+      const isBar = type.includes('bar') || type.includes('column');
+
+      if (lang === 'Python') {
+          let code = `import pandas as pd\nimport matplotlib.pyplot as plt\n\n`;
+          code += `# Data Preparation\ndata = {\n`;
+          code += `    '${xKey}': [${result.data.map(r => `'${r[xKey]}'`).join(', ')}],\n`;
+          yKeys.forEach(k => {
+              const vals = result.data.map(r => {
+                  const v = parseFloat(String(r[k]).replace(/,/g, ''));
+                  return isNaN(v) ? 0 : v;
+              });
+              code += `    '${k}': [${vals.join(', ')}],\n`;
+          });
+          code += `}\n\ndf = pd.DataFrame(data)\n\n`;
+          code += `# Plotting\nplt.figure(figsize=(10, 6))\n`;
+          
+          if (isBar) {
+               code += `df.plot(x='${xKey}', kind='bar', ax=plt.gca())\n`;
+          } else {
+               yKeys.forEach(k => {
+                   code += `plt.plot(df['${xKey}'], df['${k}'], marker='o', label='${k}')\n`;
+               });
+               code += `plt.legend()\n`;
+          }
+          
+          code += `plt.title('${title}')\n`;
+          code += `plt.xlabel('${xKey}')\n`;
+          code += `plt.ylabel('Value')\n`;
+          code += `plt.grid(True, linestyle='--', alpha=0.7)\n`;
+          code += `plt.tight_layout()\nplt.show()`;
+          return code;
+      } else {
+          // R Code
+          let code = `library(ggplot2)\nlibrary(tidyr)\n\n`;
+          code += `# Data Preparation\ndf <- data.frame(\n`;
+          code += `  \`${xKey}\` = c(${result.data.map(r => `'${r[xKey]}'`).join(', ')}),\n`;
+          
+          const seriesParams: string[] = [];
+          yKeys.forEach(k => {
+              const vals = result.data.map(r => {
+                  const v = parseFloat(String(r[k]).replace(/,/g, ''));
+                  return isNaN(v) ? 0 : v;
+              });
+              seriesParams.push(`  \`${k}\` = c(${vals.join(', ')})`);
+          });
+          code += seriesParams.join(',\n') + `\n)\n\n`;
+          
+          code += `# Reshape for ggplot\n`;
+          code += `df_long <- pivot_longer(df, cols = -c(\`${xKey}\`), names_to = "Series", values_to = "Value")\n\n`;
+          
+          code += `# Plotting\nggplot(df_long, aes(x = \`${xKey}\`, y = Value, fill = Series, color = Series${!isBar ? ', group = Series' : ''})) +\n`;
+          if (isBar) {
+              code += `  geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +\n`;
+          } else {
+              code += `  geom_line(size = 1) +\n  geom_point(size = 3) +\n`;
+          }
+          code += `  labs(title = "${title}", x = "${xKey}", y = "Value") +\n`;
+          code += `  theme_minimal()\n`;
+          
+          return code;
+      }
+  };
+
+  // --- Cropping Logic ---
+
+  const getImgCoords = (e: React.MouseEvent) => {
+      if (!imageRef.current) return { x: 0, y: 0 };
+      const rect = imageRef.current.getBoundingClientRect();
+      return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+      };
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+      if (!isCropping) return;
+      e.preventDefault();
+      const coords = getImgCoords(e);
+      setDragStart(coords);
+      setSelection({ x: coords.x, y: coords.y, w: 0, h: 0 });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+      if (!isCropping || !dragStart) return;
+      e.preventDefault();
+      const coords = getImgCoords(e);
+      
+      const currentX = coords.x;
+      const currentY = coords.y;
+      
+      const width = Math.abs(currentX - dragStart.x);
+      const height = Math.abs(currentY - dragStart.y);
+      const x = Math.min(currentX, dragStart.x);
+      const y = Math.min(currentY, dragStart.y);
+
+      if (imageRef.current) {
+          const maxWidth = imageRef.current.width;
+          const maxHeight = imageRef.current.height;
+          
+          setSelection({
+              x: Math.max(0, x),
+              y: Math.max(0, y),
+              w: Math.min(width, maxWidth - x),
+              h: Math.min(height, maxHeight - y)
+          });
+      }
+  };
+
+  const handleMouseUp = () => {
+      setDragStart(null);
+  };
+
+  const performCrop = () => {
+      if (!imageRef.current || !selection || selection.w < 10 || selection.h < 10) return;
+      
+      const canvas = document.createElement('canvas');
+      const scaleX = imageRef.current.naturalWidth / imageRef.current.width;
+      const scaleY = imageRef.current.naturalHeight / imageRef.current.height;
+      
+      canvas.width = selection.w * scaleX;
+      canvas.height = selection.h * scaleY;
+      
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      ctx.drawImage(
+          imageRef.current,
+          selection.x * scaleX,
+          selection.y * scaleY,
+          selection.w * scaleX,
+          selection.h * scaleY,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+      );
+      
+      canvas.toBlob((blob) => {
+          if (blob) {
+              setCroppedBlob(blob);
+              setCroppedImageUrl(URL.createObjectURL(blob));
+              setIsCropping(false);
+              setSelection(null);
+          }
+      }, 'image/png');
+  };
+
+  // --- Replotting Logic ---
+  const renderReplot = () => {
+      if (!result || !result.data || result.data.length === 0) return null;
+
+      const keys = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
+      if (keys.length < 2) return null;
+
+      const xKey = keys[0]; // Assume first column is Label/X
+      const yKeys = keys.slice(1); // Assume rest are series
+
+      // Convert data for Recharts (parse numbers)
+      const chartData = result.data.map(row => {
+          const newRow: any = { [xKey]: row[xKey] };
+          yKeys.forEach(k => {
+              const val = parseFloat(String(row[k]).replace(/,/g, ''));
+              newRow[k] = isNaN(val) ? 0 : val;
+          });
+          return newRow;
+      });
+
+      const chartType = (result.type || '').toLowerCase();
+      const isLine = chartType.includes('line') || chartType.includes('scatter');
+      const colors = ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#db2777'];
+
+      return (
+          <ResponsiveContainer width="100%" height="100%">
+              {isLine ? (
+                  <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey={xKey} tick={{fontSize: 10}} stroke="#64748b" />
+                      <YAxis tick={{fontSize: 10}} stroke="#64748b" />
+                      <Tooltip 
+                          contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                      />
+                      <Legend />
+                      {yKeys.map((k, i) => (
+                          <Line key={k} type="monotone" dataKey={k} stroke={colors[i % colors.length]} strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                      ))}
+                  </LineChart>
+              ) : (
+                  <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey={xKey} tick={{fontSize: 10}} stroke="#64748b" />
+                      <YAxis tick={{fontSize: 10}} stroke="#64748b" />
+                      <Tooltip 
+                          contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                          cursor={{fill: 'rgba(59, 130, 246, 0.1)'}}
+                      />
+                      <Legend />
+                      {yKeys.map((k, i) => (
+                          <Bar key={k} dataKey={k} fill={colors[i % colors.length]} radius={[4, 4, 0, 0]} maxBarSize={50} />
+                      ))}
+                  </BarChart>
+              )}
+          </ResponsiveContainer>
+      );
   };
 
   return (
@@ -80,104 +538,408 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language }) => {
 
        <div className="flex-grow flex flex-col md:flex-row gap-8 overflow-hidden">
            {/* Left Panel: Upload & Image Preview */}
-           <div className="w-full md:w-1/3 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 overflow-y-auto">
-               <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors mb-6"
-               >
-                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
-                   {file ? (
-                       <div className="relative group">
-                           <img src={URL.createObjectURL(file)} alt="Chart" className="max-h-64 mx-auto rounded shadow-md object-contain" />
-                           <div className="mt-4 text-sm font-bold text-slate-700 dark:text-slate-300">{file.name}</div>
+           <div className="w-full md:w-1/3 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
+               
+               {chartFiles.length === 0 ? (
+                   <div className="flex-grow flex flex-col items-center justify-center p-6 text-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                       <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-full mb-4">
+                           <ImageIcon size={32} className="text-blue-500" />
+                       </div>
+                       <h3 className="font-bold text-slate-700 dark:text-slate-200 mb-1">{t.upload}</h3>
+                       <p className="text-xs text-slate-400 mb-4">JPG, PNG, WEBP</p>
+                       <p className="text-[10px] text-blue-500 font-bold bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded">
+                          {language === 'ZH' ? '支持 Ctrl+V 粘贴' : 'Ctrl+V to Paste'}
+                       </p>
+                   </div>
+               ) : (
+                   <div className="flex h-full">
+                       {/* Thumbnail Sidebar */}
+                       <div className="w-20 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex flex-col items-center py-4 gap-3 overflow-y-auto custom-scrollbar">
+                           {chartFiles.map((f, i) => (
+                               <div 
+                                  key={f.id} 
+                                  onClick={() => handleSwitchFile(f.id)}
+                                  className={`relative w-14 h-14 rounded-lg cursor-pointer overflow-hidden border-2 transition-all flex-shrink-0 group ${
+                                      activeId === f.id ? 'border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900' : 'border-slate-200 dark:border-slate-600 opacity-70 hover:opacity-100'
+                                  }`}
+                               >
+                                   <img src={f.previewUrl} className="w-full h-full object-cover" alt="thumbnail" />
+                                   {f.result && (
+                                       <div className="absolute bottom-0 right-0 bg-green-500 w-3 h-3 rounded-tl-md flex items-center justify-center">
+                                           <Check size={8} className="text-white" />
+                                       </div>
+                                   )}
+                                   <button 
+                                      onClick={(e) => handleRemoveFile(f.id, e)}
+                                      className="absolute top-0 right-0 bg-black/50 text-white w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
+                                   >
+                                       <X size={8} />
+                                   </button>
+                               </div>
+                           ))}
                            <button 
-                              onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); }}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 hover:text-blue-500 hover:border-blue-500 transition-colors"
                            >
-                              <X size={14} />
+                               <Plus size={18} />
                            </button>
                        </div>
-                   ) : (
-                       <div className="flex flex-col items-center text-slate-400">
-                           <ImageIcon size={48} className="mb-4" />
-                           <p className="font-medium text-slate-600 dark:text-slate-300">{t.upload}</p>
-                           <p className="text-xs mt-2">Supports JPG, PNG, WEBP</p>
-                       </div>
-                   )}
-               </div>
 
-               <button 
-                  onClick={handleExtract}
-                  disabled={!file || loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-               >
-                  {loading ? <Loader2 className="animate-spin" /> : <FileText size={18} />}
-                  {loading ? t.extracting : t.extractBtn}
-               </button>
+                       {/* Active Image Preview & Controls */}
+                       <div className="flex-grow flex flex-col p-4 overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
+                           <div 
+                              className={`border-2 border-dashed rounded-xl p-2 text-center transition-colors mb-4 flex flex-col items-center justify-center min-h-[250px] relative bg-white dark:bg-slate-800
+                                  ${isCropping ? 'border-blue-500 cursor-crosshair' : 'border-slate-300 dark:border-slate-600'}
+                              `}
+                              onMouseDown={handleMouseDown}
+                              onMouseMove={handleMouseMove}
+                              onMouseUp={handleMouseUp}
+                              onMouseLeave={handleMouseUp}
+                           >
+                               {activeFile && (
+                                   <div className="relative inline-block">
+                                       <img 
+                                          ref={imageRef}
+                                          src={croppedImageUrl || activeFile.previewUrl} 
+                                          alt="Chart" 
+                                          className={`max-h-[350px] max-w-full rounded shadow-sm object-contain select-none block ${isCropping ? 'opacity-80' : ''}`} 
+                                          draggable={false}
+                                       />
+                                       
+                                       {/* Interactive Overlay */}
+                                       {result && result.data && showOverlay && !isCropping && (
+                                           <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                                               {result.data.map((row, i) => {
+                                                   if (row._box_2d) {
+                                                       const [ymin, xmin, ymax, xmax] = row._box_2d; // Normalized 0-1000
+                                                       const width = xmax - xmin;
+                                                       const height = ymax - ymin;
+                                                       return (
+                                                           <rect 
+                                                               key={i}
+                                                               x={`${xmin/10}%`}
+                                                               y={`${ymin/10}%`}
+                                                               width={`${width/10}%`}
+                                                               height={`${height/10}%`}
+                                                               className={`transition-all duration-200 pointer-events-auto cursor-pointer ${
+                                                                   hoveredRowIndex === i 
+                                                                   ? 'fill-blue-500/20 stroke-blue-500 stroke-2' 
+                                                                   : 'fill-transparent stroke-transparent hover:stroke-blue-300 hover:stroke-1'
+                                                               }`}
+                                                               onMouseEnter={() => setHoveredRowIndex(i)}
+                                                               onMouseLeave={() => setHoveredRowIndex(null)}
+                                                           />
+                                                       )
+                                                   }
+                                                   return null;
+                                               })}
+                                           </svg>
+                                       )}
+
+                                       {isCropping && selection && (
+                                           <div 
+                                              className="absolute border-2 border-blue-500 bg-blue-500/20 pointer-events-none"
+                                              style={{
+                                                  left: selection.x,
+                                                  top: selection.y,
+                                                  width: selection.w,
+                                                  height: selection.h
+                                              }}
+                                           >
+                                               <div className="absolute -top-6 left-0 bg-blue-600 text-white text-[10px] px-1 rounded font-bold">
+                                                   {Math.round(selection.w)}x{Math.round(selection.h)}
+                                               </div>
+                                           </div>
+                                       )}
+                                   </div>
+                               )}
+                           </div>
+
+                           {activeFile && (
+                               <div className="mb-4 flex gap-2">
+                                   {!isCropping ? (
+                                       <>
+                                           <button 
+                                              onClick={() => setIsCropping(true)}
+                                              className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
+                                           >
+                                               <Crop size={14} /> {language === 'ZH' ? '裁剪模式' : 'Crop Area'}
+                                           </button>
+                                           {croppedImageUrl && (
+                                               <button 
+                                                  onClick={resetCrop}
+                                                  className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
+                                               >
+                                                   <RotateCcw size={14} /> {language === 'ZH' ? '重置原图' : 'Reset'}
+                                               </button>
+                                           )}
+                                       </>
+                                   ) : (
+                                       <>
+                                           <button 
+                                              onClick={performCrop}
+                                              disabled={!selection || selection.w < 10}
+                                              className="flex-1 bg-green-600 text-white font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-green-700 transition-colors disabled:opacity-50"
+                                           >
+                                               <Check size={14} /> {language === 'ZH' ? '确认裁剪' : 'Confirm Crop'}
+                                           </button>
+                                           <button 
+                                              onClick={() => { setIsCropping(false); setSelection(null); }}
+                                              className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                                           >
+                                               <X size={14} /> {language === 'ZH' ? '取消' : 'Cancel'}
+                                           </button>
+                                       </>
+                                   )}
+                               </div>
+                           )}
+                           
+                           {isCropping && (
+                               <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs p-3 rounded-lg mb-4 flex items-center gap-2 border border-blue-200 dark:border-blue-800">
+                                   <MousePointer2 size={16} />
+                                   {language === 'ZH' ? '请在图片上拖拽框选图表区域（排除无关文字）。' : 'Drag on the image to select the chart area (exclude captions).'}
+                               </div>
+                           )}
+
+                           <button 
+                              onClick={handleExtract}
+                              disabled={!activeFile || loading || isCropping}
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
+                           >
+                              {loading ? <Loader2 className="animate-spin" /> : <FileText size={18} />}
+                              {loading ? t.extracting : t.extractBtn}
+                           </button>
+                       </div>
+                   </div>
+               )}
            </div>
 
-           {/* Right Panel: Result Table */}
-           <div className="w-full md:w-2/3 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-               {result ? (
-                   <div className="flex flex-col h-full">
-                       <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
-                           <div>
-                               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{result.title || t.resultTitle}</h3>
-                               <p className="text-xs text-slate-500">{t.chartType}: {result.type}</p>
+           {/* Right Panel: Result Spreadsheet */}
+           <div className="w-full md:w-2/3 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden relative">
+               {result && activeId ? (
+                   <div className="flex flex-col h-full animate-fadeIn">
+                       <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex justify-between items-center flex-wrap gap-2">
+                           <div className="flex items-center gap-2">
+                               <div className="bg-green-100 dark:bg-green-900/30 p-1.5 rounded-lg text-green-600 dark:text-green-400">
+                                   <CheckCircle size={16} />
+                               </div>
+                               <div>
+                                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                       {result.title || t.resultTitle} 
+                                       <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 font-normal uppercase tracking-wider">{result.type}</span>
+                                   </h3>
+                               </div>
                            </div>
-                           <div className="flex gap-2">
-                               <button onClick={copyTableToClipboard} className="text-xs font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-600 flex items-center gap-2">
+                           <div className="flex gap-2 items-center">
+                               {onSendDataToAnalysis && (
+                                   <button 
+                                      onClick={handleSendToAnalysis}
+                                      className="text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-1.5 rounded flex items-center gap-2 transition-colors mr-2"
+                                   >
+                                       <ArrowRight size={14} /> Send to Data Analysis
+                                   </button>
+                               )}
+                               <button 
+                                  onClick={() => setShowReplot(!showReplot)}
+                                  className={`text-xs font-bold px-3 py-1.5 rounded flex items-center gap-2 transition-colors ${showReplot ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}
+                                  title="Toggle Re-plot Verification"
+                               >
+                                   <TrendingUp size={14} />
+                               </button>
+                               <button 
+                                  onClick={() => setShowOverlay(!showOverlay)}
+                                  className={`text-xs font-bold px-3 py-1.5 rounded flex items-center gap-2 transition-colors ${showOverlay ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-700'}`}
+                                  title="Interactive Overlay"
+                               >
+                                   <ScanEye size={14} />
+                               </button>
+                               <button onClick={() => addRow(activeId)} className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 px-3 py-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-800 flex items-center gap-2 transition-colors">
+                                   <Plus size={14} /> Row
+                               </button>
+                               <button onClick={copyTableToClipboard} className="text-xs font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-600 flex items-center gap-2 transition-colors">
                                    <Copy size={14} /> {t.copyTable}
                                </button>
-                               <button onClick={handleDownloadCSV} className="text-xs font-bold bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 flex items-center gap-2 shadow-sm">
-                                   <Download size={14} /> {t.downloadCsv}
+                               <button onClick={handleCopyLatex} className="text-xs font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-600 flex items-center gap-2 transition-colors">
+                                   <span className="font-mono text-[10px]">TeX</span> LaTeX
+                               </button>
+                               <button onClick={handleCopyMarkdown} className="text-xs font-bold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 px-3 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-600 flex items-center gap-2 transition-colors">
+                                   <FileText size={14} /> MD
+                               </button>
+                               <button onClick={() => setShowCodeModal(true)} className="text-xs font-bold bg-slate-900 dark:bg-slate-700 text-white border border-slate-900 dark:border-slate-600 px-3 py-1.5 rounded hover:bg-slate-700 dark:hover:bg-slate-600 flex items-center gap-2 transition-colors shadow-sm">
+                                   <Code size={14} /> Code
+                               </button>
+                               <button onClick={handleDownloadCSV} className="text-xs font-bold bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 flex items-center gap-2 shadow-sm transition-colors">
+                                   <Download size={14} /> CSV
                                </button>
                            </div>
                        </div>
                        
-                       <div className="flex-grow overflow-auto custom-scrollbar p-0">
-                           {result.data && result.data.length > 0 ? (
-                               <table className="w-full text-sm text-left text-slate-600 dark:text-slate-300">
-                                   <thead className="text-xs uppercase bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200 sticky top-0 shadow-sm">
-                                       <tr>
-                                           {Object.keys(result.data[0]).map((header, i) => (
-                                               <th key={i} className="px-6 py-3 border-b border-slate-200 dark:border-slate-600 font-bold whitespace-nowrap">
-                                                   {header}
-                                               </th>
-                                           ))}
-                                       </tr>
-                                   </thead>
-                                   <tbody>
-                                       {result.data.map((row, i) => (
-                                           <tr key={i} className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                                               {Object.values(row).map((val: any, j) => (
-                                                   <td key={j} className="px-6 py-4">
+                       <div className="flex-grow overflow-auto custom-scrollbar p-0 bg-white dark:bg-slate-900 flex flex-col">
+                           
+                           {/* Re-plot Section */}
+                           {showReplot && result.data && result.data.length > 0 && (
+                               <div className="h-48 flex-shrink-0 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 p-4 animate-fadeIn">
+                                   {renderReplot() || (
+                                       <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                                           <BarChartIcon size={24} className="mb-2 opacity-50" />
+                                           <p className="text-xs">Not enough data to re-plot.</p>
+                                       </div>
+                                   )}
+                               </div>
+                           )}
+
+                           {/* Data Table */}
+                           <div className="flex-grow overflow-auto">
+                               {result.data && result.data.length > 0 ? (
+                                   <table className="w-full text-sm text-left border-collapse">
+                                       <thead className="text-xs uppercase bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 sticky top-0 shadow-sm z-10">
+                                           <tr>
+                                               <th className="w-10 border border-slate-200 dark:border-slate-700 p-2 text-center bg-slate-100 dark:bg-slate-800 text-slate-400">#</th>
+                                               {Object.keys(result.data[0]).filter(k => !k.startsWith('_')).map((header, i) => (
+                                                   <th key={i} className="border border-slate-200 dark:border-slate-700 p-0 min-w-[100px] relative group">
                                                        <input 
-                                                          className="bg-transparent border-none w-full outline-none focus:ring-1 focus:ring-blue-500 rounded px-1"
-                                                          defaultValue={val} 
+                                                          className="w-full h-full bg-transparent px-3 py-2 font-bold outline-none focus:bg-white dark:focus:bg-slate-700 text-slate-700 dark:text-slate-200"
+                                                          defaultValue={header}
+                                                          onBlur={(e) => updateHeader(activeId, header, e.target.value)}
                                                        />
-                                                   </td>
+                                                       <Edit2 size={10} className="absolute right-1 top-1 text-slate-400 opacity-0 group-hover:opacity-100 pointer-events-none" />
+                                                   </th>
                                                ))}
+                                               <th className="w-10 border border-slate-200 dark:border-slate-700 p-0 bg-slate-50 dark:bg-slate-800"></th>
                                            </tr>
-                                       ))}
-                                   </tbody>
-                               </table>
+                                       </thead>
+                                       <tbody>
+                                           {result.data.map((row, i) => (
+                                               <tr 
+                                                  key={i} 
+                                                  className={`transition-colors group ${hoveredRowIndex === i ? 'bg-blue-100 dark:bg-blue-900/50' : 'hover:bg-blue-50 dark:hover:bg-slate-800/50'}`}
+                                                  onMouseEnter={() => setHoveredRowIndex(i)}
+                                                  onMouseLeave={() => setHoveredRowIndex(null)}
+                                               >
+                                                   <td className="border border-slate-200 dark:border-slate-700 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800 font-mono">
+                                                       {i + 1}
+                                                   </td>
+                                                   {Object.keys(row).filter(k => !k.startsWith('_')).map((key, j) => (
+                                                       <td key={j} className="border border-slate-200 dark:border-slate-700 p-0">
+                                                           <input 
+                                                              className="w-full h-full bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 text-slate-600 dark:text-slate-300 transition-all"
+                                                              value={row[key]}
+                                                              onChange={(e) => updateCell(activeId, i, key, e.target.value)}
+                                                           />
+                                                       </td>
+                                                   ))}
+                                                   <td className="border border-slate-200 dark:border-slate-700 text-center">
+                                                       <button 
+                                                          onClick={() => deleteRow(activeId, i)}
+                                                          className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                                          title="Delete Row"
+                                                       >
+                                                           <Trash2 size={12} />
+                                                       </button>
+                                                   </td>
+                                               </tr>
+                                           ))}
+                                       </tbody>
+                                   </table>
+                               ) : (
+                                   <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                                       <p>No tabular data found.</p>
+                                       <button onClick={() => addRow(activeId)} className="mt-2 text-blue-500 hover:underline text-sm">Create empty row</button>
+                                   </div>
+                               )}
+                           </div>
+                       </div>
+                       
+                       {/* Trend Description Panel */}
+                       <div className="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4">
+                           {activeFile.trendAnalysis ? (
+                               <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-blue-100 dark:border-blue-900 shadow-sm">
+                                   <div className="flex justify-between items-center mb-2">
+                                       <h4 className="text-sm font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                                           <Sparkles size={14} className="text-blue-500" /> Trend Description (for Discussion)
+                                       </h4>
+                                       <button 
+                                          onClick={() => navigator.clipboard.writeText(activeFile.trendAnalysis || '')}
+                                          className="text-xs text-slate-400 hover:text-blue-600 flex items-center gap-1"
+                                       >
+                                           <Copy size={12} /> Copy
+                                       </button>
+                                   </div>
+                                   <div className="prose prose-sm prose-slate dark:prose-invert max-w-none text-xs leading-relaxed">
+                                       <ReactMarkdown>{activeFile.trendAnalysis}</ReactMarkdown>
+                                   </div>
+                               </div>
                            ) : (
-                               <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                                   <p>No tabular data found.</p>
+                               <div className="flex justify-between items-center">
+                                   <span className="text-xs text-slate-500">
+                                       <span className="font-bold">AI Summary:</span> {result.summary}
+                                   </span>
+                                   <button 
+                                      onClick={handleGenerateTrend}
+                                      disabled={analyzingTrend}
+                                      className="text-xs font-bold text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded flex items-center gap-1 transition-colors"
+                                   >
+                                       {analyzingTrend ? <Loader2 size={12} className="animate-spin" /> : <MessageSquare size={12} />}
+                                       Generate Discussion Text
+                                   </button>
                                </div>
                            )}
                        </div>
-                       
-                       <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs text-slate-500">
-                           <span className="font-bold">Summary:</span> {result.summary}
-                       </div>
                    </div>
                ) : (
-                   <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-60">
+                   <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-60 p-8 text-center">
                        <Table2 size={64} className="mb-4" />
                        <p className="text-lg font-bold">No Data Extracted Yet</p>
-                       <p className="text-sm">Upload an image and click extract to see results.</p>
+                       <p className="text-sm max-w-xs mt-2">Upload images, select the chart area, and click "Extract Data" to convert visuals into an editable spreadsheet.</p>
+                   </div>
+               )}
+
+               {/* Code Generation Modal */}
+               {showCodeModal && (
+                   <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-8 animate-fadeIn">
+                       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden max-h-full">
+                           <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
+                               <div className="flex items-center gap-2">
+                                   <Code size={18} className="text-blue-600" />
+                                   <h3 className="font-bold text-slate-800 dark:text-slate-100">{language === 'ZH' ? '生成绘图代码' : 'Generate Plotting Code'}</h3>
+                               </div>
+                               <button onClick={() => setShowCodeModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X size={18} /></button>
+                           </div>
+                           
+                           <div className="p-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex gap-2">
+                               <button 
+                                  onClick={() => setCodeLang('Python')} 
+                                  className={`px-4 py-2 rounded text-xs font-bold transition-colors ${codeLang === 'Python' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'}`}
+                               >
+                                   Python (Matplotlib)
+                               </button>
+                               <button 
+                                  onClick={() => setCodeLang('R')} 
+                                  className={`px-4 py-2 rounded text-xs font-bold transition-colors ${codeLang === 'R' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'}`}
+                               >
+                                   R (ggplot2)
+                               </button>
+                           </div>
+
+                           <div className="flex-grow p-0 overflow-auto bg-[#1e1e1e]">
+                               <pre className="p-4 text-xs font-mono text-green-400 leading-relaxed">
+                                   <code>{generateCode(codeLang)}</code>
+                               </pre>
+                           </div>
+
+                           <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex justify-end">
+                               <button 
+                                  onClick={() => {
+                                      navigator.clipboard.writeText(generateCode(codeLang));
+                                      alert(language === 'ZH' ? '代码已复制' : 'Code copied to clipboard');
+                                  }}
+                                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-bold text-xs flex items-center gap-2 transition-colors"
+                               >
+                                   <Copy size={14} /> {language === 'ZH' ? '复制代码' : 'Copy Code'}
+                               </button>
+                           </div>
+                       </div>
                    </div>
                )}
            </div>

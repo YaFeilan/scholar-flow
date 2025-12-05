@@ -1,4 +1,4 @@
-
+// ... imports ...
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Upload, FileText, BarChart2, Zap, Table, Code, Loader2, ArrowRight, PieChart, Activity, LayoutGrid, Download, Eye, CheckCircle, RefreshCcw, Target, Filter, Settings, Type, ListFilter, MessageCircle, Send, Check, X, AlertTriangle, Info } from 'lucide-react';
 import { performDataAnalysis, chatWithDataAnalysis } from '../services/geminiService';
@@ -10,6 +10,7 @@ import { jsPDF } from 'jspdf';
 
 interface DataAnalysisProps {
   language: Language;
+  initialData?: any[][] | null;
 }
 
 type ColumnType = 'Numeric' | 'Categorical' | 'Date' | 'Text';
@@ -209,7 +210,7 @@ const calculateLocalStats = (data: any[], configs: ColumnConfig[]) => {
   };
 };
 
-const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
+const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) => {
   const t = TRANSLATIONS[language].data;
   
   // State for Flow Control
@@ -302,6 +303,19 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language }) => {
           return { index, name: header || `Col_${index}`, included: true, type };
       });
   };
+
+  // Load Initial Data
+  useEffect(() => {
+      if (initialData && initialData.length > 0) {
+          setRawFileContent(initialData);
+          setUseFirstRowAsHeader(true);
+          setColumnConfigs(detectColumnTypes(initialData, true));
+          setStep('preview');
+          setFile({ name: 'Imported Data from Chart', type: 'text/csv' } as File);
+          setResult(null);
+          setLocalStats(null);
+      }
+  }, [initialData]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

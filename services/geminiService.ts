@@ -1,4 +1,4 @@
-
+// ... existing code ...
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import {
   Language,
@@ -75,7 +75,6 @@ const getText = async (prompt: string, modelName = "gemini-2.5-flash") => {
   }
 };
 
-// ... [Keep existing exports like searchAcademicPapers, etc.] ...
 export const searchAcademicPapers = async (query: string, language: Language, limit: number): Promise<Paper[]> => {
   const prompt = `Search for academic papers related to "${query}". Return ${limit} results.
   For each paper, provide title, authors, journal, year, citations (approx), and abstract.
@@ -775,13 +774,16 @@ export const extractChartData = async (file: File, language: Language): Promise<
     const prompt = `Analyze this chart image. Extract the underlying data into a structured JSON format.
     Identify the chart title, type (Bar, Line, Scatter, Pie, etc.), and the data points.
     
+    IMPORTANT: For each data row, try to estimate the bounding box of the visual element (bar, point, slice) in the image.
+    Format the bounding box as "_box_2d": [ymin, xmin, ymax, xmax] where coordinates are normalized to 0-1000.
+    
     Return JSON:
     {
       "title": "Chart Title",
       "type": "Chart Type",
       "summary": "Brief description of trends",
       "data": [
-        { "Label/X-Axis": "Value 1", "Series A": 10, "Series B": 20 },
+        { "Label/X-Axis": "Value 1", "Series A": 10, "Series B": 20, "_box_2d": [100, 100, 200, 200] },
         ...
       ]
     }
@@ -793,4 +795,20 @@ export const extractChartData = async (file: File, language: Language): Promise<
     console.error("Chart Extraction Error:", error);
     return null;
   }
+};
+
+export const generateChartTrendAnalysis = async (data: any[], language: Language): Promise<string> => {
+  const prompt = `Analyze the following dataset extracted from a chart.
+  Data: ${JSON.stringify(data.slice(0, 50))} (First 50 rows)
+  
+  Task: Write a comprehensive trend description suitable for the "Discussion" section of an academic paper.
+  Focus on:
+  1. Overall trend (increasing, decreasing, fluctuating).
+  2. Significant peaks, troughs, or outliers.
+  3. Correlation between variables if apparent.
+  4. Use academic phrasing (e.g., "The data reveals a significant positive correlation...", "Notably, X plateaued at...").
+  
+  Language: ${language}. Return only the text description formatted in Markdown.`;
+
+  return getText(prompt, 'gemini-2.5-flash');
 };
