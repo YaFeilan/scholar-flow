@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType, OpeningReviewResponse, ReviewPersona, PolishConfig, AdvisorReport, GapAnalysisResult } from "../types";
+import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType, OpeningReviewResponse, ReviewPersona, PolishConfig, AdvisorReport, GapAnalysisResult, TrendAnalysisResult, TrendTimeRange, TrendPersona } from "../types";
 // @ts-ignore
 import mammoth from "mammoth";
 
@@ -294,19 +294,27 @@ export const generateCoverLetter = async (
   }
 };
 
-export const analyzeResearchTrends = async (topic: string, lang: Language = 'EN') => {
+export const analyzeResearchTrends = async (topic: string, lang: Language = 'EN', timeRange: TrendTimeRange = '1Y', persona: TrendPersona = 'Researcher'): Promise<TrendAnalysisResult | null> => {
   try {
     const model = 'gemini-2.5-flash';
+    
+    const personaInstruction = persona === 'Institution' 
+      ? 'Focus on Market Size, Patent Applications, Industrial Benchmarks, and Applied Technologies.' 
+      : 'Focus on Academic Citations, Novel Algorithms, Theoretical Gaps, and Research Benchmarks.';
+
     const prompt = `Analyze the academic research trends for the field: "${topic}".
+    Context:
+    - Time Range: Past ${timeRange}
+    - Persona: ${persona} (${personaInstruction})
     ${getLangInstruction(lang)}
+    
     Provide data for:
-    1. 3 Emerging Technologies/Concepts with estimated YoY growth (e.g., +150.5).
-    2. 8-10 Research Hotspots (keywords) with an importance value (1-100).
-    3. Top 5 Research Methodologies used in this field, with approximate paper counts and growth percentages.
+    1. 3 Emerging Technologies/Concepts: Include estimated YoY growth AND predicted growth for next year.
+    2. 8-10 Research Hotspots: Keywords for visualization. 'relatedTo' field should list 1-2 other hotspots from this list to form a graph.
+    3. Top 5 Research Methodologies: Include 'codeStats' (simulated GitHub stars/HF models).
+    4. 3 Significant "Research Gaps" (Blue Ocean opportunities): Underexplored areas.
     
-    For each methodology, list 2-3 related hotspots from your hotspots list (exact text match if possible) to allow linking the visualization.
-    
-    Ensure the data is realistic for the current year.`;
+    Ensure the data is realistic for the context.`;
 
     const response = await ai.models.generateContent({
       model,
@@ -323,6 +331,7 @@ export const analyzeResearchTrends = async (topic: string, lang: Language = 'EN'
                 properties: {
                   name: { type: Type.STRING },
                   growth: { type: Type.NUMBER },
+                  predictedGrowth: { type: Type.NUMBER },
                   type: { type: Type.STRING },
                 },
               },
@@ -335,6 +344,7 @@ export const analyzeResearchTrends = async (topic: string, lang: Language = 'EN'
                   text: { type: Type.STRING },
                   value: { type: Type.NUMBER },
                   category: { type: Type.STRING },
+                  relatedTo: { type: Type.ARRAY, items: { type: Type.STRING } }
                 },
               },
             },
@@ -350,26 +360,62 @@ export const analyzeResearchTrends = async (topic: string, lang: Language = 'EN'
                     type: Type.ARRAY, 
                     items: { type: Type.STRING },
                   },
+                  codeStats: {
+                    type: Type.OBJECT,
+                    properties: {
+                      github: { type: Type.STRING },
+                      huggingface: { type: Type.STRING },
+                    }
+                  }
                 },
               },
             },
+            researchGaps: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  problem: { type: Type.STRING },
+                  potential: { type: Type.STRING },
+                  difficulty: { type: Type.STRING, enum: ['High', 'Medium', 'Low'] },
+                  type: { type: Type.STRING, enum: ['Blue Ocean', 'Hard Problem'] }
+                }
+              }
+            }
           },
         },
       },
     });
 
     const res = JSON.parse(response.text || '{}');
-    // Ensure all required arrays exist
     return {
         emergingTech: Array.isArray(res.emergingTech) ? res.emergingTech : [],
         hotspots: Array.isArray(res.hotspots) ? res.hotspots : [],
-        methodologies: Array.isArray(res.methodologies) ? res.methodologies : []
+        methodologies: Array.isArray(res.methodologies) ? res.methodologies : [],
+        researchGaps: Array.isArray(res.researchGaps) ? res.researchGaps : []
     };
   } catch (error) {
     console.error("Gemini API Error:", error);
     return null;
   }
 };
+
+export const getPaperTLDR = async (paperTitle: string, lang: Language): Promise<string> => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const prompt = `Provide a 3-sentence "TL;DR" (Too Long; Didn't Read) summary for the academic paper titled "${paperTitle}".
+    Focus on: 1. Core Contribution. 2. Key Method. 3. Main Result.
+    ${getLangInstruction(lang)}`;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+    });
+    return response.text || "Summary unavailable.";
+  } catch (e) {
+    return "Summary unavailable.";
+  }
+}
 
 export const generateStructuredReview = async (
   topic: string, 

@@ -105,17 +105,17 @@ export const MOCK_PAPERS: Paper[] = [
 ];
 
 export const EMERGING_TECH: TrendItem[] = [
-  { name: 'Multimodal AI (多模态AI)', growth: 320.5, type: 'Emerging Tech' },
-  { name: 'Foundation Models (基础模型)', growth: 285.2, type: 'Emerging Tech' },
-  { name: 'Quantum Machine Learning (量子机器学习)', growth: 230.7, type: 'Emerging Tech' },
+  { name: 'Multimodal AI (多模态AI)', growth: 320.5, predictedGrowth: 410.2, type: 'Emerging Tech' },
+  { name: 'Foundation Models (基础模型)', growth: 285.2, predictedGrowth: 300.5, type: 'Emerging Tech' },
+  { name: 'Quantum Machine Learning (量子机器学习)', growth: 230.7, predictedGrowth: 280.0, type: 'Emerging Tech' },
 ];
 
 export const HOTSPOTS: HotspotItem[] = [
-  { text: 'Large Language Models (大规模语言模型)', value: 100, category: 'AI' },
-  { text: 'Deep Learning (深度学习)', value: 85, category: 'AI' },
-  { text: 'Computer Vision (计算机视觉)', value: 80, category: 'AI' },
-  { text: 'Natural Language Processing (自然语言处理)', value: 75, category: 'AI' },
-  { text: 'Reinforcement Learning (强化学习)', value: 70, category: 'AI' },
-  { text: 'Generative AI', value: 65, category: 'AI' },
-  { text: 'Graph Neural Networks', value: 60, category: 'AI' },
+  { text: 'Large Language Models (大规模语言模型)', value: 100, category: 'AI', relatedTo: ['Generative AI', 'NLP'] },
+  { text: 'Deep Learning (深度学习)', value: 85, category: 'AI', relatedTo: ['Computer Vision', 'NLP'] },
+  { text: 'Computer Vision (计算机视觉)', value: 80, category: 'AI', relatedTo: ['Deep Learning'] },
+  { text: 'Natural Language Processing (自然语言处理)', value: 75, category: 'AI', relatedTo: ['Large Language Models'] },
+  { text: 'Reinforcement Learning (强化学习)', value: 70, category: 'AI', relatedTo: ['Robotics'] },
+  { text: 'Generative AI', value: 65, category: 'AI', relatedTo: ['Large Language Models'] },
+  { text: 'Graph Neural Networks', value: 60, category: 'AI', relatedTo: ['Deep Learning'] },
 ];

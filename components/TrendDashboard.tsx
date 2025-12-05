@@ -1,12 +1,11 @@
 
-
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import * as d3 from 'd3';
 import { EMERGING_TECH, HOTSPOTS } from '../constants';
-import { analyzeResearchTrends, searchAcademicPapers } from '../services/geminiService';
-import { Search, Loader2, Move, BarChart2, Tag, X, Filter, BookOpen, Lightbulb } from 'lucide-react';
-import { Language, HotspotItem, Paper } from '../types';
+import { analyzeResearchTrends, searchAcademicPapers, getPaperTLDR } from '../services/geminiService';
+import { Search, Loader2, Move, BarChart2, Tag, X, Filter, BookOpen, Lightbulb, Share2, Github, LayoutGrid, MonitorPlay, Zap, ArrowRight, User } from 'lucide-react';
+import { Language, HotspotItem, Paper, TrendTimeRange, TrendPersona, TrendAnalysisResult } from '../types';
 import { TRANSLATIONS } from '../translations';
 
 interface TrendDashboardProps {
@@ -17,60 +16,63 @@ interface TrendDashboardProps {
 const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToIdea }) => {
   const t = TRANSLATIONS[language].trends;
   const appName = TRANSLATIONS[language].appName;
-  const cloudRef = useRef<HTMLDivElement>(null);
+  
+  // -- State --
   const [topic, setTopic] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
-  const [relatedPapers, setRelatedPapers] = useState<Paper[]>([]);
-  const [loadingPapers, setLoadingPapers] = useState(false);
   
-  // Initial State with mocked data including relationships
-  const [trendData, setTrendData] = useState({
+  // Filters
+  const [timeRange, setTimeRange] = useState<TrendTimeRange>('1Y');
+  const [persona, setPersona] = useState<TrendPersona>('Researcher');
+  
+  // Views
+  const [viewMode, setViewMode] = useState<'cloud' | 'graph'>('cloud');
+  const [rightPanelTab, setRightPanelTab] = useState<'papers' | 'gaps'>('papers');
+  
+  // Selection
+  const [selectedKeyword, setSelectedKeyword] = useState<string | null>(null);
+  
+  // Data
+  const [trendData, setTrendData] = useState<TrendAnalysisResult>({
     emergingTech: EMERGING_TECH,
     hotspots: HOTSPOTS,
-    methodologies: [
-      { 
-        name: 'Transformer Architecture', 
-        value: 10500, 
-        growth: 180.1, 
-        relatedHotspots: ['Large Language Models (大规模语言模型)', 'Natural Language Processing (自然语言处理)', 'Generative AI'] 
-      },
-      { 
-        name: 'Diffusion Models', 
-        value: 8900, 
-        growth: 210.3,
-        relatedHotspots: ['Generative AI', 'Computer Vision (计算机视觉)', 'Deep Learning (深度学习)']
-      },
-      { 
-        name: 'Generative AI', 
-        value: 7800, 
-        growth: 165.9,
-        relatedHotspots: ['Large Language Models (大规模语言模型)', 'Generative AI', 'Natural Language Processing (自然语言处理)']
-      },
-      { 
-        name: 'Graph Neural Networks', 
-        value: 6100, 
-        growth: 62.5,
-        relatedHotspots: ['Graph Neural Networks', 'Deep Learning (深度学习)']
-      },
-      { 
-        name: 'Federated Learning', 
-        value: 4900, 
-        growth: 40.8,
-        relatedHotspots: ['Deep Learning (深度学习)', 'Reinforcement Learning (强化学习)']
-      },
-    ] as any[]
+    methodologies: [],
+    researchGaps: []
   });
 
+  // Drill Down Data
+  const [relatedPapers, setRelatedPapers] = useState<Paper[]>([]);
+  const [loadingPapers, setLoadingPapers] = useState(false);
+  const [paperTLDRs, setPaperTLDRs] = useState<Record<string, string>>({});
+
+  // Refs
+  const cloudRef = useRef<HTMLDivElement>(null);
+
+  // -- Handlers --
   const handleAnalyze = async () => {
     if (!topic.trim()) return;
     setIsLoading(true);
     setSelectedKeyword(null);
-    const result = await analyzeResearchTrends(topic, language);
-    if (result && result.emergingTech && result.hotspots && result.methodologies) {
+    setRightPanelTab('papers'); // reset to default
+    
+    // Simulate re-analysis with new context
+    const result = await analyzeResearchTrends(topic, language, timeRange, persona);
+    if (result) {
       setTrendData(result);
     }
     setIsLoading(false);
+  };
+
+  const handleTLDR = async (paperId: string, title: string) => {
+    if (paperTLDRs[paperId]) return;
+    setPaperTLDRs(prev => ({...prev, [paperId]: 'Loading...'}));
+    const summary = await getPaperTLDR(title, language);
+    setPaperTLDRs(prev => ({...prev, [paperId]: summary}));
+  }
+
+  const handleAddToPPT = (content: string) => {
+     // Mock functionality for now - In a real app this would dispatch to global store
+     alert("Added visual/data to PPT Clipboard");
   };
 
   // Fetch related papers when keyword is selected
@@ -78,7 +80,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
     const fetchPapers = async () => {
       if (selectedKeyword) {
         setLoadingPapers(true);
-        // Use the full keyword text for broader search context
+        setRightPanelTab('papers');
         const papers = await searchAcademicPapers(selectedKeyword, language, 5);
         setRelatedPapers(papers);
         setLoadingPapers(false);
@@ -89,7 +91,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
     fetchPapers();
   }, [selectedKeyword, language]);
 
-  // Improved Force-Directed Word Cloud using D3
+  // -- D3 Visualization Effect --
   useEffect(() => {
     if (!cloudRef.current) return;
     const container = d3.select(cloudRef.current);
@@ -97,17 +99,8 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
 
     const width = cloudRef.current.clientWidth;
     const height = 500;
-
     const rawData = trendData.hotspots || [];
     if (rawData.length === 0) return;
-
-    // Clone data for D3 mutation
-    const data = rawData.map(d => ({ ...d }));
-
-    // Scale for font size
-    const sizeScale = d3.scaleLinear()
-      .domain([d3.min(data, d => d.value) || 0, d3.max(data, d => d.value) || 100])
-      .range([14, 42]);
 
     // Create SVG
     const svg = container.append("svg")
@@ -115,336 +108,393 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
       .attr("height", height)
       .style("overflow", "visible");
 
-    const g = svg.append("g")
-      .attr("transform", `translate(${width / 2},${height / 2})`);
+    // Force Simulation Setup
+    let simulation: any;
+    
+    if (viewMode === 'cloud') {
+        const data = rawData.map(d => ({ ...d }));
+        const sizeScale = d3.scaleLinear()
+          .domain([d3.min(data, d => d.value) || 0, d3.max(data, d => d.value) || 100])
+          .range([14, 42]);
 
-    // Simulation Setup
-    const simulation = d3.forceSimulation(data as any)
-      .force("charge", d3.forceManyBody().strength(-30)) // Increased repulsion
-      .force("center", d3.forceCenter(0, 0)) // Pull to center
-      .force("y", d3.forceY(0).strength(0.08)) // Centering gravity Y
-      .force("x", d3.forceX(0).strength(0.08)) // Centering gravity X
-      .force("collide", d3.forceCollide().radius((d: any) => {
-          // Estimate text width for collision radius
-          const text = d.text.split('(')[0];
-          const fontSize = sizeScale(d.value);
-          // Heuristic: Roughly half text width + padding
-          return (text.length * fontSize * 0.35) + 12;
-      }).iterations(3));
+        const g = svg.append("g").attr("transform", `translate(${width / 2},${height / 2})`);
 
-    // Render Text Nodes
-    const textNodes = g.selectAll("text")
-      .data(data)
-      .enter().append("text")
-      .style("font-size", d => `${sizeScale(d.value)}px`)
-      .style("font-family", "sans-serif")
-      .style("font-weight", (d, i) => i < 3 ? "800" : "500")
-      .style("fill", (d) => {
-        // Highlighting logic
-        if (selectedKeyword && d.text === selectedKeyword) return "#e11d48"; // Red for selected
-        return selectedKeyword ? "#94a3b8" : (data.indexOf(d) < 3 ? "#2563eb" : "#475569"); // Dim others if one selected
-      }) 
-      .style("opacity", (d) => {
-         if (selectedKeyword && d.text !== selectedKeyword) return 0.4;
-         return 1;
-      })
-      .style("cursor", "pointer")
-      .attr("text-anchor", "middle")
-      .attr("dy", "0.35em")
-      .text(d => d.text.split('(')[0]) // Show English text
-      .on("click", (event, d) => {
-        event.stopPropagation();
-        setSelectedKeyword(d.text === selectedKeyword ? null : d.text);
-      })
-      .call(d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended) as any
-      );
+        simulation = d3.forceSimulation(data as any)
+          .force("charge", d3.forceManyBody().strength(-30))
+          .force("center", d3.forceCenter(0, 0))
+          .force("y", d3.forceY(0).strength(0.08))
+          .force("x", d3.forceX(0).strength(0.08))
+          .force("collide", d3.forceCollide().radius((d: any) => (d.text.length * sizeScale(d.value) * 0.35) + 12).iterations(3));
 
-    // Hover effects
-    textNodes
-      .on("mouseover", function(event, d) { 
-        if (selectedKeyword) return; // Disable hover effect when selection is active
-        d3.select(this)
-          .transition().duration(200)
-          .style("fill", "#7c3aed") // Purple on hover
-          .style("font-size", (d: any) => `${sizeScale(d.value) * 1.1}px`);
-      })
-      .on("mouseout", function(event, d: any) { 
-        if (selectedKeyword) return;
-        d3.select(this)
-          .transition().duration(200)
-          .style("fill", (d: any, i) => data.indexOf(d) < 3 ? "#2563eb" : "#475569")
-          .style("font-size", `${sizeScale(d.value)}px`);
-      });
+        const textNodes = g.selectAll("text")
+          .data(data)
+          .enter().append("text")
+          .style("font-size", d => `${sizeScale(d.value)}px`)
+          .style("font-family", "sans-serif")
+          .style("font-weight", (d, i) => i < 3 ? "800" : "500")
+          .style("fill", (d) => selectedKeyword === d.text ? "#e11d48" : (selectedKeyword ? "#94a3b8" : (data.indexOf(d) < 3 ? "#2563eb" : "#475569")))
+          .style("opacity", d => (selectedKeyword && d.text !== selectedKeyword) ? 0.4 : 1)
+          .style("cursor", "pointer")
+          .attr("text-anchor", "middle")
+          .attr("dy", "0.35em")
+          .text(d => d.text.split('(')[0])
+          .on("click", (event, d) => { event.stopPropagation(); setSelectedKeyword(d.text === selectedKeyword ? null : d.text); })
+          .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended) as any);
 
-    // Update positions on tick
-    simulation.on("tick", () => {
-      textNodes
-        .attr("x", (d: any) => d.x)
-        .attr("y", (d: any) => d.y);
-    });
+         simulation.on("tick", () => {
+            textNodes.attr("x", (d: any) => d.x).attr("y", (d: any) => d.y);
+         });
 
-    // Drag functions
+    } else {
+        // Graph View
+        const nodes = rawData.map(d => ({ ...d, id: d.text, r: Math.max(20, d.value / 2) }));
+        const links: any[] = [];
+        
+        // Infer links based on 'relatedTo' or mock based on category
+        nodes.forEach((source, i) => {
+           if (source.relatedTo) {
+               source.relatedTo.forEach((targetName: string) => {
+                   // Simple matching
+                   const target = nodes.find(n => n.text.includes(targetName) || targetName.includes(n.text));
+                   if (target) links.push({ source: source.id, target: target.id });
+               });
+           }
+           // Fallback: Link same categories if sparse
+           if (links.length < nodes.length) {
+               for (let j=i+1; j<nodes.length; j++) {
+                   if (nodes[i].category === nodes[j].category) {
+                       links.push({ source: nodes[i].id, target: nodes[j].id, dashed: true });
+                   }
+               }
+           }
+        });
+
+        simulation = d3.forceSimulation(nodes as any)
+            .force("link", d3.forceLink(links).id((d: any) => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collide", d3.forceCollide().radius((d: any) => d.r + 5));
+
+        const link = svg.append("g")
+            .attr("stroke", "#94a3b8")
+            .attr("stroke-opacity", 0.6)
+            .selectAll("line")
+            .data(links)
+            .join("line")
+            .attr("stroke-width", 1)
+            .attr("stroke-dasharray", (d: any) => d.dashed ? "4,4" : "0");
+
+        const node = svg.append("g")
+            .selectAll("circle")
+            .data(nodes)
+            .join("circle")
+            .attr("r", (d: any) => d.r)
+            .attr("fill", (d: any) => d.text === selectedKeyword ? "#e11d48" : "#3b82f6")
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 2)
+            .style("cursor", "pointer")
+            .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended) as any)
+            .on("click", (event, d: any) => { event.stopPropagation(); setSelectedKeyword(d.text === selectedKeyword ? null : d.text); });
+
+        const label = svg.append("g")
+            .selectAll("text")
+            .data(nodes)
+            .join("text")
+            .text((d: any) => d.text.substring(0, 15))
+            .attr("font-size", 10)
+            .attr("dx", 0)
+            .attr("dy", (d: any) => d.r + 12)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#475569")
+            .style("pointer-events", "none");
+
+        simulation.on("tick", () => {
+            link.attr("x1", (d: any) => d.source.x).attr("y1", (d: any) => d.source.y)
+                .attr("x2", (d: any) => d.target.x).attr("y2", (d: any) => d.target.y);
+            node.attr("cx", (d: any) => d.x).attr("cy", (d: any) => d.y);
+            label.attr("x", (d: any) => d.x).attr("y", (d: any) => d.y);
+        });
+    }
+
     function dragstarted(event: any, d: any) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
-
-    function dragged(event: any, d: any) {
-      d.fx = event.x;
-      d.fy = event.y;
-    }
-
+    function dragged(event: any, d: any) { d.fx = event.x; d.fy = event.y; }
     function dragended(event: any, d: any) {
       if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
+      d.fx = null; d.fy = null;
     }
 
-    // Cleanup
-    return () => {
-      simulation.stop();
-    };
-  }, [trendData.hotspots, selectedKeyword]);
+    return () => simulation.stop();
+  }, [trendData.hotspots, selectedKeyword, viewMode]);
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="bg-darkbg rounded-xl p-8 mb-8 text-white relative overflow-hidden shadow-2xl transition-all duration-500">
+      {/* Header & Controls */}
+      <div className="bg-darkbg rounded-xl p-8 mb-8 text-white relative overflow-hidden shadow-2xl">
          <div className="relative z-10">
-            <div className="flex justify-between items-start flex-wrap gap-4 mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                     <span className="text-blue-400 font-bold">~</span>
-                     <h2 className="text-2xl font-bold font-serif">{appName} <span className="text-slate-400 font-sans font-normal text-lg">{t.title}</span></h2>
-                  </div>
+                  <h2 className="text-3xl font-bold font-serif mb-2">{appName} <span className="text-blue-400">{t.title}</span></h2>
                   <p className="text-slate-400 text-sm max-w-lg">{t.subtitle}</p>
                 </div>
                 
-                {/* Input Section */}
-                <div className="flex gap-2 bg-slate-800/50 p-1 rounded-lg border border-slate-700/50 backdrop-blur-sm w-full md:w-auto">
-                    <div className="relative flex-grow md:w-64">
-                        <input 
-                          type="text" 
-                          value={topic}
-                          onChange={(e) => setTopic(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-                          className="w-full bg-transparent border-none text-white text-sm px-4 py-2 focus:ring-0 placeholder-slate-500 outline-none"
-                          placeholder={t.placeholder}
-                        />
+                {/* Global Controls */}
+                <div className="flex flex-col gap-3 w-full md:w-auto">
+                    <div className="flex items-center gap-2 bg-slate-800/50 p-1 rounded-lg border border-slate-700/50">
+                        <User size={14} className="ml-2 text-slate-400" />
+                        <select 
+                           value={persona}
+                           onChange={(e) => setPersona(e.target.value as TrendPersona)}
+                           className="bg-transparent text-white text-xs font-bold border-none focus:ring-0 cursor-pointer py-1"
+                        >
+                           <option value="Researcher">Researcher View</option>
+                           <option value="Institution">Institution View</option>
+                        </select>
                     </div>
-                    <button 
-                      onClick={handleAnalyze}
-                      disabled={isLoading}
-                      className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                      {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Search className="h-4 w-4" />}
-                      {t.analyze}
-                    </button>
+                    
+                    <div className="flex gap-2">
+                        <div className="relative flex-grow md:w-64">
+                            <input 
+                              type="text" 
+                              value={topic}
+                              onChange={(e) => setTopic(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+                              className="w-full bg-slate-800 border border-slate-700 rounded-lg text-white text-sm px-4 py-2 focus:ring-1 focus:ring-blue-500 outline-none"
+                              placeholder={t.placeholder}
+                            />
+                        </div>
+                        <button 
+                          onClick={handleAnalyze}
+                          disabled={isLoading}
+                          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                        >
+                          {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Search className="h-4 w-4" />}
+                          {t.analyze}
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                       <span className="text-xs font-bold text-slate-500 uppercase">Time Range:</span>
+                       {['1Y', '3Y', '5Y'].map((range) => (
+                           <button
+                             key={range}
+                             onClick={() => setTimeRange(range as TrendTimeRange)}
+                             className={`text-xs px-2 py-1 rounded border transition-all ${timeRange === range ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'border-slate-700 text-slate-500 hover:text-slate-300'}`}
+                           >
+                             {range}
+                           </button>
+                       ))}
+                    </div>
                 </div>
             </div>
 
-             {/* Emerging Tech Cards */}
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 relative z-10">
+             {/* Emerging Tech Cards (with Forecast) */}
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {trendData.emergingTech?.map((tech, idx) => (
-                  <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg p-5 border border-white/5 hover:bg-white/15 transition-all animate-fadeIn">
-                     <p className="text-xs font-bold text-blue-300 uppercase mb-2 tracking-wider">{tech.type || t.emerging}</p>
-                     <h3 className="text-lg font-bold leading-tight mb-4">{tech.name}</h3>
-                     <div className="flex items-end gap-2">
-                        <span className="text-3xl font-bold text-green-400">+{tech.growth}%</span>
-                        <span className="text-xs text-slate-400 mb-1">{t.yoy}</span>
+                  <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg p-5 border border-white/5 hover:bg-white/15 transition-all group relative overflow-hidden">
+                     <div className="flex justify-between items-start mb-2">
+                        <p className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">{tech.type || t.emerging}</p>
+                        <button onClick={() => handleAddToPPT(`Emerging Tech: ${tech.name}`)} className="text-white/20 hover:text-white transition-colors"><MonitorPlay size={14} /></button>
                      </div>
+                     <h3 className="text-lg font-bold leading-tight mb-4 pr-4">{tech.name}</h3>
+                     <div className="flex items-end justify-between">
+                        <div>
+                            <span className="text-2xl font-bold text-green-400">+{tech.growth}%</span>
+                            <span className="text-xs text-slate-400 ml-1 block">{t.yoy}</span>
+                        </div>
+                        {tech.predictedGrowth && (
+                            <div className="text-right">
+                                <span className="text-sm font-bold text-purple-300">+{tech.predictedGrowth}%</span>
+                                <span className="text-[10px] text-slate-400 block">Next Year (Proj)</span>
+                            </div>
+                        )}
+                     </div>
+                     {/* Mini Sparkline Effect */}
+                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500/0 via-green-500/50 to-green-500/0 opacity-50"></div>
                   </div>
                 ))}
              </div>
          </div>
-         
-         {/* Background Decor */}
-         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-         {/* Research Hotspots (Word Cloud + Stats) */}
+         {/* Main Visualization Panel */}
          <div className="lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
                <div className="flex items-center gap-2">
-                 <span className="text-blue-600 bg-blue-50 p-1.5 rounded"><Move size={18} /></span>
-                 <h3 className="text-lg font-bold text-slate-800">{t.hotspots}</h3>
+                 <div className="flex bg-slate-100 rounded-lg p-1">
+                    <button 
+                        onClick={() => setViewMode('cloud')}
+                        className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 transition-all ${viewMode === 'cloud' ? 'bg-white shadow text-slate-800' : 'text-slate-500'}`}
+                    >
+                        <LayoutGrid size={14} /> Cloud
+                    </button>
+                    <button 
+                        onClick={() => setViewMode('graph')}
+                        className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 transition-all ${viewMode === 'graph' ? 'bg-white shadow text-slate-800' : 'text-slate-500'}`}
+                    >
+                        <Share2 size={14} /> Network
+                    </button>
+                 </div>
+                 <h3 className="text-lg font-bold text-slate-800 ml-2">{t.hotspots}</h3>
                </div>
-               <div className="flex items-center gap-2">
-                  {isLoading && <span className="text-xs text-blue-600 flex items-center gap-1"><Loader2 size={12} className="animate-spin"/> {t.extracting}</span>}
-                  <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100">Interactive Visualization</span>
-               </div>
+               
+               <button onClick={() => handleAddToPPT('Hotspots Visualization')} className="text-xs text-slate-400 hover:text-blue-600 flex items-center gap-1">
+                  <MonitorPlay size={14} /> Add to PPT
+               </button>
             </div>
             
-            <div className="flex flex-grow gap-4 h-full overflow-hidden">
-                {/* Left: Interactive Force Layout Cloud */}
-                <div 
-                   className="flex-grow bg-slate-50/30 rounded-lg border border-slate-100 overflow-hidden relative" 
-                   ref={cloudRef}
-                   onClick={() => setSelectedKeyword(null)} // Click background to deselect
-                >
-                   {/* D3 renders here */}
-                   <div className="absolute bottom-2 left-2 text-[10px] text-slate-400 pointer-events-none">
-                      Force-Directed Layout • Click to Filter Methodologies
-                   </div>
-                </div>
-
-                {/* Right: Frequency Statistics Panel */}
-                <div className="w-64 flex-shrink-0 border-l border-slate-100 pl-4 flex flex-col">
-                   <div className="flex items-center gap-2 mb-3 text-sm font-bold text-slate-700">
-                      <BarChart2 size={16} /> {t.keywordStats}
-                   </div>
-                   <div className="flex-grow overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-                      {[...(trendData.hotspots || [])].sort((a,b) => b.value - a.value).map((item, idx) => (
-                         <div 
-                           key={idx} 
-                           className={`group cursor-pointer rounded-lg p-2 transition-all border ${
-                              selectedKeyword === item.text 
-                              ? 'bg-blue-50 border-blue-200 shadow-sm' 
-                              : 'bg-white border-transparent hover:bg-slate-50'
-                           }`}
-                           onClick={() => setSelectedKeyword(item.text === selectedKeyword ? null : item.text)}
-                         >
-                            <div className="flex justify-between items-center mb-1">
-                               <span className={`text-xs font-bold truncate pr-2 ${selectedKeyword === item.text ? 'text-blue-700' : 'text-slate-700'}`}>
-                                  {item.text.split('(')[0]}
-                               </span>
-                               <span className="text-[10px] text-slate-400 font-mono">{item.value}</span>
-                            </div>
-                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                               <div 
-                                 className={`h-full rounded-full transition-all duration-500 ${selectedKeyword === item.text ? 'bg-blue-500' : 'bg-slate-300 group-hover:bg-blue-400'}`} 
-                                 style={{ width: `${item.value}%` }}
-                               ></div>
-                            </div>
-                            {item.category && (
-                              <div className="mt-1.5 flex justify-end">
-                                <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded flex items-center gap-1">
-                                   <Tag size={8} /> {item.category}
-                                </span>
-                              </div>
-                            )}
-                         </div>
-                      ))}
-                   </div>
-                </div>
+            <div 
+               className="flex-grow bg-slate-50/30 rounded-lg border border-slate-100 overflow-hidden relative cursor-crosshair" 
+               ref={cloudRef}
+               onClick={() => setSelectedKeyword(null)}
+            >
+               {/* D3 Canvas */}
+               <div className="absolute bottom-4 left-4 pointer-events-none bg-white/80 backdrop-blur px-3 py-2 rounded text-xs text-slate-500 border border-slate-100">
+                  {viewMode === 'cloud' ? 'Force-Directed Word Cloud' : 'Knowledge Graph Topology'} <br/>
+                  <span className="opacity-70">Click nodes to drill down</span>
+               </div>
             </div>
          </div>
 
-         {/* Methodology Rankings (Sidebar) OR Related Papers */}
-         <div className={`lg:col-span-4 bg-white p-6 rounded-xl border shadow-sm flex flex-col h-[600px] transition-all ${selectedKeyword ? 'border-blue-300 shadow-md ring-1 ring-blue-50' : 'border-slate-200'}`}>
-            <div className="flex items-center justify-between gap-2 mb-4 border-b border-slate-100 pb-3 flex-wrap">
-               <div className="flex items-center gap-2">
-                 <span className={`p-1.5 rounded transition-colors ${selectedKeyword ? 'bg-blue-100 text-blue-600' : 'bg-purple-50 text-secondary'}`}>
-                   {selectedKeyword ? <BookOpen size={18} /> : <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
-                 </span>
-                 <h3 className="text-lg font-bold text-slate-800">
-                   {selectedKeyword ? t.relatedPapers : t.methodologies}
-                 </h3>
-               </div>
-               {selectedKeyword && (
-                 <button 
-                   onClick={() => setSelectedKeyword(null)}
-                   className="text-xs text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded flex items-center gap-1 transition-colors"
-                 >
-                   Clear <X size={12} />
-                 </button>
-               )}
+         {/* Right Panel: Drill Down & Details */}
+         <div className={`lg:col-span-4 bg-white rounded-xl border shadow-sm flex flex-col h-[600px] overflow-hidden transition-all ${selectedKeyword ? 'border-blue-300 ring-1 ring-blue-50' : 'border-slate-200'}`}>
+            {/* Tabs */}
+            <div className="flex border-b border-slate-100 bg-slate-50/50">
+                <button 
+                   onClick={() => setRightPanelTab('papers')}
+                   className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${rightPanelTab === 'papers' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
+                >
+                   {selectedKeyword ? 'Related Papers' : t.methodologies}
+                </button>
+                <button 
+                   onClick={() => setRightPanelTab('gaps')}
+                   className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors flex items-center justify-center gap-1 ${rightPanelTab === 'gaps' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
+                >
+                   <Zap size={14} className={rightPanelTab === 'gaps' ? 'text-purple-600' : 'text-slate-400'} /> Blue Ocean
+                </button>
             </div>
 
-            {selectedKeyword ? (
-               // Display Related Papers
-               <div className="flex-grow flex flex-col">
-                  {onNavigateToIdea && (
-                    <div className="mb-4">
-                      <button 
-                        onClick={() => onNavigateToIdea(selectedKeyword)}
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-sm"
-                      >
-                        <Lightbulb size={16} />
-                        {t.generateIdeas}
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="flex-grow relative overflow-y-auto custom-scrollbar pr-1">
-                      {loadingPapers ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-                          <Loader2 className="animate-spin text-blue-600 h-8 w-8 mb-2" />
-                          <span className="text-sm">Fetching latest papers...</span>
+            <div className="flex-grow p-4 overflow-y-auto custom-scrollbar relative">
+                {rightPanelTab === 'gaps' ? (
+                    // Research Gaps View
+                    <div className="space-y-4">
+                        <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 text-xs text-purple-800 mb-2">
+                            AI-identified opportunities based on current literature saturation.
                         </div>
-                      ) : relatedPapers.length > 0 ? (
-                        <div className="space-y-3">
-                          {relatedPapers.map((paper, idx) => (
-                            <div key={paper.id} className="bg-slate-50 p-4 rounded-lg border border-slate-100 hover:border-blue-200 hover:shadow-sm transition-all group animate-fadeIn" style={{animationDelay: `${idx * 100}ms`}}>
-                                <h4 className="font-bold text-sm text-slate-800 leading-snug mb-2 group-hover:text-blue-700 line-clamp-2">
-                                  {paper.title}
-                                </h4>
-                                <div className="flex flex-wrap items-center gap-y-1 gap-x-2 text-xs text-slate-500 mb-2">
-                                    <span className="bg-white px-1.5 py-0.5 rounded border border-slate-200">{paper.year}</span>
-                                    <span className="font-medium text-slate-600 truncate max-w-[150px]">{paper.journal}</span>
+                        {trendData.researchGaps?.map((gap, i) => (
+                            <div key={i} className="border border-slate-200 rounded-lg p-4 hover:border-purple-300 transition-colors group">
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${gap.type === 'Blue Ocean' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{gap.type}</span>
+                                    <span className={`text-[10px] font-bold ${gap.difficulty === 'High' ? 'text-red-500' : gap.difficulty === 'Medium' ? 'text-amber-500' : 'text-green-500'}`}>{gap.difficulty} Difficulty</span>
                                 </div>
-                                <div className="flex flex-wrap gap-1">
-                                    {paper.badges?.slice(0, 3).map((b, i) => (
-                                      <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                                          b.type === 'SCI' ? 'bg-green-50 text-green-700 border-green-200' :
-                                          b.type === 'Q1' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                                          'bg-white text-slate-500 border-slate-200'
-                                      }`}>
-                                          {b.type} {b.if && `IF:${b.if}`}
-                                      </span>
-                                    ))}
-                                </div>
+                                <h4 className="font-bold text-slate-800 text-sm mb-2">{gap.problem}</h4>
+                                <p className="text-xs text-slate-600 leading-relaxed mb-3">{gap.potential}</p>
+                                <button className="w-full text-center py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-500 hover:bg-slate-50 group-hover:border-purple-200 group-hover:text-purple-600 transition-all">
+                                    Draft Proposal
+                                </button>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 text-center p-4">
-                          <BookOpen size={32} className="mb-2 opacity-20" />
-                          <p className="text-sm">{t.noPapers}</p>
-                        </div>
-                      )}
-                  </div>
-               </div>
-            ) : (
-               // Display Methodologies (Default)
-               <div className="flex-grow relative">
-                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={trendData.methodologies} margin={{ top: 5, right: 30, left: 10, bottom: 5 }} barSize={12}>
-                       <XAxis type="number" hide />
-                       <YAxis type="category" dataKey="name" width={1} hide />
-                       <Tooltip 
-                         contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                         cursor={{fill: 'transparent'}}
-                       />
-                       <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                          {trendData.methodologies?.map((entry, index) => (
-                             <Cell key={`cell-${index}`} fill={index < 2 ? '#4f46e5' : '#818cf8'} />
-                          ))}
-                       </Bar>
-                    </BarChart>
-                 </ResponsiveContainer>
-                 
-                 <div className="absolute top-0 right-0 left-0 bottom-0 flex flex-col justify-around pointer-events-none py-2">
-                    {trendData.methodologies?.map((item, idx) => (
-                       <div key={idx} className="relative flex justify-between items-center group mb-2 pl-2 pr-4">
-                          <div className="flex items-center gap-3 pr-2 bg-white/60 backdrop-blur-[1px] rounded p-1">
-                             <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
-                             <span className="text-xs font-bold text-slate-700 group-hover:text-blue-600 transition-colors line-clamp-1">{item.name}</span>
+                        ))}
+                         {trendData.researchGaps?.length === 0 && (
+                            <div className="text-center py-10 text-slate-400">
+                                <Zap size={32} className="mx-auto mb-2 opacity-20" />
+                                <p>Run analysis to identify gaps.</p>
+                            </div>
+                         )}
+                    </div>
+                ) : (
+                    // Papers / Methodologies View
+                    <>
+                       {selectedKeyword ? (
+                          // Drill Down: Related Papers
+                          <div className="space-y-3">
+                              <div className="flex justify-between items-center mb-2">
+                                  <h4 className="text-xs font-bold text-slate-400 uppercase">Drill-down: {selectedKeyword}</h4>
+                                  <button onClick={() => setSelectedKeyword(null)} className="text-slate-400 hover:text-slate-600"><X size={14}/></button>
+                              </div>
+                              
+                              {loadingPapers ? (
+                                  <div className="flex justify-center py-10"><Loader2 className="animate-spin text-blue-600" /></div>
+                              ) : (
+                                  relatedPapers.map((paper) => (
+                                      <div key={paper.id} className="bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-300 transition-all group">
+                                          <h5 className="font-bold text-sm text-slate-800 leading-tight mb-2 group-hover:text-blue-700">{paper.title}</h5>
+                                          <div className="flex justify-between items-center mb-2">
+                                              <span className="text-xs text-slate-500">{paper.year} • {paper.journal}</span>
+                                              <div 
+                                                className="text-xs font-bold text-purple-600 cursor-pointer flex items-center gap-1 bg-purple-50 px-2 py-0.5 rounded hover:bg-purple-100"
+                                                onMouseEnter={() => handleTLDR(paper.id, paper.title)}
+                                              >
+                                                  <Zap size={10} /> AI TL;DR
+                                              </div>
+                                          </div>
+                                          {/* AI TL;DR Tooltip Area */}
+                                          {paperTLDRs[paper.id] && (
+                                              <div className="bg-white p-2 rounded border border-purple-100 text-[10px] text-slate-600 shadow-sm animate-fadeIn mt-1">
+                                                  {paperTLDRs[paper.id] === 'Loading...' ? <Loader2 size={10} className="animate-spin inline mr-1"/> : <span className="font-bold text-purple-700">Summary: </span>}
+                                                  {paperTLDRs[paper.id]}
+                                              </div>
+                                          )}
+                                      </div>
+                                  ))
+                              )}
+                              
+                              {onNavigateToIdea && (
+                                <button 
+                                    onClick={() => onNavigateToIdea(selectedKeyword)}
+                                    className="w-full mt-4 bg-amber-500 text-white py-2 rounded-lg font-bold text-sm hover:bg-amber-600 flex items-center justify-center gap-2"
+                                >
+                                    <Lightbulb size={16} /> Generate Research Idea
+                                </button>
+                              )}
                           </div>
-                          <div className="flex items-center gap-2 pl-2 bg-white/60 backdrop-blur-[1px] rounded p-1">
-                             <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">{item.value}</span>
-                             <span className="text-[10px] font-bold text-green-500">↑ {item.growth}%</span>
+                       ) : (
+                          // Default: Methodologies Ranking
+                          <div className="space-y-4">
+                             {trendData.methodologies?.length === 0 && !isLoading && (
+                                <div className="text-center py-10 text-slate-400">
+                                   <BarChart2 size={32} className="mx-auto mb-2 opacity-20" />
+                                   <p>Run analysis to see rankings.</p>
+                                </div>
+                             )}
+                             {trendData.methodologies?.map((item, idx) => (
+                                <div key={idx} className="bg-white p-3 rounded-lg border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
+                                   <div className="flex justify-between items-start mb-1 relative z-10">
+                                      <div className="flex items-center gap-2">
+                                         <span className={`w-5 h-5 flex items-center justify-center rounded text-[10px] font-bold ${idx < 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
+                                         <span className="font-bold text-sm text-slate-800">{item.name}</span>
+                                      </div>
+                                      <span className="text-xs font-bold text-green-600">+{item.growth}%</span>
+                                   </div>
+                                   
+                                   <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-2 relative z-10">
+                                      <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (item.value / 100))}%` }}></div>
+                                   </div>
+
+                                   {/* Code Stats */}
+                                   <div className="flex gap-3 relative z-10">
+                                       {item.codeStats && (
+                                           <>
+                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                                                <Github size={10} /> {item.codeStats.github}
+                                            </div>
+                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                                                <span>🤗</span> {item.codeStats.huggingface}
+                                            </div>
+                                           </>
+                                       )}
+                                   </div>
+                                </div>
+                             ))}
                           </div>
-                       </div>
-                    ))}
-                 </div>
-               </div>
-            )}
+                       )}
+                    </>
+                )}
+            </div>
          </div>
       </div>
     </div>

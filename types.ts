@@ -38,9 +38,14 @@ export enum ViewState {
   OPENING_REVIEW = 'OPENING_REVIEW',
 }
 
+// Trend Types
+export type TrendTimeRange = '1Y' | '3Y' | '5Y';
+export type TrendPersona = 'Researcher' | 'Institution';
+
 export interface TrendItem {
   name: string;
   growth: number;
+  predictedGrowth?: number; // New: Future prediction
   type: string;
 }
 
@@ -48,6 +53,32 @@ export interface HotspotItem {
   text: string;
   value: number; // size
   category: string;
+  relatedTo?: string[]; // New: For graph connections
+}
+
+export interface MethodologyItem {
+  name: string;
+  value: number;
+  growth: number;
+  relatedHotspots: string[];
+  codeStats?: { // New: Implementation stats
+    github: string;
+    huggingface: string;
+  };
+}
+
+export interface ResearchGap {
+  problem: string;
+  potential: string;
+  difficulty: 'High' | 'Medium' | 'Low';
+  type: 'Blue Ocean' | 'Hard Problem';
+}
+
+export interface TrendAnalysisResult {
+  emergingTech: TrendItem[];
+  hotspots: HotspotItem[];
+  methodologies: MethodologyItem[];
+  researchGaps: ResearchGap[];
 }
 
 export interface TrackedPaperDetails {
