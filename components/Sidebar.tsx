@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network } from 'lucide-react';
+import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -39,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
              { label: navT.trends, icon: <TrendingUp size={20} />, id: ViewState.TRENDS },
              { label: navT.search, icon: <Search size={20} />, id: ViewState.SEARCH },
              { label: navT.pdfChat, icon: <MessageSquare size={20} />, id: ViewState.PDF_CHAT }, 
-             { label: navT.knowledge, icon: <Network size={20} />, id: ViewState.KNOWLEDGE_GRAPH }, // New Item
+             { label: navT.knowledge, icon: <Network size={20} />, id: ViewState.KNOWLEDGE_GRAPH },
              { label: navT.opening, icon: <ClipboardCheck size={20} />, id: ViewState.OPENING_REVIEW },
           ]
       },
@@ -59,6 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
           items: [
              { label: navT.review, icon: <FileText size={20} />, id: ViewState.REVIEW_GENERATION },
              { label: navT.polish, icon: <PenTool size={20} />, id: ViewState.POLISH },
+             { label: navT.figure, icon: <ImageIcon size={20} />, id: ViewState.FIGURE_GEN }, // New Item
              { label: navT.ppt, icon: <MonitorPlay size={20} />, id: ViewState.PPT_GENERATION },
           ]
       },

@@ -680,3 +680,69 @@ export const runCodeSimulation = async (code: string, language: Language): Promi
     
     return getText(prompt, 'gemini-2.5-flash');
 };
+
+// --- NEW: Scientific Figure Generation ---
+export const generateScientificFigure = async (
+    prompt: string, 
+    style: string, 
+    mode: 'generate' | 'polish',
+    imageFile?: File
+): Promise<string | null> => {
+    try {
+        // Mode 1: Polish (Sketch to Figure) - Image Editing
+        if (mode === 'polish' && imageFile) {
+            const base64Data = await fileToBase64(imageFile);
+            // Use gemini-2.5-flash-image for editing as per guidelines
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash-image',
+                contents: {
+                    parts: [
+                        { inlineData: { mimeType: imageFile.type, data: base64Data } },
+                        { text: `Turn this rough sketch into a high-quality scientific figure. Style: ${style}. Details: ${prompt}. Maintain the structural logic but make it publication-ready.` }
+                    ]
+                }
+            });
+            
+            // Extract image from response
+            if (response.candidates?.[0]?.content?.parts) {
+                for (const part of response.candidates[0].content.parts) {
+                    if (part.inlineData) {
+                        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                    }
+                }
+            }
+            return null;
+        } 
+        
+        // Mode 2: Generate (Text to Figure) - High Quality Generation
+        else {
+            // Use gemini-3-pro-image-preview for high quality generation
+            const response = await ai.models.generateContent({
+                model: 'gemini-3-pro-image-preview',
+                contents: {
+                    parts: [
+                        { text: `Create a scientific figure. Description: ${prompt}. Style: ${style}. High resolution, professional, academic journal standard.` }
+                    ]
+                },
+                config: {
+                    imageConfig: {
+                        imageSize: "2K",
+                        aspectRatio: "4:3"
+                    }
+                }
+            });
+
+            if (response.candidates?.[0]?.content?.parts) {
+                for (const part of response.candidates[0].content.parts) {
+                    if (part.inlineData) {
+                        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+                    }
+                }
+            }
+            return null;
+        }
+    } catch (e) {
+        console.error("Figure Generation Error:", e);
+        return null;
+    }
+};

@@ -15,7 +15,8 @@ import DataAnalysis from './components/DataAnalysis';
 import CodeAssistant from './components/CodeAssistant';
 import ExperimentDesign from './components/ExperimentDesign';
 import PDFChat from './components/PDFChat';
-import KnowledgeGraph from './components/KnowledgeGraph'; // New Import
+import KnowledgeGraph from './components/KnowledgeGraph';
+import FigureGenerator from './components/FigureGenerator'; // New Import
 import { ViewState, Paper, Language } from './types';
 import { generateLiteratureReview } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -137,6 +138,9 @@ const App: React.FC = () => {
             )}
             {currentView === ViewState.POLISH && (
             <PolishAssistant language={language} />
+            )}
+            {currentView === ViewState.FIGURE_GEN && (
+            <FigureGenerator language={language} />
             )}
             {currentView === ViewState.PPT_GENERATION && (
             <PPTGenerator language={language} />

@@ -23,7 +23,8 @@ export const TRANSLATIONS = {
       code: 'Code Assistant',
       experimentDesign: 'Exp. Design',
       pdfChat: 'AI Paper Guide',
-      knowledge: 'Knowledge Graph'
+      knowledge: 'Knowledge Graph',
+      figure: 'Sci-Figure Gen'
     },
     search: { 
       title: 'Research Assistant', 
@@ -375,6 +376,33 @@ export const TRANSLATIONS = {
       imageNote: 'Generate Note from Image',
       connecting: 'Discovering relationships...',
       analyzingImage: 'Analyzing Image...'
+    },
+    figure: {
+      title: 'Scientific Figure Gen/Polish',
+      subtitle: 'Generate high-quality mechanism diagrams or polish rough sketches into publication-standard figures.',
+      mode: {
+        generate: 'Text-to-Figure',
+        polish: 'Sketch-to-Figure'
+      },
+      input: {
+        promptLabel: 'Describe your figure',
+        promptPlaceholder: 'e.g. A mechanism diagram showing how drug X inhibits protein Y in the mitochondria...',
+        uploadLabel: 'Upload Sketch/Chart',
+        styleLabel: 'Target Journal Style'
+      },
+      styles: {
+        Nature: 'Nature (Clean, Serif)',
+        Science: 'Science (Bold, Modern)',
+        Cell: 'Cell (Graphical, Colorful)',
+        IEEE: 'IEEE (Technical, B&W)',
+        Flat: 'Flat Vector'
+      },
+      btn: 'Generate Figure',
+      generating: 'Rendering...',
+      download: 'Download Image',
+      refine: 'Refine (Chat)',
+      result: 'Figure Result',
+      refinePlaceholder: 'e.g. Make the arrows thicker, change background to white...'
     }
   }
   ,
@@ -401,7 +429,8 @@ export const TRANSLATIONS = {
       code: '代码助手',
       experimentDesign: '实验设计',
       pdfChat: 'AI论文导读',
-      knowledge: '个人知识库'
+      knowledge: '个人知识库',
+      figure: '科研绘图'
     },
     search: { 
       title: '科研助手', 
@@ -753,6 +782,33 @@ export const TRANSLATIONS = {
       imageNote: '图片转笔记',
       connecting: '正在发现关联...',
       analyzingImage: '正在分析图片...'
+    },
+    figure: {
+      title: '科研绘图/美化',
+      subtitle: '生成高质量机制图或将粗糙手绘/图表美化为期刊标准配图。',
+      mode: {
+        generate: '文生图',
+        polish: '图生图 (美化)'
+      },
+      input: {
+        promptLabel: '描述图片内容',
+        promptPlaceholder: '例如：一张展示药物X在线粒体中抑制蛋白Y的机制图...',
+        uploadLabel: '上传手绘/图表',
+        styleLabel: '目标期刊风格'
+      },
+      styles: {
+        Nature: 'Nature (衬线体/简洁)',
+        Science: 'Science (黑体/现代)',
+        Cell: 'Cell (图形化/多彩)',
+        IEEE: 'IEEE (技术/黑白)',
+        Flat: '扁平矢量风'
+      },
+      btn: '生成配图',
+      generating: '绘图中...',
+      download: '下载图片',
+      refine: '调整 (对话)',
+      result: '生成结果',
+      refinePlaceholder: '例如：把箭头变粗一点，背景换成白色...'
     }
   }
 };
