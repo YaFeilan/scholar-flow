@@ -49,9 +49,19 @@ export const TRANSLATIONS = {
       uploadTitle: 'Upload Manuscript',
       uploadDesc: 'PDF, Word, or Text files supported',
       contentLabel: 'Paper Content / Abstract',
-      startBtn: 'Start Peer Review Process',
+      startBtn: 'Start 3-Way Review',
       pending: 'Review Pending',
-      pendingDesc: 'Upload a document to receive a comprehensive evaluation from our AI expert panel.'
+      pendingDesc: 'Upload a document to receive a comprehensive evaluation from our AI expert panel.',
+      targetLabel: 'Target / Level',
+      journalLabel: 'Target Journal (Optional)',
+      rebuttalBtn: 'Draft Rebuttal Letter',
+      coverLetterBtn: 'Draft Cover Letter',
+      checklist: 'Pre-submission Checklist',
+      targets: {
+        SCI: 'SCI/EI (Science/Eng)',
+        SSCI: 'SSCI (Social Science)',
+        Coursework: 'Coursework / Assignment'
+      }
     },
     review: {
       steps: { 1: 'Search Strategy', 2: 'Select Papers', 3: 'Configuration', 4: 'Result' },
@@ -193,13 +203,23 @@ export const TRANSLATIONS = {
     },
     peer: {
       title: '智能审稿人',
-      subtitle: '模拟资深专家审稿流程。检查创新性、方法论可行性及参考文献真实性。',
+      subtitle: '模拟三维专家审稿流程。检查Gap、方法论、语言及期刊匹配度。',
       uploadTitle: '上传稿件',
       uploadDesc: '支持 PDF, Word 或文本文件',
       contentLabel: '论文内容 / 摘要',
       startBtn: '开始审稿流程',
       pending: '等待审稿',
-      pendingDesc: '上传文档以获取 AI 专家组的全面评估。'
+      pendingDesc: '上传文档以获取 AI 专家组的全面评估。',
+      targetLabel: '目标类型',
+      journalLabel: '目标期刊 (选填)',
+      rebuttalBtn: '生成回复信 (Rebuttal)',
+      coverLetterBtn: '生成投稿信 (Cover Letter)',
+      checklist: '预审检查清单',
+      targets: {
+        SCI: 'SCI/EI (理工科)',
+        SSCI: 'SSCI (社科)',
+        Coursework: '课程作业/大作业'
+      }
     },
     review: {
       steps: { 1: '检索策略', 2: '选择文献', 3: '配置参数', 4: '生成结果' },

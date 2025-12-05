@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse } from "../types";
+import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType } from "../types";
 // @ts-ignore
 import mammoth from "mammoth";
 
@@ -28,8 +28,6 @@ const fileToBase64 = (file: File): Promise<string> => {
 export const searchAcademicPapers = async (query: string, lang: Language = 'EN', limit: number = 20): Promise<Paper[]> => {
   try {
     const model = 'gemini-2.5-flash';
-    // Use Google Search to find real papers
-    // Prompt engineered to strictly enforce JSON output even with Search tool enabled
     const prompt = `
       You are a high-performance academic search engine. 
       Your task is to find ${limit} DISTINCT, high-quality academic papers related to: "${query}".
@@ -68,50 +66,43 @@ export const searchAcademicPapers = async (query: string, lang: Language = 'EN',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }], 
-        // Note: responseMimeType is intentionally omitted as it conflicts with tools in some versions
       }
     });
 
     let jsonStr = response.text || '[]';
     
-    // aggressive cleanup to find the JSON array
-    // 1. Try to find markdown code blocks
     const codeBlockMatch = jsonStr.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
     if (codeBlockMatch) {
       jsonStr = codeBlockMatch[1];
     }
 
-    // 2. If no code block, or even inside code block, find the first '[' and last ']'
-    // Improved regex to capture nested arrays/objects properly within the bounds
     const firstBracket = jsonStr.indexOf('[');
     const lastBracket = jsonStr.lastIndexOf(']');
     
     if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
       jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
     } else {
-      console.warn("Gemini Search: Could not find JSON array brackets in response.", jsonStr);
-      // Fallback: try to see if it's a single object and wrap it
       if (jsonStr.trim().startsWith('{')) {
           jsonStr = `[${jsonStr}]`;
       } else {
-          return []; // Return empty to trigger fallback
+          return [];
       }
     }
 
-    // Clean up any trailing commas before the closing bracket which is invalid JSON but common in LLM output
     jsonStr = jsonStr.replace(/,\s*\]/g, ']');
 
     const papers = JSON.parse(jsonStr);
     
-    // Validation and ID assignment
     if (Array.isArray(papers)) {
-      return papers.map((p: any, i: number) => ({
+      return papers.map((p: any, i: number) => {
+        if (!p) return null;
+        return {
         ...p,
         id: p.id || `search-gen-${i}-${Date.now()}`,
-        badges: p.badges || [],
+        badges: Array.isArray(p.badges) ? p.badges : [], // GUARANTEE ARRAY
         authors: Array.isArray(p.authors) ? p.authors : [p.authors || 'Unknown'],
         addedDate: p.addedDate || new Date().toISOString().split('T')[0]
-      }));
+      }}).filter((p: any) => p !== null);
     }
     
     return [];
@@ -148,22 +139,45 @@ export const generateLiteratureReview = async (papers: string[], lang: Language 
   }
 };
 
-export const performPeerReview = async (content: string, filename: string, lang: Language = 'EN'): Promise<PeerReviewResponse | null> => {
+export const performPeerReview = async (
+  content: string, 
+  filename: string, 
+  targetType: TargetType, 
+  journalName: string, 
+  lang: Language = 'EN'
+): Promise<PeerReviewResponse | null> => {
   try {
     const model = 'gemini-2.5-flash';
-    const instruction = lang === 'ZH' ? '请用中文回答 (Respond in Simplified Chinese).' : 'Respond in English.';
+    const instruction = lang === 'ZH' ? 'Respond in Simplified Chinese.' : 'Respond in English.';
     
+    let specificFocus = "";
+    if (targetType === 'SCI' || targetType === 'EI') {
+      specificFocus = "Focus on Gap Check (did they miss references?), Baselines (are comparisons SOTA?), and Ablation Studies (module validity).";
+    } else if (targetType === 'SSCI') {
+      specificFocus = "Focus on Theoretical Framework (is the hypothesis grounded?) and Endogeneity (IV/Robustness checks).";
+    } else {
+      specificFocus = "Focus on rubric requirements, clarity, and basic academic standards.";
+    }
+
     const prompt = `
-    Role: Chief Editor of a top-tier academic journal.
-    Task: Conduct a comprehensive peer review process for the manuscript "${filename}".
+    Role: Senior Review Board for ${journalName || targetType}.
+    Task: Conduct a rigorous 3-dimensional peer review of the manuscript "${filename}".
+    Target: ${targetType} Journal.
     ${instruction}
     
-    You must simulate a panel of 3 distinct reviewers plus your own Executive Summary.
+    You must simulate THREE distinct personas:
+
+    1. **The Reviewer #2 (Domain Expert)**: Ruthless. ${specificFocus}
+       - MUST Quote evidence from text.
+       - Identify the "Research Gap".
     
-    Reviewer Profiles:
-    1. The Methodologist: Ruthless on data, statistics, logic, and technical implementation.
-    2. The Domain Expert: Focuses on novelty, theoretical depth, and contribution to the specific field.
-    3. The Generalist/Editor: Focuses on readability, structure, logical flow, and broader impact.
+    2. **The Native Academic Editor**: Focus on "Chinglish" vs Academic English, Flow, Signposting, and Tense Consistency.
+       - Point out specific phrases to nominalize or make precise.
+    
+    3. **The Editor-in-Chief**: Focus on "Scope Match" (Does it fit ${journalName}?), Impact Statement ("So What?"), and Reference Health (recency/self-citation).
+       - Give a desk rejection probability.
+
+    Also generate a "Pre-submission Checklist".
     
     Output strictly in JSON format.
     `;
@@ -171,24 +185,43 @@ export const performPeerReview = async (content: string, filename: string, lang:
     const response = await ai.models.generateContent({
       model,
       contents: [
-        { text: `${prompt}\n\nManuscript Content:\n${content.substring(0, 25000)}` }
+        { text: `${prompt}\n\nManuscript Content (Snippet):\n${content.substring(0, 30000)}` }
       ],
       config: {
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            summary: { type: Type.STRING, description: "Executive summary of the manuscript and the decision." },
+            checklist: {
+              type: Type.OBJECT,
+              properties: {
+                originality: { type: Type.STRING, enum: ['High', 'Medium', 'Low'] },
+                soundness: { type: Type.STRING, enum: ['Yes', 'No', 'Partial'] },
+                clarity: { type: Type.STRING, enum: ['Excellent', 'Good', 'Needs Improvement'] },
+                recommendation: { type: Type.STRING, enum: ['Accept', 'Minor Revision', 'Major Revision', 'Reject'] },
+              }
+            },
+            summary: { type: Type.STRING, description: "Executive summary of the decision." },
             reviewers: {
               type: Type.ARRAY,
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  id: { type: Type.INTEGER },
-                  role: { type: Type.STRING, description: "e.g., Methodology Expert" },
-                  focus: { type: Type.STRING, description: "e.g., Technical Rigor & Data" },
-                  content: { type: Type.STRING, description: "Detailed review markdown." },
-                  rating: { type: Type.INTEGER, description: "Score out of 5" }
+                  roleName: { type: Type.STRING },
+                  icon: { type: Type.STRING, enum: ['Expert', 'Language', 'Editor'] },
+                  focusArea: { type: Type.STRING },
+                  critiques: {
+                    type: Type.ARRAY,
+                    items: {
+                       type: Type.OBJECT,
+                       properties: {
+                          point: { type: Type.STRING },
+                          quote: { type: Type.STRING },
+                          suggestion: { type: Type.STRING }
+                       }
+                    }
+                  },
+                  score: { type: Type.NUMBER, description: "Score out of 10" }
                 }
               }
             }
@@ -201,6 +234,63 @@ export const performPeerReview = async (content: string, filename: string, lang:
   } catch (error) {
     console.error("Gemini API Error:", error);
     return null;
+  }
+};
+
+export const generateRebuttalLetter = async (
+  critiques: string, 
+  lang: Language = 'EN'
+): Promise<string> => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const prompt = `
+    You are an expert academic author. Write a polite, professional, and convincing "Response to Reviewers" (Rebuttal Letter) based on the critiques provided below.
+    ${getLangInstruction(lang)}
+    
+    Tone: Humble, confident, grateful. Use standard phrases like "We thank the reviewer for this insightful comment..."
+    
+    Critiques to address:
+    ${critiques}
+    
+    Format as a formal letter.
+    `;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+    });
+
+    return response.text || "Failed to generate rebuttal.";
+  } catch (error) {
+    return "Error generating rebuttal.";
+  }
+};
+
+export const generateCoverLetter = async (
+  paperSummary: string, 
+  journalName: string, 
+  lang: Language = 'EN'
+): Promise<string> => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const prompt = `
+    Write a compelling Cover Letter for submission to "${journalName}".
+    ${getLangInstruction(lang)}
+    
+    Highlight the "Why this journal?" and "Research Gap" based on this summary:
+    ${paperSummary}
+    
+    Format as a formal letter to the Editor-in-Chief.
+    `;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+    });
+
+    return response.text || "Failed to generate cover letter.";
+  } catch (error) {
+    return "Error generating cover letter.";
   }
 };
 
@@ -259,7 +349,6 @@ export const analyzeResearchTrends = async (topic: string, lang: Language = 'EN'
                   relatedHotspots: { 
                     type: Type.ARRAY, 
                     items: { type: Type.STRING },
-                    description: "List of related hotspot text values exactly as they appear in the hotspots list"
                   },
                 },
               },
@@ -269,7 +358,13 @@ export const analyzeResearchTrends = async (topic: string, lang: Language = 'EN'
       },
     });
 
-    return JSON.parse(response.text || '{}');
+    const res = JSON.parse(response.text || '{}');
+    // Ensure all required arrays exist
+    return {
+        emergingTech: Array.isArray(res.emergingTech) ? res.emergingTech : [],
+        hotspots: Array.isArray(res.hotspots) ? res.hotspots : [],
+        methodologies: Array.isArray(res.methodologies) ? res.methodologies : []
+    };
   } catch (error) {
     console.error("Gemini API Error:", error);
     return null;
@@ -370,7 +465,13 @@ export const trackCitationNetwork = async (query: string, isFile: boolean = fals
       },
     });
 
-    return JSON.parse(response.text || '[]');
+    const res = JSON.parse(response.text || '[]');
+    if (!Array.isArray(res)) return [];
+    // Ensure inner papers are also arrays
+    return res.map((item: any) => ({
+        ...item,
+        papers: Array.isArray(item.papers) ? item.papers : []
+    }));
   } catch (error) {
     console.error("Gemini API Error:", error);
     return [];
@@ -395,16 +496,12 @@ export const polishContent = async (content: string | File, lang: Language = 'EN
     if (content instanceof File) {
         const base64Data = await fileToBase64(content);
         let mimeType = content.type;
-        // Basic fallback for common types if type is missing or generic
         if (!mimeType || mimeType === '') {
             if (content.name.endsWith('.pdf')) mimeType = 'application/pdf';
             else if (content.name.endsWith('.png')) mimeType = 'image/png';
             else if (content.name.endsWith('.jpg') || content.name.endsWith('.jpeg')) mimeType = 'image/jpeg';
         }
 
-        // Only PDF and Image types are supported for inlineData in this context
-        // For text files passed as File, we should ideally read them, but here we assume PDF/Image
-        // if the component passed a File.
         parts.push({
             inlineData: {
                 mimeType: mimeType,
@@ -443,7 +540,12 @@ export const polishContent = async (content: string | File, lang: Language = 'EN
       },
     });
 
-    return JSON.parse(response.text || 'null');
+    const res = JSON.parse(response.text || 'null');
+    // Sanitize response
+    if (res && !Array.isArray(res.changes)) {
+        res.changes = [];
+    }
+    return res;
   } catch (error) {
     console.error("Gemini API Error:", error);
     return null;
@@ -801,7 +903,13 @@ export const generateResearchIdeas = async (topic: string, lang: Language = 'EN'
       }
     });
 
-    return JSON.parse(response.text || 'null');
+    const res = JSON.parse(response.text || 'null');
+    // Sanitize response
+    if (res) {
+        if (!Array.isArray(res.directions)) res.directions = [];
+        if (!Array.isArray(res.journals)) res.journals = [];
+    }
+    return res;
   } catch (error) {
     console.error("Idea Guide Error:", error);
     return null;

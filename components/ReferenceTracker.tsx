@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Search, BookOpen, Layers, Tag, Loader2, FileText, Share2, List, X, Info } from 'lucide-react';
 import * as d3 from 'd3';
@@ -70,20 +69,23 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
     
     // Flatten hierarchy
     results.forEach((cat, catIdx) => {
-      cat.papers.forEach((paper, pIdx) => {
-        const nodeId = `p-${catIdx}-${pIdx}`;
-        nodes.push({
-          id: nodeId,
-          name: paper.title,
-          author: paper.author,
-          year: paper.year,
-          description: paper.description,
-          type: 'paper',
-          radius: 8 + Math.random() * 4,
-          category: cat.category
+      // Safety check for papers array
+      if (Array.isArray(cat.papers)) {
+        cat.papers.forEach((paper, pIdx) => {
+            const nodeId = `p-${catIdx}-${pIdx}`;
+            nodes.push({
+            id: nodeId,
+            name: paper.title,
+            author: paper.author,
+            year: paper.year,
+            description: paper.description,
+            type: 'paper',
+            radius: 8 + Math.random() * 4,
+            category: cat.category
+            });
+            links.push({ source: 'root', target: nodeId });
         });
-        links.push({ source: 'root', target: nodeId });
-      });
+      }
     });
 
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
@@ -314,7 +316,7 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {results.map((category, idx) => (
+            {results?.map((category, idx) => (
               <div key={idx} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                 <div className="bg-slate-50 px-5 py-3 border-b border-slate-100 flex items-center justify-between">
                   <span className="font-bold text-slate-700 flex items-center gap-2">
@@ -322,11 +324,11 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
                     {category.category}
                   </span>
                   <span className="bg-white text-slate-500 text-xs px-2 py-1 rounded border border-slate-200 font-mono">
-                    {category.papers.length} Refs
+                    {category.papers?.length || 0} Refs
                   </span>
                 </div>
                 <div className="p-5 space-y-4">
-                  {category.papers.map((paper, pIdx) => (
+                  {category.papers?.map((paper, pIdx) => (
                     <div key={pIdx} className="group">
                       <div className="flex justify-between items-start mb-1">
                         <h4 className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors leading-tight">

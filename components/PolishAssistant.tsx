@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef } from 'react';
 import { PenTool, Upload, FileText, ArrowRight, Check, Loader2, RefreshCw } from 'lucide-react';
 import { polishContent } from '../services/geminiService';
@@ -143,7 +144,7 @@ const PolishAssistant: React.FC<PolishAssistantProps> = ({ language }) => {
                      {t.revisionNotes}
                   </h3>
                   <div className="space-y-4">
-                     {result.changes.map((change, idx) => (
+                     {result.changes?.map((change, idx) => (
                         <div key={idx} className="bg-slate-50 rounded-lg p-3 border border-slate-100 text-sm">
                            <div className="flex justify-between items-start mb-2">
                               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide
@@ -169,7 +170,7 @@ const PolishAssistant: React.FC<PolishAssistantProps> = ({ language }) => {
                            </p>
                         </div>
                      ))}
-                     {result.changes.length === 0 && (
+                     {result.changes?.length === 0 && (
                         <p className="text-slate-500 text-sm italic text-center py-4">No major errors found. Your text is already in good shape!</p>
                      )}
                   </div>

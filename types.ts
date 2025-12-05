@@ -93,13 +93,28 @@ export interface IdeaFollowUpResult {
   recommendedTerms: string[];
 }
 
-export interface PeerReviewResponse {
-  summary: string;
-  reviewers: {
-    id: number;
-    role: string;
-    focus: string;
-    content: string; // Markdown content
-    rating: number; // 1-5
+// Updated Peer Review Types
+export type TargetType = 'SCI' | 'SSCI' | 'EI' | 'Coursework';
+
+export interface ReviewerFeedback {
+  roleName: string; // e.g., "The Domain Expert (Reviewer #2)"
+  icon: 'Expert' | 'Language' | 'Editor';
+  focusArea: string;
+  critiques: {
+    point: string;
+    quote: string; // Evidence
+    suggestion: string; // Actionable advice
   }[];
+  score: number; // 1-10
+}
+
+export interface PeerReviewResponse {
+  checklist: {
+    originality: 'High' | 'Medium' | 'Low';
+    soundness: 'Yes' | 'No' | 'Partial';
+    clarity: 'Excellent' | 'Good' | 'Needs Improvement';
+    recommendation: 'Accept' | 'Minor Revision' | 'Major Revision' | 'Reject';
+  };
+  reviewers: ReviewerFeedback[];
+  summary: string;
 }

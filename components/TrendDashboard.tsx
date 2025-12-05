@@ -249,7 +249,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
 
              {/* Emerging Tech Cards */}
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 relative z-10">
-                {trendData.emergingTech.map((tech, idx) => (
+                {trendData.emergingTech?.map((tech, idx) => (
                   <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg p-5 border border-white/5 hover:bg-white/15 transition-all animate-fadeIn">
                      <p className="text-xs font-bold text-blue-300 uppercase mb-2 tracking-wider">{tech.type || t.emerging}</p>
                      <h3 className="text-lg font-bold leading-tight mb-4">{tech.name}</h3>
@@ -299,7 +299,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                       <BarChart2 size={16} /> {t.keywordStats}
                    </div>
                    <div className="flex-grow overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-                      {[...trendData.hotspots].sort((a,b) => b.value - a.value).map((item, idx) => (
+                      {[...(trendData.hotspots || [])].sort((a,b) => b.value - a.value).map((item, idx) => (
                          <div 
                            key={idx} 
                            className={`group cursor-pointer rounded-lg p-2 transition-all border ${
@@ -389,7 +389,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                                     <span className="font-medium text-slate-600 truncate max-w-[150px]">{paper.journal}</span>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
-                                    {paper.badges.slice(0, 3).map((b, i) => (
+                                    {paper.badges?.slice(0, 3).map((b, i) => (
                                       <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded border ${
                                           b.type === 'SCI' ? 'bg-green-50 text-green-700 border-green-200' :
                                           b.type === 'Q1' ? 'bg-rose-50 text-rose-700 border-rose-200' :
@@ -422,7 +422,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                          cursor={{fill: 'transparent'}}
                        />
                        <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                          {trendData.methodologies.map((entry, index) => (
+                          {trendData.methodologies?.map((entry, index) => (
                              <Cell key={`cell-${index}`} fill={index < 2 ? '#4f46e5' : '#818cf8'} />
                           ))}
                        </Bar>
@@ -430,7 +430,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                  </ResponsiveContainer>
                  
                  <div className="absolute top-0 right-0 left-0 bottom-0 flex flex-col justify-around pointer-events-none py-2">
-                    {trendData.methodologies.map((item, idx) => (
+                    {trendData.methodologies?.map((item, idx) => (
                        <div key={idx} className="relative flex justify-between items-center group mb-2 pl-2 pr-4">
                           <div className="flex items-center gap-3 pr-2 bg-white/60 backdrop-blur-[1px] rounded p-1">
                              <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold ${idx === 0 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
