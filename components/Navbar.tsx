@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb } from 'lucide-react';
+import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -17,6 +17,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setView, language, setLang
 
   const navItems = [
     { label: 'Search', icon: <Search size={16} />, id: ViewState.SEARCH, text: t.search },
+    { label: 'Opening', icon: <ClipboardCheck size={16} />, id: ViewState.OPENING_REVIEW, text: t.opening },
     { label: 'Idea', icon: <Lightbulb size={16} />, id: ViewState.IDEA_GUIDE, text: t.idea },
     { label: 'Review', icon: <FileText size={16} />, id: ViewState.REVIEW_GENERATION, text: t.review },
     { label: 'PPT', icon: <MonitorPlay size={16} />, id: ViewState.PPT_GENERATION, text: t.ppt },

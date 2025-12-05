@@ -3,7 +3,7 @@
 export const TRANSLATIONS = {
   EN: {
     appName: 'Research Assistant',
-    nav: { search: 'Search', review: 'Review Gen', track: 'Tracking', trends: 'Trends', advisor: 'Advisor', peer: 'Peer Review', polish: 'Polish', ppt: 'PPT Gen', idea: 'Idea Guide' },
+    nav: { search: 'Search', review: 'Review Gen', track: 'Tracking', trends: 'Trends', advisor: 'Advisor', peer: 'Peer Review', polish: 'Polish', ppt: 'PPT Gen', idea: 'Idea Guide', opening: 'Opening Review' },
     search: { 
       title: 'Research Assistant', 
       subtitle: 'Search and select papers to generate a structured academic review.', 
@@ -128,11 +128,29 @@ export const TRANSLATIONS = {
       followUpBtn: 'Get Specific Advice',
       deepDive: 'Deep Dive Analysis',
       keywords: 'Search Keywords'
+    },
+    opening: {
+      title: 'Opening Proposal Review',
+      subtitle: 'Evaluate your research proposal logic, methodology, and journal alignment.',
+      uploadTitle: 'Upload Proposal',
+      uploadDesc: 'Upload your opening report (PDF) for analysis.',
+      targetLabel: 'Target Journal / Research Goal',
+      targetPlaceholder: 'e.g. IEEE TPAMI, or Ph.D. graduation requirement',
+      btn: 'Start Review',
+      analyzing: 'Analyzing Proposal...',
+      reportTitle: 'Review Report',
+      download: 'Download PDF Report',
+      sections: {
+        titleCheck: 'Title Analysis',
+        methodCheck: 'Methodology Review',
+        logicCheck: 'Logic & Flow',
+        journalMatch: 'Journal Alignment'
+      }
     }
   },
   ZH: {
     appName: '科研助手',
-    nav: { search: '文献检索', review: '综述生成', track: '引用追踪', trends: '趋势分析', advisor: '投稿顾问', peer: '智能审稿', polish: '论文润色', ppt: 'PPT制作', idea: '思路引导' },
+    nav: { search: '文献检索', review: '综述生成', track: '引用追踪', trends: '趋势分析', advisor: '投稿顾问', peer: '智能审稿', polish: '论文润色', ppt: 'PPT制作', idea: '思路引导', opening: '开题审查' },
     search: { 
       title: '科研助手', 
       subtitle: '检索并选择文献以生成结构化综述', 
@@ -257,6 +275,24 @@ export const TRANSLATIONS = {
       followUpBtn: '获取具体建议',
       deepDive: '深入分析',
       keywords: '推荐关键词'
+    },
+    opening: {
+      title: '开题审查',
+      subtitle: '评估您的开题报告逻辑、研究方法及与目标期刊的契合度。',
+      uploadTitle: '上传开题报告',
+      uploadDesc: '上传 PDF 格式的开题报告进行深度分析。',
+      targetLabel: '目标期刊 / 研究目标',
+      targetPlaceholder: '例如：IEEE TPAMI，或 博士毕业要求',
+      btn: '开始审查',
+      analyzing: '正在审查报告...',
+      reportTitle: '审查报告',
+      download: '下载 PDF 报告',
+      sections: {
+        titleCheck: '题目解析',
+        methodCheck: '方法论审查',
+        logicCheck: '逻辑思路检查',
+        journalMatch: '期刊/目标匹配度'
+      }
     }
   }
 };

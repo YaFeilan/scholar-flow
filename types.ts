@@ -35,6 +35,7 @@ export enum ViewState {
   ADVISOR = 'ADVISOR',
   PPT_GENERATION = 'PPT_GENERATION',
   IDEA_GUIDE = 'IDEA_GUIDE',
+  OPENING_REVIEW = 'OPENING_REVIEW',
 }
 
 export interface TrendItem {

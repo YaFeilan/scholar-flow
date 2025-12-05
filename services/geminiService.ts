@@ -856,3 +856,72 @@ export const generateIdeaFollowUp = async (
     return null;
   }
 }
+
+export const generateOpeningReview = async (file: File, target: string, lang: Language): Promise<string> => {
+  try {
+    const model = 'gemini-2.5-flash';
+    const base64Data = await fileToBase64(file);
+    let mimeType = file.type;
+    
+    // Default to PDF if generic or unknown, as this feature targets PDF proposals
+    if (!mimeType || mimeType === '') {
+      mimeType = 'application/pdf';
+    }
+
+    const prompt = `
+    Role: Senior Thesis Committee Member / Academic Advisor.
+    Task: Review the uploaded "Opening Report/Research Proposal".
+    Context: The user is aiming for: "${target}" (Target Journal or Graduation Requirement).
+
+    ${getLangInstruction(lang)}
+
+    CRITICAL ANALYSIS POINTS:
+    1. **Title Analysis**: Is it specific, concise, and academic? Does it reflect the content?
+    2. **Methodology Check**: Are the proposed methods feasible? Are they state-of-the-art? Is the technical path clear?
+    3. **Logic & Flow (思路)**: Is there a clear problem definition? Does the solution logically follow the problem? Is there a hypothesis?
+    4. **Target Alignment**: Does this proposal meet the standards of "${target}"?
+
+    OUTPUT FORMAT (Strict Markdown for Report Generation):
+
+    # Opening Proposal Review Report
+    **Target Goal**: ${target}
+    **Date**: ${new Date().toLocaleDateString()}
+
+    ## 1. Executive Summary
+    [Brief assessment of the proposal's readiness (Pass/Major Revisions/Minor Revisions)]
+
+    ## 2. Title Evaluation
+    - **Current Status**: [Critique]
+    - **Suggestion**: [Optimization advice]
+
+    ## 3. Methodology & Logic Review
+    - **Feasibility**: [Analysis]
+    - **Logic Gaps**: [Identify any logical disconnects in the research plan]
+    - **Innovation**: [Assess the novelty]
+
+    ## 4. Alignment with Target (${target})
+    - **Fit Score**: [1-10]
+    - **Gap Analysis**: [What is missing to reach this target?]
+
+    ## 5. Specific Recommendations
+    1. [Actionable item 1]
+    2. [Actionable item 2]
+    3. [Actionable item 3]
+    `;
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: {
+        parts: [
+          { inlineData: { mimeType, data: base64Data } },
+          { text: prompt }
+        ]
+      }
+    });
+
+    return response.text || "Failed to generate opening review.";
+  } catch (error) {
+    console.error("Opening Review Error:", error);
+    return "Error generating review. Please ensure the file is a valid PDF.";
+  }
+};

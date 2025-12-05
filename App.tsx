@@ -11,6 +11,7 @@ import PolishAssistant from './components/PolishAssistant';
 import Advisor from './components/Advisor';
 import PPTGenerator from './components/PPTGenerator';
 import IdeaGuide from './components/IdeaGuide';
+import OpeningReview from './components/OpeningReview';
 import { ViewState, Paper, Language } from './types';
 import { generateLiteratureReview } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -82,6 +83,9 @@ const App: React.FC = () => {
         )}
         {currentView === ViewState.PPT_GENERATION && (
           <PPTGenerator language={language} />
+        )}
+        {currentView === ViewState.OPENING_REVIEW && (
+          <OpeningReview language={language} />
         )}
       </main>
 
