@@ -93,10 +93,28 @@ export const TRANSLATIONS = {
       tabText: 'Text Input',
       tabFile: 'File Upload',
       placeholder: 'Paste your abstract or paragraph here...',
-      btn: 'Polish Text',
-      revisionNotes: 'Revision Notes',
+      btn: 'Start Polish',
+      revisionNotes: 'Changes',
       outputTitle: 'Polished Output',
-      feedback: 'Overall Feedback'
+      feedback: 'Overall Feedback',
+      config: {
+        mode: 'Task Mode',
+        tone: 'Style / Tone',
+        field: 'Discipline',
+        glossary: 'Locked Terms (Glossary)',
+        modes: { EnToEn: 'English Polish', CnToEn: 'Chinese -> English', EnToCn: 'English -> Chinese' },
+        tones: { Academic: 'Academic Formal', Native: 'Native Speaker', Concise: 'Concise', Paraphrase: 'Paraphrase' },
+        fields: { General: 'General', Medicine: 'Medicine', CS: 'Computer Science', SocialSciences: 'Social Sciences', Engineering: 'Engineering', Economics: 'Economics' }
+      },
+      control: {
+        diffView: 'Diff View',
+        cleanView: 'Clean',
+        accept: 'Accept',
+        reject: 'Reject',
+        chatPlaceholder: 'e.g. "Make the second sentence more concise"',
+        export: 'Export w/ Revisions',
+        version: 'Ver'
+      }
     },
     advisor: {
       title: 'Publication Advisor',
@@ -266,7 +284,25 @@ export const TRANSLATIONS = {
       btn: '开始润色',
       revisionNotes: '修改说明',
       outputTitle: '润色结果',
-      feedback: '整体反馈'
+      feedback: '整体反馈',
+      config: {
+        mode: '任务模式',
+        tone: '风格 / 语气',
+        field: '学科领域',
+        glossary: '术语锁定 (术语表)',
+        modes: { EnToEn: '英文润色', CnToEn: '中译英', EnToCn: '英译中' },
+        tones: { Academic: '学术严谨', Native: '地道母语', Concise: '简洁专业', Paraphrase: '重写降重' },
+        fields: { General: '通用', Medicine: '医学', CS: '计算机', SocialSciences: '人文社科', Engineering: '工程', Economics: '经济金融' }
+      },
+      control: {
+        diffView: '修订模式',
+        cleanView: '预览模式',
+        accept: '采纳',
+        reject: '拒绝',
+        chatPlaceholder: '例如：“把第二段改得更委婉一点”',
+        export: '导出 (含修订)',
+        version: '版本'
+      }
     },
     advisor: {
       title: '投稿顾问',

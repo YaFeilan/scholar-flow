@@ -9,8 +9,9 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'Pattern Recognition',
     year: 2010,
     citations: 3500,
-    badges: [{ type: 'SCI' }, { type: 'Q1', if: 7.8 }],
-    abstract: 'This paper proposes a novel layered ensemble framework...'
+    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'Q1', if: 7.8, partition: 'Q1' }],
+    abstract: 'This paper proposes a novel layered ensemble framework...',
+    addedDate: '2023-11-15'
   },
   {
     id: '2',
@@ -19,8 +20,9 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'IEEE Transactions on Neural Networks and Learning Systems',
     year: 2023,
     citations: 95,
-    badges: [{ type: 'SCI' }, { type: 'Q1', if: 14.3 }],
-    abstract: 'We introduce an adaptive mechanism for hierarchical ensembles...'
+    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'Q1', if: 14.3, partition: 'Q1' }],
+    abstract: 'We introduce an adaptive mechanism for hierarchical ensembles...',
+    addedDate: '2024-01-20'
   },
   {
     id: '3',
@@ -29,8 +31,9 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'Journal of Biomedical Informatics',
     year: 2018,
     citations: 420,
-    badges: [{ type: 'SCI' }, { type: 'Q2', if: 5.1 }],
-    abstract: 'Medical imaging requires high precision. This study applies stacking...'
+    badges: [{ type: 'SCI', partition: 'Q2' }, { type: 'Q2', if: 5.1, partition: 'Q2' }],
+    abstract: 'Medical imaging requires high precision. This study applies stacking...',
+    addedDate: '2023-09-10'
   },
   {
     id: '4',
@@ -39,8 +42,9 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'Expert Systems with Applications',
     year: 2024,
     citations: 12,
-    badges: [{ type: 'SCI' }, { type: 'Q2', if: 8.5 }],
-    abstract: 'Interpreting ensemble models is challenging. We present a framework...'
+    badges: [{ type: 'SCI', partition: 'Q2' }, { type: 'Q2', if: 8.5, partition: 'Q2' }],
+    abstract: 'Interpreting ensemble models is challenging. We present a framework...',
+    addedDate: '2024-02-05'
   },
   {
     id: '5',
@@ -49,8 +53,9 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'Machine Learning',
     year: 2021,
     citations: 150,
-    badges: [{ type: 'SCI' }, { type: 'Q1', if: 6.2 }],
-    abstract: 'Comparing XGBoost and LightGBM within hierarchical contexts...'
+    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'Q1', if: 6.2, partition: 'Q1' }],
+    abstract: 'Comparing XGBoost and LightGBM within hierarchical contexts...',
+    addedDate: '2023-12-01'
   },
   {
     id: '6',
@@ -59,8 +64,9 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'Nature Physics',
     year: 2024,
     citations: 89,
-    badges: [{ type: 'SCI' }, { type: 'Q1', if: 19.6 }],
-    abstract: 'We review the current state of Quantum Machine Learning algorithms, focusing on variational quantum circuits...'
+    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'Q1', if: 19.6, partition: 'Q1' }],
+    abstract: 'We review the current state of Quantum Machine Learning algorithms, focusing on variational quantum circuits...',
+    addedDate: '2024-02-28'
   },
   // CNKI (Chinese) Mock Papers
   {
@@ -71,7 +77,8 @@ export const MOCK_PAPERS: Paper[] = [
     year: 2023,
     citations: 28,
     badges: [{ type: 'CNKI' }, { type: 'EI' }],
-    abstract: '为解决高比例新能源接入下的电网调度难题，本文提出了一种基于改进DQN的实时调度策略...'
+    abstract: '为解决高比例新能源接入下的电网调度难题，本文提出了一种基于改进DQN的实时调度策略...',
+    addedDate: '2024-01-10'
   },
   {
     id: 'cnki-2',
@@ -80,8 +87,9 @@ export const MOCK_PAPERS: Paper[] = [
     journal: '计算机学报',
     year: 2024,
     citations: 15,
-    badges: [{ type: 'CNKI' }],
-    abstract: '大语言模型展现出强大的文本理解与生成能力。本文综述了其在电子病历分析、辅助诊断等领域的最新进展...'
+    badges: [{ type: 'CNKI' }, { type: 'CJR', partition: 'Q1' }],
+    abstract: '大语言模型展现出强大的文本理解与生成能力。本文综述了其在电子病历分析、辅助诊断等领域的最新进展...',
+    addedDate: '2024-03-01'
   },
   {
     id: 'cnki-3',
@@ -90,8 +98,9 @@ export const MOCK_PAPERS: Paper[] = [
     journal: '自动化学报',
     year: 2022,
     citations: 56,
-    badges: [{ type: 'CNKI' }, { type: 'EI' }],
-    abstract: '针对复杂交通场景，提出了一种基于Transformer的激光雷达与摄像头特征级融合算法...'
+    badges: [{ type: 'CNKI' }, { type: 'EI' }, { type: 'CJR', partition: 'Q2' }],
+    abstract: '针对复杂交通场景，提出了一种基于Transformer的激光雷达与摄像头特征级融合算法...',
+    addedDate: '2023-10-05'
   }
 ];
 

@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType, OpeningReviewResponse, ReviewPersona } from "../types";
+import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType, OpeningReviewResponse, ReviewPersona, PolishConfig } from "../types";
 // @ts-ignore
 import mammoth from "mammoth";
 
@@ -478,17 +478,44 @@ export const trackCitationNetwork = async (query: string, isFile: boolean = fals
   }
 };
 
-export const polishContent = async (content: string | File, lang: Language = 'EN'): Promise<PolishResult | null> => {
+export const polishContent = async (
+  content: string | File, 
+  lang: Language = 'EN',
+  config?: PolishConfig
+): Promise<PolishResult | null> => {
   try {
     const model = 'gemini-2.5-flash';
     const instruction = getLangInstruction(lang);
     
+    // Construct System Instruction based on Config
+    let modeInstruction = "";
+    if (config) {
+        if (config.mode === 'CnToEn') modeInstruction = "Translate Chinese to Academic English.";
+        else if (config.mode === 'EnToCn') modeInstruction = "Translate English to Academic Chinese.";
+        else modeInstruction = "Polish English to be more academic.";
+
+        modeInstruction += `\nTone: ${config.tone} (e.g., Formal, Native, Concise).`;
+        modeInstruction += `\nField: ${config.field} (Use appropriate terminology).`;
+        if (config.glossary) {
+            modeInstruction += `\nGlossary (Do not translate/change these terms): ${config.glossary}`;
+        }
+    } else {
+        modeInstruction = "Polish the content to improve academic tone, clarity, and flow.";
+    }
+
     const promptText = `Act as a professional academic editor. 
-    Polish the provided content to improve its academic tone, clarity, and flow. 
+    ${modeInstruction}
     ${instruction}
-    Identify specific areas for improvement (Grammar, Vocabulary, Tone, or Structure) and explain why.
     
-    If the content is a full paper or long document, focus on improving the Abstract, Introduction, and Conclusion, or provide a representative polish of the key sections.
+    CRITICAL RULES:
+    1. **PROTECT CITATIONS:** Do NOT modify, reorder, or remove citation markers like [1], (Smith et al., 2020), or \\cite{...}.
+    2. **PROTECT LATEX:** Do NOT modify any content inside $...$, $$...$$, or LaTeX commands.
+    
+    Return a JSON with:
+    1. 'polishedText': The full polished version.
+    2. 'changes': A list of significant changes. For each change, provide the 'original' substring and the 'revised' substring so we can locate it.
+    
+    If the content is very long, process the first 25000 characters.
     `;
 
     const parts: any[] = [];
@@ -510,7 +537,7 @@ export const polishContent = async (content: string | File, lang: Language = 'EN
         });
         parts.push({ text: promptText });
     } else {
-        parts.push({ text: `${promptText}\n\nOriginal Text:\n"${content.substring(0, 25000)}"` });
+        parts.push({ text: `${promptText}\n\nOriginal Text:\n"${typeof content === 'string' ? content.substring(0, 25000) : ''}"` });
     }
 
     const response = await ai.models.generateContent({
@@ -528,6 +555,7 @@ export const polishContent = async (content: string | File, lang: Language = 'EN
               items: {
                 type: Type.OBJECT,
                 properties: {
+                  id: { type: Type.STRING },
                   original: { type: Type.STRING },
                   revised: { type: Type.STRING },
                   reason: { type: Type.STRING },
@@ -545,12 +573,83 @@ export const polishContent = async (content: string | File, lang: Language = 'EN
     if (res && !Array.isArray(res.changes)) {
         res.changes = [];
     }
-    return res;
+    // Add IDs if missing
+    if (res && res.changes) {
+        res.changes = res.changes.map((c: any, i: number) => ({
+            ...c,
+            id: c.id || `change-${Date.now()}-${i}`,
+            status: 'pending' // Default status
+        }));
+    }
+    
+    return { ...res, versionId: Date.now() };
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error("Gemini Polish Error:", error);
     return null;
   }
 };
+
+export const refinePolish = async (
+    currentText: string,
+    instruction: string,
+    lang: Language
+): Promise<PolishResult | null> => {
+    try {
+        const model = 'gemini-2.5-flash';
+        const prompt = `
+        You are an academic editor refining a previous polish.
+        Current Text: "${currentText.substring(0, 20000)}"
+        
+        User Instruction: "${instruction}"
+        
+        Task: Apply the user's specific instruction to the text.
+        ${getLangInstruction(lang)}
+        
+        Return JSON with the NEW full text and the NEW changes list (only relating to this refinement).
+        `;
+        
+        const response = await ai.models.generateContent({
+            model,
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        polishedText: { type: Type.STRING },
+                        overallComment: { type: Type.STRING },
+                        changes: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    id: { type: Type.STRING },
+                                    original: { type: Type.STRING },
+                                    revised: { type: Type.STRING },
+                                    reason: { type: Type.STRING },
+                                    category: { type: Type.STRING, enum: ['Grammar', 'Vocabulary', 'Tone', 'Structure'] },
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        const res = JSON.parse(response.text || 'null');
+         if (res && res.changes) {
+            res.changes = res.changes.map((c: any, i: number) => ({
+                ...c,
+                id: c.id || `refine-${Date.now()}-${i}`,
+                status: 'pending'
+            }));
+        }
+        return { ...res, versionId: Date.now() };
+    } catch (error) {
+        console.error("Refine Polish Error:", error);
+        return null;
+    }
+}
 
 export const generateAdvisorReport = async (title: string, journal: string, lang: Language = 'EN'): Promise<string> => {
   try {
@@ -621,7 +720,7 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
             data: base64Data
           }
         };
-        textContent = "[Image uploaded by user. The user requested: 'Generate a including all in the picture'. You must EXTRACT EVERYTHING visible in the image: All Text, All Data Points, All Chart Titles, Legends, and Diagram details.]";
+        textContent = "[Image uploaded by user. The user requested: 'Generate a detailed description including ALL content in the picture'. You must EXTRACT EVERYTHING visible in the image: All Text, All Data Points, All Chart Titles, Legends, and Diagram details.]";
       }
       // 2. PDF Handling (Native Gemini Support)
       else if (mimeType === 'application/pdf') {
@@ -778,7 +877,7 @@ export const generatePPTContent = async (
     - Style Theme: ${config.style}
     
     CRITICAL INSTRUCTIONS:
-    1. If the input is an IMAGE, you MUST extract ALL text, data points, and describe any diagrams/charts in the generated slides. The user wants "Generate a including all in the picture".
+    1. If the input is an IMAGE, you MUST extract ALL text, data points, and describe any diagrams/charts in the generated slides. The user wants "Generate a comprehensive presentation including ALL details in the picture".
     2. **VISUAL FOCUS:** The user wants "Pictures not just text". 
        - Propose layouts that are visual (e.g., "ImageWithText", "SplitScreen", "DiagramFocused").
        - In 'content', keep text as concise bullet points.

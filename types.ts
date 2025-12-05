@@ -60,15 +60,32 @@ export interface TrackedReference {
   }[];
 }
 
+// Polish Types
+export type PolishMode = 'EnToEn' | 'CnToEn' | 'EnToCn';
+export type PolishTone = 'Academic' | 'Native' | 'Concise' | 'Paraphrase';
+export type PolishField = 'General' | 'Medicine' | 'CS' | 'SocialSciences' | 'Engineering' | 'Economics';
+
+export interface PolishConfig {
+  mode: PolishMode;
+  tone: PolishTone;
+  field: PolishField;
+  glossary?: string;
+}
+
+export interface PolishChange {
+  id: string; // unique id for linkage
+  original: string;
+  revised: string;
+  reason: string;
+  category: 'Grammar' | 'Vocabulary' | 'Tone' | 'Structure';
+  status: 'accepted' | 'rejected' | 'pending';
+}
+
 export interface PolishResult {
-  polishedText: string;
+  polishedText: string; // The full text (current state)
   overallComment: string;
-  changes: {
-    original: string;
-    revised: string;
-    reason: string;
-    category: 'Grammar' | 'Vocabulary' | 'Tone' | 'Structure';
-  }[];
+  changes: PolishChange[];
+  versionId: number;
 }
 
 export interface IdeaGuideResult {
