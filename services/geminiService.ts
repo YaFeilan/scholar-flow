@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType } from "../types";
+import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType, OpeningReviewResponse, ReviewPersona } from "../types";
 // @ts-ignore
 import mammoth from "mammoth";
 
@@ -853,17 +853,24 @@ export const generateSlideImage = async (prompt: string, style: string): Promise
   }
 }
 
-export const generateResearchIdeas = async (topic: string, lang: Language = 'EN'): Promise<IdeaGuideResult | null> => {
+export const generateResearchIdeas = async (topic: string, lang: Language = 'EN', focus: string = 'General'): Promise<IdeaGuideResult | null> => {
   try {
     const model = 'gemini-2.5-flash';
     const prompt = `
     Role: Senior Academic Research Mentor.
     Task: The user is interested in "${topic}". Help them brainstorm research directions.
+    Context Focus: The user wants a "${focus}" approach (e.g., if 'Data-Driven', emphasize datasets; if 'Policy', emphasize implications).
     ${getLangInstruction(lang)}
     
     Please provide:
-    1. 3 distinct, innovative research directions/angles based on this topic. For each, suggest 2 potential paper titles.
-    2. 3 suitable academic journals for this field. Provide an estimated impact factor and a brief reason why it fits.
+    1. 3 distinct, innovative research directions/angles based on this topic. 
+       - For each, provide specific **Methodologies** (e.g., DID, Transformer, Grounded Theory).
+       - Provide specific **Data Sources** (e.g., CFPS, ImageNet, Interviews).
+       - Suggest 2 potential paper titles.
+       - List 3 "Core Papers" (Seminal or recent high-impact works) that they MUST read to start this direction.
+    2. 3 suitable academic journals for this field. 
+       - Provide **Review Cycle** (e.g., "3 months") and **Acceptance Rate** (e.g., "15%") estimates.
+       - Provide impact factor estimate.
 
     Output as JSON.
     `;
@@ -883,7 +890,20 @@ export const generateResearchIdeas = async (topic: string, lang: Language = 'EN'
                 properties: {
                   angle: { type: Type.STRING },
                   description: { type: Type.STRING },
-                  recommendedTitles: { type: Type.ARRAY, items: { type: Type.STRING } }
+                  methodology: { type: Type.STRING, description: "Specific models or qualitative methods" },
+                  dataSources: { type: Type.STRING, description: "Specific datasets or collection methods" },
+                  recommendedTitles: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  corePapers: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        title: { type: Type.STRING },
+                        author: { type: Type.STRING },
+                        year: { type: Type.STRING },
+                      }
+                    }
+                  }
                 }
               }
             },
@@ -894,6 +914,8 @@ export const generateResearchIdeas = async (topic: string, lang: Language = 'EN'
                 properties: {
                   name: { type: Type.STRING },
                   impactFactor: { type: Type.STRING },
+                  reviewCycle: { type: Type.STRING },
+                  acceptanceRate: { type: Type.STRING },
                   reason: { type: Type.STRING }
                 }
               }
@@ -904,11 +926,6 @@ export const generateResearchIdeas = async (topic: string, lang: Language = 'EN'
     });
 
     const res = JSON.parse(response.text || 'null');
-    // Sanitize response
-    if (res) {
-        if (!Array.isArray(res.directions)) res.directions = [];
-        if (!Array.isArray(res.journals)) res.journals = [];
-    }
     return res;
   } catch (error) {
     console.error("Idea Guide Error:", error);
@@ -936,8 +953,9 @@ export const generateIdeaFollowUp = async (
     
     Output JSON with:
     1. Analysis (A paragraph analyzing this specific intersection).
-    2. Suggestions (3 specific sub-angles or methodological approaches).
-    3. RecommendedTerms (5 search keywords for databases like Scopus/Web of Science).
+    2. Logic Path (An array of strings representing the causal chain or framework steps, e.g., ["IV: Policy", "Mechanism: Cost", "DV: Adoption"]).
+    3. Suggestions (3 specific sub-angles or methodological approaches).
+    4. RecommendedTerms (5 search keywords).
     `;
 
     const response = await ai.models.generateContent({
@@ -949,6 +967,7 @@ export const generateIdeaFollowUp = async (
           type: Type.OBJECT,
           properties: {
             analysis: { type: Type.STRING },
+            logicPath: { type: Type.ARRAY, items: { type: Type.STRING } },
             suggestions: {
               type: Type.ARRAY,
               items: {
@@ -975,62 +994,49 @@ export const generateIdeaFollowUp = async (
   }
 }
 
-export const generateOpeningReview = async (file: File, target: string, lang: Language): Promise<string> => {
+export const generateOpeningReview = async (
+  file: File, 
+  target: string, 
+  lang: Language,
+  persona: ReviewPersona = 'Gentle'
+): Promise<OpeningReviewResponse | null> => {
   try {
     const model = 'gemini-2.5-flash';
     const base64Data = await fileToBase64(file);
     let mimeType = file.type;
     
-    // Default to PDF if generic or unknown, as this feature targets PDF proposals
     if (!mimeType || mimeType === '') {
       mimeType = 'application/pdf';
     }
+
+    const personaInstruction = persona === 'Critical' 
+      ? 'Adopt a "Reviewer #2" persona: Be strict, challenge assumptions, look for fatal flaws, and be ruthless about methodology and theoretical contribution.' 
+      : 'Adopt a "Mentor" persona: Be encouraging, constructive, focus on potential, and guide gently.';
 
     const prompt = `
     Role: Senior Thesis Committee Member / Academic Advisor.
     Task: Review the uploaded "Opening Report/Research Proposal".
     Context: The user is aiming for: "${target}" (Target Journal or Graduation Requirement).
+    Persona: ${personaInstruction}
 
     ${getLangInstruction(lang)}
 
-    CRITICAL ANALYSIS POINTS:
-    1. **Title Analysis**: Is it specific, concise, and academic? Does it reflect the content?
-    2. **Methodology Check**: Are the proposed methods feasible? Are they state-of-the-art? Is the technical path clear?
-    3. **Logic & Flow (思路)**: Is there a clear problem definition? Does the solution logically follow the problem? Is there a hypothesis?
-    4. **Target Alignment**: Does this proposal meet the standards of "${target}"?
-    5. **Literature Check**: Based on the content, suggest relevant classic or state-of-the-art papers they might have missed or should reference.
+    CRITICAL OUTPUT INSTRUCTION: Return a JSON object with the following structure.
+    
+    Radar Map Scoring (0-100):
+    - topic: Heat/Relevance of the topic.
+    - method: Rigor and difficulty of methodology.
+    - data: Quality and uniqueness of data source.
+    - theory: Depth of theoretical contribution.
+    - language: Academic writing standard.
 
-    OUTPUT FORMAT (Strict Markdown for Report Generation):
-
-    # Opening Proposal Review Report
-    **Target Goal**: ${target}
-    **Date**: ${new Date().toLocaleDateString()}
-
-    ## 1. Executive Summary
-    [Brief assessment of the proposal's readiness (Pass/Major Revisions/Minor Revisions)]
-
-    ## 2. Title Evaluation
-    - **Current Status**: [Critique]
-    - **Suggestion**: [Optimization advice]
-
-    ## 3. Methodology & Logic Review
-    - **Feasibility**: [Analysis]
-    - **Logic Gaps**: [Identify any logical disconnects in the research plan]
-    - **Innovation**: [Assess the novelty]
-
-    ## 4. Alignment with Target (${target})
-    - **Fit Score**: [1-10]
-    - **Gap Analysis**: [What is missing to reach this target?]
-
-    ## 5. Specific Recommendations
-    1. [Actionable item 1]
-    2. [Actionable item 2]
-    3. [Actionable item 3]
-
-    ## 6. Recommended Literature
-    [Suggest 3-5 specific papers formatted as follows]
-    - **[Title]** (Year), Author
-      > *Relevance*: [Why they should read this]
+    Analysis:
+    - titleAnalysis: Critique the title and provide 3 concrete suggestions.
+    - methodologyAnalysis: Critique feasibility and provide 3 concrete improvements (suggest specific variables, models, or formulas).
+    - logicAnalysis: Identify logical gaps.
+    - journalFit: Score (1-10) and analyze fit. If score < 6, suggest 3 alternative journals.
+    - formatCheck: Check for basic compliance (Abstract structure, Reference style consistency).
+    - literature: Recommend 3-5 specific papers.
     `;
 
     const response = await ai.models.generateContent({
@@ -1040,12 +1046,130 @@ export const generateOpeningReview = async (file: File, target: string, lang: La
           { inlineData: { mimeType, data: base64Data } },
           { text: prompt }
         ]
+      },
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            overallScore: { type: Type.NUMBER },
+            radarMap: {
+              type: Type.OBJECT,
+              properties: {
+                topic: { type: Type.NUMBER },
+                method: { type: Type.NUMBER },
+                data: { type: Type.NUMBER },
+                theory: { type: Type.NUMBER },
+                language: { type: Type.NUMBER },
+              }
+            },
+            executiveSummary: { type: Type.STRING },
+            titleAnalysis: {
+              type: Type.OBJECT,
+              properties: {
+                critique: { type: Type.STRING },
+                suggestions: { type: Type.ARRAY, items: { type: Type.STRING } }
+              }
+            },
+            methodologyAnalysis: {
+              type: Type.OBJECT,
+              properties: {
+                critique: { type: Type.STRING },
+                suggestions: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      original: { type: Type.STRING },
+                      better: { type: Type.STRING },
+                      reason: { type: Type.STRING },
+                    }
+                  }
+                }
+              }
+            },
+            logicAnalysis: {
+              type: Type.OBJECT,
+              properties: {
+                critique: { type: Type.STRING },
+                gaps: { type: Type.ARRAY, items: { type: Type.STRING } }
+              }
+            },
+            journalFit: {
+              type: Type.OBJECT,
+              properties: {
+                score: { type: Type.NUMBER },
+                analysis: { type: Type.STRING },
+                alternativeJournals: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      reason: { type: Type.STRING },
+                      if: { type: Type.STRING },
+                    }
+                  }
+                }
+              }
+            },
+            formatCheck: {
+               type: Type.OBJECT,
+               properties: {
+                 status: { type: Type.STRING, enum: ['Pass', 'Warning', 'Fail'] },
+                 issues: { type: Type.ARRAY, items: { type: Type.STRING } }
+               }
+            },
+            literature: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  author: { type: Type.STRING },
+                  year: { type: Type.STRING },
+                  reason: { type: Type.STRING },
+                  link: { type: Type.STRING },
+                }
+              }
+            }
+          }
+        }
       }
     });
 
-    return response.text || "Failed to generate opening review.";
+    return JSON.parse(response.text || 'null');
   } catch (error) {
     console.error("Opening Review Error:", error);
-    return "Error generating review. Please ensure the file is a valid PDF.";
+    return null;
   }
 };
+
+export const optimizeOpeningSection = async (
+  sectionContext: string,
+  contentToOptimize: string,
+  lang: Language = 'EN'
+): Promise<string> => {
+   try {
+     const model = 'gemini-2.5-flash';
+     const prompt = `
+     You are an academic writing coach.
+     Context: The user needs to improve the "${sectionContext}" section of their research proposal.
+     Critique to address: "${contentToOptimize}"
+     
+     Task: Rewrite the relevant paragraph/sentence to be more academic, logical, and rigorous.
+     ${getLangInstruction(lang)}
+     
+     Output ONLY the rewritten text.
+     `;
+
+     const response = await ai.models.generateContent({
+       model,
+       contents: prompt,
+     });
+
+     return response.text || "Failed to optimize.";
+   } catch (error) {
+      return "Optimization failed.";
+   }
+}

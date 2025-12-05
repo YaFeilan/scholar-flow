@@ -1,10 +1,11 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { Lightbulb, Send, Loader2, BookOpen, Target, ArrowRight, MessageCircle, ChevronDown, Key } from 'lucide-react';
+import { Lightbulb, Send, Loader2, BookOpen, Target, ArrowRight, MessageCircle, ChevronDown, Key, Database, Cpu, FileText, ExternalLink, Download, Layout, RefreshCw } from 'lucide-react';
 import { generateResearchIdeas, generateIdeaFollowUp } from '../services/geminiService';
 import { Language, IdeaGuideResult, IdeaFollowUpResult } from '../types';
 import { TRANSLATIONS } from '../translations';
+import { jsPDF } from 'jspdf';
 
 interface IdeaGuideProps {
   language: Language;
@@ -15,6 +16,7 @@ interface IdeaGuideProps {
 const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearInitialTopic }) => {
   const t = TRANSLATIONS[language].idea;
   const [topic, setTopic] = useState('');
+  const [focus, setFocus] = useState('General');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IdeaGuideResult | null>(null);
 
@@ -33,7 +35,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
         setResult(null);
         setSelectedDirectionIndex(null);
         setFollowUpResult(null);
-        const data = await generateResearchIdeas(initialTopic, language);
+        const data = await generateResearchIdeas(initialTopic, language, focus);
         setResult(data);
         setLoading(false);
         if (onClearInitialTopic) {
@@ -50,7 +52,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
     setResult(null);
     setSelectedDirectionIndex(null); // Reset deep dive
     setFollowUpResult(null);
-    const data = await generateResearchIdeas(topic, language);
+    const data = await generateResearchIdeas(topic, language, focus);
     setResult(data);
     setLoading(false);
   };
@@ -75,18 +77,98 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
     setFollowUpLoading(false);
   };
 
+  const handleExportProposal = () => {
+    if (!result) return;
+    
+    const doc = new jsPDF();
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let yPos = margin;
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Research Proposal Draft", margin, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Topic: ${topic} (${focus} Focus)`, margin, yPos);
+    yPos += 10;
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, margin, yPos);
+    yPos += 15;
+
+    // Directions
+    result.directions.forEach((dir, idx) => {
+      if (yPos > 250) { doc.addPage(); yPos = margin; }
+      
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Direction ${idx + 1}: ${dir.angle}`, margin, yPos);
+      yPos += 8;
+      
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "italic");
+      const descLines = doc.splitTextToSize(dir.description, pageWidth - 2 * margin);
+      doc.text(descLines, margin, yPos);
+      yPos += (descLines.length * 6) + 4;
+
+      doc.setFont("helvetica", "normal");
+      doc.text(`Methodology: ${dir.methodology}`, margin, yPos);
+      yPos += 6;
+      doc.text(`Data Sources: ${dir.dataSources}`, margin, yPos);
+      yPos += 10;
+
+      // Titles
+      doc.setFont("helvetica", "bold");
+      doc.text("Suggested Titles:", margin, yPos);
+      yPos += 6;
+      doc.setFont("helvetica", "normal");
+      dir.recommendedTitles.forEach(t => {
+          doc.text(`- ${t}`, margin + 5, yPos);
+          yPos += 6;
+      });
+      yPos += 4;
+      
+      // Papers
+      if (dir.corePapers) {
+          doc.setFont("helvetica", "bold");
+          doc.text("Core References:", margin, yPos);
+          yPos += 6;
+          doc.setFont("helvetica", "normal");
+          dir.corePapers.forEach(p => {
+              doc.text(`- ${p.title} (${p.year}) - ${p.author}`, margin + 5, yPos);
+              yPos += 6;
+          });
+      }
+      yPos += 10;
+    });
+
+    doc.save('Research_Proposal_Draft.pdf');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-8 mb-8 border border-amber-100 shadow-sm relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end gap-6">
-           <div className="flex items-center gap-3">
-              <div className="bg-amber-400 p-2 rounded-lg text-white shadow-lg shadow-amber-200">
-                <Lightbulb size={24} />
-              </div>
-              <h2 className="text-3xl font-serif font-bold text-amber-900 whitespace-nowrap">{t.title}</h2>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+           <div className="flex flex-col gap-2">
+             <div className="flex items-center gap-3">
+                <div className="bg-amber-400 p-2 rounded-lg text-white shadow-lg shadow-amber-200">
+                  <Lightbulb size={24} />
+                </div>
+                <h2 className="text-3xl font-serif font-bold text-amber-900 whitespace-nowrap">{t.title}</h2>
+             </div>
+             <p className="text-amber-800/70 max-w-2xl">{t.subtitle}</p>
            </div>
-           <p className="text-amber-800/70 max-w-2xl pb-1.5">{t.subtitle}</p>
+           
+           {result && (
+              <button 
+                onClick={handleExportProposal}
+                className="bg-white border border-amber-200 text-amber-700 px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-amber-50 flex items-center gap-2 transition-colors"
+              >
+                <Download size={18} /> {t.exportProposal}
+              </button>
+           )}
         </div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/40 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
       </div>
@@ -94,17 +176,32 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Input Panel */}
         <div className="lg:col-span-12">
-           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-2 flex items-start gap-2">
-              <textarea
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder={t.placeholder}
-                className="flex-grow bg-transparent border-none text-lg px-4 py-3 focus:ring-0 outline-none resize-none h-20 placeholder-slate-400 text-slate-700"
-              />
+           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-2 flex flex-col md:flex-row items-start gap-2">
+              <div className="flex-grow w-full relative">
+                 <textarea
+                   value={topic}
+                   onChange={(e) => setTopic(e.target.value)}
+                   placeholder={t.placeholder}
+                   className="w-full bg-transparent border-none text-lg px-4 py-3 focus:ring-0 outline-none resize-none h-24 placeholder-slate-400 text-slate-700"
+                 />
+                 <div className="absolute bottom-2 left-4 flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-400 uppercase">{t.focus.label}</span>
+                    <select 
+                      value={focus} 
+                      onChange={(e) => setFocus(e.target.value)}
+                      className="text-xs font-bold text-slate-600 bg-slate-100 border-none rounded py-1 pl-2 pr-6 cursor-pointer focus:ring-0"
+                    >
+                       <option value="General">{t.focus.general}</option>
+                       <option value="Data-Driven">{t.focus.data}</option>
+                       <option value="Policy-Oriented">{t.focus.policy}</option>
+                       <option value="Theory-Heavy">{t.focus.theory}</option>
+                    </select>
+                 </div>
+              </div>
               <button
                 onClick={handleGenerate}
                 disabled={loading || !topic}
-                className="bg-amber-500 text-white px-8 rounded-lg font-bold hover:bg-amber-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 h-20 flex-shrink-0"
+                className="w-full md:w-auto bg-amber-500 text-white px-8 rounded-lg font-bold hover:bg-amber-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 h-24 flex-shrink-0"
               >
                 {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Send size={20} />}
                 <span className="text-sm whitespace-nowrap">{t.btn}</span>
@@ -129,9 +226,17 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
            <>
               {/* Research Directions */}
               <div className="lg:col-span-8 space-y-6">
-                 <h3 className="font-bold text-slate-800 text-xl flex items-center gap-2">
-                    <Target className="text-blue-600" /> {t.directions}
-                 </h3>
+                 <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-slate-800 text-xl flex items-center gap-2">
+                        <Target className="text-blue-600" /> {t.directions}
+                    </h3>
+                    <button 
+                      onClick={handleGenerate}
+                      className="text-xs text-slate-400 hover:text-blue-600 flex items-center gap-1"
+                    >
+                      <RefreshCw size={12} /> Regenerate
+                    </button>
+                 </div>
                  
                  <div className="grid grid-cols-1 gap-6">
                     {result.directions.map((dir, idx) => {
@@ -148,10 +253,13 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                           >
                             <div className="p-6">
                               <div className="flex items-start justify-between mb-4">
-                                 <h4 className="text-lg font-bold text-slate-800">{dir.angle}</h4>
+                                 <div>
+                                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Direction {idx + 1}</div>
+                                     <h4 className="text-xl font-bold text-slate-800 leading-tight">{dir.angle}</h4>
+                                 </div>
                                  <button 
                                    onClick={() => handleSelectDirection(idx)}
-                                   className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1
+                                   className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1 flex-shrink-0
                                       ${isSelected 
                                         ? 'bg-amber-500 text-white border-amber-500' 
                                         : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200'}
@@ -161,20 +269,58 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                                     {t.selectDirection}
                                  </button>
                               </div>
-                              <p className="text-slate-600 text-sm leading-relaxed mb-6">{dir.description}</p>
+                              <p className="text-slate-600 text-sm leading-relaxed mb-6 border-l-2 border-slate-200 pl-3">{dir.description}</p>
                               
-                              <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-                                 <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1">
-                                    <BookOpen size={12} /> {t.titles}
-                                 </h5>
-                                 <ul className="space-y-2">
-                                    {dir.recommendedTitles.map((title, tIdx) => (
-                                       <li key={tIdx} className="flex items-start gap-2 text-sm text-slate-700 font-medium">
-                                          <ArrowRight size={14} className="mt-1 text-amber-500 flex-shrink-0" />
-                                          {title}
-                                       </li>
-                                    ))}
-                                 </ul>
+                              {/* Methodology & Data Badges */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                 <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                                    <div className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                        <Cpu size={12} /> {t.methodology}
+                                    </div>
+                                    <div className="text-sm font-medium text-slate-700">{dir.methodology}</div>
+                                 </div>
+                                 <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                    <div className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                        <Database size={12} /> {t.dataSources}
+                                    </div>
+                                    <div className="text-sm font-medium text-slate-700">{dir.dataSources}</div>
+                                 </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  {/* Titles */}
+                                  <div>
+                                    <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                        <BookOpen size={12} /> {t.titles}
+                                    </h5>
+                                    <ul className="space-y-2">
+                                        {dir.recommendedTitles.map((title, tIdx) => (
+                                        <li key={tIdx} className="flex items-start gap-2 text-sm text-slate-700 font-medium leading-snug">
+                                            <ArrowRight size={14} className="mt-0.5 text-amber-500 flex-shrink-0" />
+                                            {title}
+                                        </li>
+                                        ))}
+                                    </ul>
+                                  </div>
+                                  
+                                  {/* Core Papers */}
+                                  <div>
+                                     <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                        <FileText size={12} /> {t.corePapers}
+                                     </h5>
+                                     {dir.corePapers && dir.corePapers.length > 0 ? (
+                                        <ul className="space-y-2">
+                                            {dir.corePapers.map((paper, pIdx) => (
+                                            <li key={pIdx} className="bg-slate-50 p-2 rounded border border-slate-100 text-xs text-slate-600">
+                                                <div className="font-bold text-slate-800">{paper.title}</div>
+                                                <div className="text-[10px] text-slate-400 mt-1">{paper.author} • {paper.year}</div>
+                                            </li>
+                                            ))}
+                                        </ul>
+                                     ) : (
+                                         <p className="text-xs text-slate-400 italic">No specific papers generated.</p>
+                                     )}
+                                  </div>
                               </div>
                             </div>
 
@@ -205,6 +351,27 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                                   {/* Deep Dive Result */}
                                   {followUpResult && (
                                      <div className="bg-white rounded-lg border border-amber-100 p-5 shadow-sm animate-fadeIn">
+                                        {/* Logic Tree Visualization */}
+                                        {followUpResult.logicPath && followUpResult.logicPath.length > 0 && (
+                                            <div className="mb-6 overflow-x-auto pb-2">
+                                                <h6 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1">
+                                                    <Layout size={12} /> {t.logicFlow}
+                                                </h6>
+                                                <div className="flex items-center min-w-max">
+                                                    {followUpResult.logicPath.map((step, idx) => (
+                                                        <React.Fragment key={idx}>
+                                                            <div className="bg-blue-50 text-blue-800 border border-blue-100 px-3 py-2 rounded-lg text-xs font-bold shadow-sm whitespace-nowrap">
+                                                                {step}
+                                                            </div>
+                                                            {idx < followUpResult.logicPath.length - 1 && (
+                                                                <ArrowRight size={16} className="text-slate-300 mx-2" />
+                                                            )}
+                                                        </React.Fragment>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <div className="mb-4">
                                            <h6 className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-2">{t.deepDive}</h6>
                                            <p className="text-slate-700 text-sm leading-relaxed">{followUpResult.analysis}</p>
@@ -225,7 +392,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                                            </h6>
                                            <div className="flex flex-wrap gap-2">
                                               {followUpResult.recommendedTerms.map((term, kIdx) => (
-                                                 <span key={kIdx} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full border border-slate-200">
+                                                 <span key={kIdx} className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-full border border-slate-200 font-medium">
                                                     {term}
                                                  </span>
                                               ))}
@@ -252,10 +419,19 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                        <div key={idx} className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm animate-fadeIn" style={{animationDelay: `${idx * 150}ms`}}>
                           <div className="flex justify-between items-start mb-2">
                              <h4 className="font-bold text-slate-800 leading-tight">{journal.name}</h4>
+                             <ExternalLink size={14} className="text-slate-300 hover:text-blue-500 cursor-pointer" />
                           </div>
-                          <div className="flex items-center gap-2 mb-3">
-                             <span className="text-xs font-bold bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-100">IF: {journal.impactFactor}</span>
+                          
+                          <div className="flex flex-wrap gap-2 mb-3">
+                             <span className="text-[10px] font-bold bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100">IF: {journal.impactFactor}</span>
+                             {journal.reviewCycle && (
+                                <span className="text-[10px] font-bold bg-slate-50 text-slate-600 px-2 py-1 rounded border border-slate-200">{journal.reviewCycle}</span>
+                             )}
+                             {journal.acceptanceRate && (
+                                <span className="text-[10px] font-bold bg-slate-50 text-slate-600 px-2 py-1 rounded border border-slate-200">Acc: {journal.acceptanceRate}</span>
+                             )}
                           </div>
+                          
                           <p className="text-xs text-slate-500 leading-relaxed border-t border-slate-100 pt-2 mt-2">
                              {journal.reason}
                           </p>

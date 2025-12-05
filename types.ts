@@ -73,19 +73,29 @@ export interface PolishResult {
 
 export interface IdeaGuideResult {
   directions: {
-    angle: string;
+    angle: string; // Research Angle
     description: string;
+    methodology: string; // Practical models (DID, RDD, Transformer)
+    dataSources: string; // Specific datasets (CFPS, CHNS)
     recommendedTitles: string[];
+    corePapers: { // Key references to start with
+      title: string;
+      author: string;
+      year: string;
+    }[];
   }[];
   journals: {
     name: string;
     impactFactor: string;
+    reviewCycle: string; // e.g., "3 months"
+    acceptanceRate: string; // e.g., "15%"
     reason: string;
   }[];
 }
 
 export interface IdeaFollowUpResult {
   analysis: string;
+  logicPath: string[]; // Visualization steps: IV -> Mechanism -> DV
   suggestions: {
     title: string;
     detail: string;
@@ -117,4 +127,47 @@ export interface PeerReviewResponse {
   };
   reviewers: ReviewerFeedback[];
   summary: string;
+}
+
+// Opening Review Types
+export type ReviewPersona = 'Gentle' | 'Critical';
+
+export interface OpeningReviewResponse {
+  overallScore: number;
+  radarMap: {
+    topic: number; // Topic Heat
+    method: number; // Method Difficulty
+    data: number; // Data Quality
+    theory: number; // Theoretical Contribution
+    language: number; // Language Style
+  };
+  executiveSummary: string;
+  titleAnalysis: {
+    critique: string;
+    suggestions: string[];
+  };
+  methodologyAnalysis: {
+    critique: string;
+    suggestions: { original: string; better: string; reason: string }[];
+  };
+  logicAnalysis: {
+    critique: string;
+    gaps: string[];
+  };
+  journalFit: {
+    score: number;
+    analysis: string;
+    alternativeJournals: { name: string; reason: string; if: string }[];
+  };
+  formatCheck: {
+    status: 'Pass' | 'Warning' | 'Fail';
+    issues: string[];
+  };
+  literature: {
+    title: string;
+    author: string;
+    year: string;
+    reason: string;
+    link?: string;
+  }[];
 }

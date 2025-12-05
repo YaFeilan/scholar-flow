@@ -125,9 +125,9 @@ export const TRANSLATIONS = {
     },
     idea: {
       title: 'Research Idea Guide',
-      subtitle: 'Brainstorm research directions, titles, and journals based on your interests or current events.',
+      subtitle: 'Brainstorm research directions, specific data sources, core papers, and suitable journals.',
       inputLabel: 'What are you interested in?',
-      placeholder: 'e.g., The application of Large Language Models in medical diagnosis, or the recent release of Sora...',
+      placeholder: 'e.g., The application of Large Language Models in medical diagnosis...',
       btn: 'Generate Ideas',
       directions: 'Research Directions',
       journals: 'Recommended Journals',
@@ -137,7 +137,19 @@ export const TRANSLATIONS = {
       followUpPlaceholder: 'e.g., I want to focus on consumer behavior aspects...',
       followUpBtn: 'Get Specific Advice',
       deepDive: 'Deep Dive Analysis',
-      keywords: 'Search Keywords'
+      keywords: 'Search Keywords',
+      methodology: 'Methodology',
+      dataSources: 'Data Sources',
+      corePapers: 'Core References',
+      exportProposal: 'Export Proposal Draft',
+      logicFlow: 'Logic Framework',
+      focus: {
+        label: 'Focus:',
+        general: 'General',
+        data: 'Data-Driven',
+        policy: 'Policy/Impact',
+        theory: 'Theory-Heavy'
+      }
     },
     opening: {
       title: 'Opening Proposal Review',
@@ -283,9 +295,9 @@ export const TRANSLATIONS = {
     },
     idea: {
       title: '科研思路引导',
-      subtitle: '输入您的研究兴趣或近期热点事件，AI 为您推荐研究方向、论文题目及合适期刊。',
+      subtitle: '输入您的研究兴趣，AI 为您推荐落地性强的方法论、数据源、核心文献及投稿期刊。',
       inputLabel: '您对什么感兴趣？',
-      placeholder: '例如：大语言模型在医疗诊断中的应用，或者 Sora 发布带来的影响...',
+      placeholder: '例如：大语言模型在医疗诊断中的应用...',
       btn: '生成研究思路',
       directions: '推荐研究方向',
       journals: '推荐投稿期刊',
@@ -295,7 +307,19 @@ export const TRANSLATIONS = {
       followUpPlaceholder: '例如：我想具体了解消费者行为方面的研究...',
       followUpBtn: '获取具体建议',
       deepDive: '深入分析',
-      keywords: '推荐关键词'
+      keywords: '推荐关键词',
+      methodology: '建议方法论',
+      dataSources: '数据来源建议',
+      corePapers: '核心必读文献',
+      exportProposal: '导出开题报告草稿',
+      logicFlow: '逻辑框架',
+      focus: {
+        label: '侧重维度:',
+        general: '综合',
+        data: '数据驱动',
+        policy: '政策/应用',
+        theory: '理论/机制'
+      }
     },
     opening: {
       title: '开题审查',
