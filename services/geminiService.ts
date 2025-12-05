@@ -470,8 +470,19 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
     if (paper.source === 'local' && paper.file) {
       const mimeType = paper.file.type;
       
-      // 1. PDF Handling (Native Gemini Support)
-      if (mimeType === 'application/pdf') {
+      // 1. Image Handling (New)
+      if (mimeType.startsWith('image/')) {
+        const base64Data = await fileToBase64(paper.file);
+        userContentPart = {
+          inlineData: {
+            mimeType: mimeType,
+            data: base64Data
+          }
+        };
+        textContent = "[Image uploaded by user. Interpret the diagram, chart, or text within this image.]";
+      }
+      // 2. PDF Handling (Native Gemini Support)
+      else if (mimeType === 'application/pdf') {
         const base64Data = await fileToBase64(paper.file);
         userContentPart = {
           inlineData: {
@@ -480,7 +491,7 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
           }
         };
       } 
-      // 2. DOCX Handling (Text Extraction via Mammoth)
+      // 3. DOCX Handling (Text Extraction via Mammoth)
       else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || paper.file.name.endsWith('.docx')) {
         try {
            const arrayBuffer = await paper.file.arrayBuffer();
@@ -491,7 +502,7 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
            textContent = `[Error extracting DOCX content. Please verify file integrity.]\nFilename: ${paper.file.name}`;
         }
       }
-      // 3. Plain Text / Markdown Handling
+      // 4. Plain Text / Markdown Handling
       else if (mimeType.startsWith('text/') || paper.file.name.endsWith('.md') || paper.file.name.endsWith('.txt')) {
         const text = await paper.file.text();
         textContent = `[Full Paper Content from ${paper.file.name}]:\n${text}`;
@@ -500,12 +511,12 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
 
     // Prepare Prompt
     const systemInstruction = `
-    You are an AI research assistant. Please provide a concise, professional interpretation of the paper in Chinese (under 300 words).
+    You are an AI research assistant. Please provide a concise, professional interpretation of the paper or content in Chinese (under 300 words).
 
     REQUIRED OUTPUT FORMAT (Markdown):
     
-    ## 论文基本信息
-    • 标题: "${paper.title}"
+    ## 论文基本信息 (or Content Summary)
+    • 标题/主题: "${paper.title}"
     • 作者: ${paper.authors.join(', ')} (or infer from content)
     • 发表: ${paper.journal} ${paper.year}
 
@@ -514,10 +525,10 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
     • 研究方法:
       - [Method Point 1]
       - [Method Point 2]
-    • 主要发现:
-      - [Finding 1]
-      - [Finding 2]
-      - [Finding 3]
+    • 主要发现/图表解读:
+      - [Finding/Visual Detail 1]
+      - [Finding/Visual Detail 2]
+      - [Finding/Visual Detail 3]
 
     ## 创新价值
     • 理论: [Theoretical contribution]
@@ -528,11 +539,11 @@ export const generatePaperInterpretation = async (paper: Paper, lang: Language =
     • 方向: [Future direction]
 
     Keep English terms for key technical concepts but provide Chinese annotations.
-    If the file content is provided, base the interpretation strictly on it.
+    If an image is provided, detail the charts, axes, trends, or diagram structures visibly.
     `;
 
     const parts = [];
-    // If we have a file part (PDF), add it
+    // If we have a file part (PDF/Image), add it
     if (userContentPart) {
       parts.push(userContentPart);
     }

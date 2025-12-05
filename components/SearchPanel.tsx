@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef } from 'react';
-import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown } from 'lucide-react';
+import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
 import { MOCK_PAPERS } from '../constants';
 import { TRANSLATIONS } from '../translations';
@@ -20,7 +20,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   const [filters, setFilters] = useState<SearchFilters>({
     databases: ['Google Scholar', 'SCI'],
     timeRange: 'All Time',
-    partition: ['Q1', 'Q2'],
+    partition: [],
   });
   const [sortBy, setSortBy] = useState<'relevance' | 'date' | 'if'>('relevance');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -131,12 +131,12 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
         const newPapers: Paper[] = files.map((file, idx) => ({
            id: `local-${file.name}-${Date.now()}-${idx}`,
            title: file.name,
-           authors: ['Local Author'],
-           journal: 'Local Repository',
+           authors: ['Local File'],
+           journal: 'Imported',
            year: new Date(file.lastModified).getFullYear(),
            citations: 0,
            badges: [{ type: 'LOCAL' }],
-           abstract: 'Local file content not yet analyzed.',
+           abstract: 'Click to analyze content.',
            source: 'local',
            file: file
         }));
@@ -147,12 +147,12 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       const newPapers: Paper[] = (Array.from(e.target.files) as File[]).map((file, idx) => ({
         id: `local-${file.name}-${Date.now()}-${idx}`,
         title: file.name,
-        authors: ['Local Author'],
-        journal: 'Local Repository',
+        authors: ['Local File'],
+        journal: 'Imported',
         year: new Date(file.lastModified).getFullYear(),
         citations: 0,
         badges: [{ type: 'LOCAL' }],
-        abstract: 'Local file content not yet analyzed.',
+        abstract: 'Click to analyze content.',
         source: 'local',
         file: file
       }));
@@ -186,6 +186,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
         papers = papers.filter(p => {
           if (!p.badges || p.badges.length === 0) return true;
           return p.badges.some(b => dbFilters.includes(b.type));
+        });
+      }
+
+      // Partition Filter (JCR/CAS Q1-Q4)
+      if (filters.partition && filters.partition.length > 0) {
+        papers = papers.filter(p => {
+            // Check if any of the paper's badges match any of the selected partitions
+            return p.badges.some(b => b.partition && filters.partition.includes(b.partition));
         });
       }
     }
@@ -241,6 +249,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
     { id: 'EI', label: 'EI' },
   ];
 
+  const partitionOptions = ['Q1', 'Q2', 'Q3', 'Q4'];
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       
@@ -294,6 +304,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
             
             {/* Filters */}
              <div className="flex flex-col items-center gap-4">
+                {/* DB Filters */}
                 <div className="flex flex-wrap justify-center gap-2">
                     {dbOptions.map(opt => (
                         <FilterButton 
@@ -305,6 +316,26 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                                 ? filters.databases.filter(d => d !== opt.id)
                                 : [...filters.databases, opt.id];
                             setFilters({...filters, databases: newDbs});
+                            }}
+                        />
+                    ))}
+                </div>
+
+                {/* Partition Filters */}
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wide mr-1 flex items-center gap-1">
+                        <Layers size={12} /> {t.filters.partition}:
+                    </span>
+                    {partitionOptions.map(opt => (
+                        <FilterButton 
+                            key={opt} 
+                            active={filters.partition.includes(opt)} 
+                            label={opt} 
+                            onClick={() => {
+                            const newParts = filters.partition.includes(opt) 
+                                ? filters.partition.filter(p => p !== opt)
+                                : [...filters.partition, opt];
+                            setFilters({...filters, partition: newParts});
                             }}
                         />
                     ))}
@@ -380,7 +411,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                  multiple 
                  className="hidden" 
                  onChange={handleLocalUpload}
-                 accept=".pdf,.doc,.docx,.txt,.md"
+                 accept=".pdf,.doc,.docx,.txt,.md,.jpg,.jpeg,.png,.webp"
                />
                <UploadCloud size={48} className="mx-auto text-blue-400 mb-4" />
                <h3 className="text-lg font-bold text-slate-700">{t.upload.btn}</h3>
@@ -473,6 +504,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                          <span key={i} className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
                             b.type === 'SCI' ? 'bg-green-50 text-green-700 border-green-200' :
                             b.type === 'Q1' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                            b.type === 'Q2' ? 'bg-orange-50 text-orange-700 border-orange-200' :
                             b.type === 'LOCAL' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                             'bg-slate-50 text-slate-600 border-slate-200'
                          }`}>
@@ -538,6 +570,18 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                   <p className="text-slate-700 leading-relaxed text-base">
                      {viewingPaper.abstract || "No abstract available for this paper."}
                   </p>
+
+                  {/* Image Preview for Local Files */}
+                  {viewingPaper.source === 'local' && viewingPaper.file && viewingPaper.file.type.startsWith('image/') && (
+                     <div className="mt-6 mb-4">
+                        <h3 className="text-sm font-bold text-slate-900 mb-2 uppercase tracking-wide opacity-50">Image Preview</h3>
+                        <img 
+                          src={URL.createObjectURL(viewingPaper.file)} 
+                          alt="Paper Content" 
+                          className="max-w-full rounded-lg border border-slate-200 shadow-sm max-h-64 object-contain bg-slate-50" 
+                        />
+                     </div>
+                  )}
                   
                   {viewingPaper.source === 'local' && (
                      <div className="mt-6 bg-amber-50 p-4 rounded-lg border border-amber-100 text-amber-800 text-sm">
@@ -553,4 +597,3 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
 };
 
 export default SearchPanel;
-    
