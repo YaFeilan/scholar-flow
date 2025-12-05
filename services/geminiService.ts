@@ -117,7 +117,17 @@ export const searchAcademicPapers = async (query: string, language: Language, li
       });
       
       const papers = response.text ? JSON.parse(response.text) : [];
-      return papers.map((p: any) => ({ ...p, source: 'online', addedDate: new Date().toISOString().split('T')[0] }));
+      // Assign random past dates for "Date Added" simulation to demonstrate sorting
+      return papers.map((p: any) => {
+         const randomDays = Math.floor(Math.random() * 30);
+         const date = new Date();
+         date.setDate(date.getDate() - randomDays);
+         return { 
+             ...p, 
+             source: 'online', 
+             addedDate: date.toISOString().split('T')[0] 
+         };
+      });
 
   } catch (e) {
       console.error(e);
@@ -291,9 +301,132 @@ export const generateIdeaFollowUp = async (topic: string, angle: string, query: 
 // --- Opening Review ---
 
 export const generateOpeningReview = async (file: File, target: string, language: Language, persona: ReviewPersona): Promise<OpeningReviewResponse | null> => {
-    const prompt = `Review opening proposal. Target: ${target}. Persona: ${persona}. Language: ${language}.
-    Return JSON matching OpeningReviewResponse.`;
-    return getJson(prompt);
+    const base64Data = await fileToBase64(file);
+    const prompt = `Review this opening proposal file (PDF/Doc). 
+    Target Journal/Research Goal: ${target}. 
+    Reviewer Persona: ${persona}. 
+    Language: ${language}.
+    
+    Provide a comprehensive review including:
+    1. Overall score (0-100).
+    2. Radar map scores (topic, method, data, theory, language) out of 100.
+    3. Executive summary.
+    4. Critique of the title and suggestions.
+    5. Critique of methodology and specific improvement suggestions (original vs better).
+    6. Analysis of logical flow and gaps.
+    7. Fit for the target journal/goal and alternatives.
+    8. Format check status.
+    9. Recommended literature to strengthen the proposal.
+    
+    Return JSON matching the defined schema.`;
+
+    const schema: Schema = {
+      type: Type.OBJECT,
+      properties: {
+        overallScore: { type: Type.NUMBER },
+        radarMap: {
+          type: Type.OBJECT,
+          properties: {
+            topic: { type: Type.NUMBER },
+            method: { type: Type.NUMBER },
+            data: { type: Type.NUMBER },
+            theory: { type: Type.NUMBER },
+            language: { type: Type.NUMBER },
+          }
+        },
+        executiveSummary: { type: Type.STRING },
+        titleAnalysis: {
+          type: Type.OBJECT,
+          properties: {
+            critique: { type: Type.STRING },
+            suggestions: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
+        },
+        methodologyAnalysis: {
+          type: Type.OBJECT,
+          properties: {
+            critique: { type: Type.STRING },
+            suggestions: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  original: { type: Type.STRING },
+                  better: { type: Type.STRING },
+                  reason: { type: Type.STRING }
+                }
+              }
+            }
+          }
+        },
+        logicAnalysis: {
+             type: Type.OBJECT,
+             properties: {
+                 critique: { type: Type.STRING },
+                 gaps: { type: Type.ARRAY, items: { type: Type.STRING } }
+             }
+        },
+        journalFit: {
+          type: Type.OBJECT,
+          properties: {
+            score: { type: Type.NUMBER },
+            analysis: { type: Type.STRING },
+            alternativeJournals: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  reason: { type: Type.STRING },
+                  if: { type: Type.STRING }
+                }
+              }
+            }
+          }
+        },
+        formatCheck: {
+            type: Type.OBJECT,
+             properties: {
+                 status: { type: Type.STRING, enum: ["Pass", "Warning", "Fail"] },
+                 issues: { type: Type.ARRAY, items: { type: Type.STRING } }
+             }
+        },
+        literature: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              author: { type: Type.STRING },
+              year: { type: Type.STRING },
+              reason: { type: Type.STRING },
+              link: { type: Type.STRING }
+            }
+          }
+        }
+      }
+    };
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: {
+                parts: [
+                    { inlineData: { mimeType: file.type, data: base64Data } },
+                    { text: prompt }
+                ]
+            },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: schema
+            }
+        });
+        
+        return response.text ? JSON.parse(response.text) : null;
+    } catch (e) {
+        console.error("Opening Review Error:", e);
+        return null;
+    }
 };
 
 export const optimizeOpeningSection = async (section: string, context: string, language: Language): Promise<string> => {

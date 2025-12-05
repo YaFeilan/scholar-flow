@@ -227,9 +227,18 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
             </div>
 
             {/* Left Panel: PDF Preview */}
-            <div className="w-1/2 bg-slate-100 pt-14 border-r border-slate-200 hidden lg:block">
+            <div className="w-1/2 bg-slate-100 pt-14 border-r border-slate-200 hidden lg:block relative">
                {fileUrl ? (
-                  <iframe src={fileUrl} className="w-full h-full" title="PDF Preview" />
+                  <object data={fileUrl} type="application/pdf" className="w-full h-full">
+                      <div className="flex flex-col items-center justify-center h-full text-slate-500 p-10 text-center">
+                          <AlertTriangle size={48} className="mb-4 text-slate-300" />
+                          <p className="font-bold">Unable to display PDF inline.</p>
+                          <p className="text-sm mb-4">Your browser may block embedded PDFs from this source.</p>
+                          <a href={fileUrl} download="proposal.pdf" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 flex items-center gap-2">
+                             <Download size={16} /> Download to View
+                          </a>
+                      </div>
+                  </object>
                ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-400">No Preview Available</div>
                )}

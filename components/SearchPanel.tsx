@@ -27,6 +27,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   const [resultLimit, setResultLimit] = useState(20);
   const [minCitations, setMinCitations] = useState<string>('');
   const [filterYear, setFilterYear] = useState<string>('');
+  const [addedAfter, setAddedAfter] = useState<string>('');
   
   // Search Mode State
   const [searchSource, setSearchSource] = useState<'online' | 'local'>('online');
@@ -217,6 +218,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }
     }
 
+    // Apply "Added After" filter
+    if (addedAfter) {
+      papers = papers.filter(p => {
+         if (!p.addedDate) return false;
+         return p.addedDate >= addedAfter;
+      });
+    }
+
     // Sort
     return papers.sort((a, b) => {
       if (sortBy === 'date') {
@@ -231,7 +240,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }
       return 0; // Relevance
     });
-  }, [sortBy, results, localPapers, filters, searchSource, filterYear, minCitations]);
+  }, [sortBy, results, localPapers, filters, searchSource, filterYear, minCitations, addedAfter]);
 
   const FilterButton: React.FC<{ active: boolean; label: string; onClick?: () => void }> = ({ active, label, onClick }) => (
     <button
@@ -375,6 +384,17 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                            onChange={(e) => setFilterYear(e.target.value)}
                            className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm w-16 p-0 placeholder-slate-400"
                            placeholder={language === 'ZH' ? '全部' : 'All'}
+                        />
+                     </div>
+
+                     {/* Added After Date Filter */}
+                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <span className="font-medium">{language === 'ZH' ? '加入时间 >' : 'Added After:'}</span>
+                        <input
+                           type="date"
+                           value={addedAfter}
+                           onChange={(e) => setAddedAfter(e.target.value)}
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm p-0 placeholder-slate-400 cursor-pointer"
                         />
                      </div>
 
