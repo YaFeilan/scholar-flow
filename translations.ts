@@ -121,8 +121,21 @@ export const TRANSLATIONS = {
       subtitle: 'Evaluate your manuscript\'s fit for target journals and get title optimization suggestions.',
       paperTitle: 'Paper Title',
       journalTitle: 'Target Journal',
+      paperAbstract: 'Abstract',
+      abstractPlaceholder: 'Paste abstract here for better context analysis...',
       btn: 'Evaluate Match',
-      reportTitle: 'Evaluation Report'
+      reportTitle: 'Evaluation Report',
+      history: 'History',
+      apply: 'Apply',
+      radar: {
+         topic: 'Topic',
+         method: 'Method',
+         novelty: 'Novelty',
+         scope: 'Scope',
+         style: 'Style'
+      },
+      risks: 'Submission Risks',
+      alternatives: 'Alternative Journals'
     },
     ppt: {
       title: 'AI PPT Generator',
@@ -309,8 +322,21 @@ export const TRANSLATIONS = {
       subtitle: '评估稿件与目标期刊的匹配度，并获取标题优化建议。',
       paperTitle: '论文标题',
       journalTitle: '目标期刊',
+      paperAbstract: '摘要',
+      abstractPlaceholder: '在此粘贴摘要，以获得更准确的上下文分析...',
       btn: '评估匹配度',
-      reportTitle: '评估报告'
+      reportTitle: '评估报告',
+      history: '历史记录',
+      apply: '应用',
+      radar: {
+         topic: '主题相关',
+         method: '方法论',
+         novelty: '创新性',
+         scope: '期刊范围',
+         style: '语言风格'
+      },
+      risks: '投稿风险预警',
+      alternatives: '替代期刊推荐'
     },
     ppt: {
       title: 'AI PPT 制作',

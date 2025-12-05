@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType, OpeningReviewResponse, ReviewPersona, PolishConfig } from "../types";
+import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse, TargetType, OpeningReviewResponse, ReviewPersona, PolishConfig, AdvisorReport, GapAnalysisResult } from "../types";
 // @ts-ignore
 import mammoth from "mammoth";
 
@@ -431,9 +431,16 @@ export const trackCitationNetwork = async (query: string, isFile: boolean = fals
     ${getLangInstruction(lang)}
 
     TASK:
-    Identify 5-8 distinct Technical Categories of references used in this paper (e.g., "Theoretical Foundation", "Dataset", "Baselines", "Optimization Methods").
-    For each category, list 2-3 likely or actual papers that would be cited, including a brief description of their technical role in the context of the main paper.
+    Identify 5-6 distinct Technical Categories of references (e.g., "Theoretical Foundation", "Dataset", "Baselines", "Optimization Methods").
+    For each category, list 2-3 likely or actual papers that would be cited.
     
+    ENHANCED METADATA REQUIREMENT:
+    For EACH paper, you must provide:
+    - 'sentiment': Does the main paper 'Support', 'Dispute', or just 'Mention' this reference?
+    - 'snippet': Generate a realistic 1-sentence context snippet showing how it is cited in the text (e.g., "While [Author] proposed X, we find...").
+    - 'isStrong': true if it is a major basis of the work, false if minor.
+    - 'citations': Estimate citation count (integer).
+
     Return a JSON structure.`;
 
     const response = await ai.models.generateContent({
@@ -456,6 +463,11 @@ export const trackCitationNetwork = async (query: string, isFile: boolean = fals
                     author: { type: Type.STRING },
                     year: { type: Type.NUMBER },
                     description: { type: Type.STRING },
+                    citations: { type: Type.NUMBER },
+                    sentiment: { type: Type.STRING, enum: ['Support', 'Dispute', 'Mention'] },
+                    snippet: { type: Type.STRING },
+                    isStrong: { type: Type.BOOLEAN },
+                    doi: { type: Type.STRING },
                   },
                 },
               },
@@ -467,16 +479,80 @@ export const trackCitationNetwork = async (query: string, isFile: boolean = fals
 
     const res = JSON.parse(response.text || '[]');
     if (!Array.isArray(res)) return [];
-    // Ensure inner papers are also arrays
-    return res.map((item: any) => ({
+    
+    // Post-process to ensure IDs exist
+    return res.map((item: any, cIdx: number) => ({
         ...item,
-        papers: Array.isArray(item.papers) ? item.papers : []
+        papers: Array.isArray(item.papers) ? item.papers.map((p: any, pIdx: number) => ({
+            ...p,
+            id: `ref-${cIdx}-${pIdx}-${Date.now()}`,
+            userNote: ''
+        })) : []
     }));
   } catch (error) {
     console.error("Gemini API Error:", error);
     return [];
   }
 };
+
+export const analyzeNetworkGaps = async (references: any[], lang: Language = 'EN'): Promise<GapAnalysisResult | null> => {
+    try {
+        const model = 'gemini-2.5-flash';
+        const refsText = JSON.stringify(references.slice(0, 30)); // Limit payload
+        const prompt = `Analyze this list of academic references.
+        Identify research gaps or missing themes that are conspicuously absent given the context of these papers.
+        ${getLangInstruction(lang)}
+        
+        Return JSON with:
+        - missingThemes: string[] (e.g. "Ethics", "Real-time performance")
+        - underrepresentedMethods: string[]
+        - suggestion: string (A concise insight paragraph)`;
+
+        const response = await ai.models.generateContent({
+            model,
+            contents: `References: ${refsText}\n\n${prompt}`,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        missingThemes: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        underrepresentedMethods: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        suggestion: { type: Type.STRING }
+                    }
+                }
+            }
+        });
+        return JSON.parse(response.text || 'null');
+    } catch (error) {
+        return null;
+    }
+}
+
+export const chatWithCitationNetwork = async (query: string, contextRefs: any[], lang: Language = 'EN'): Promise<string> => {
+    try {
+        const model = 'gemini-2.5-flash';
+        const context = contextRefs.map((r: any) => `${r.title} (${r.year}) by ${r.author}: ${r.description}`).join('\n');
+        
+        const prompt = `You are an expert on this specific citation network.
+        Context Papers:
+        ${context.substring(0, 20000)}
+        
+        User Question: "${query}"
+        
+        Answer based on the themes and connections in these papers.
+        ${getLangInstruction(lang)}
+        `;
+
+        const response = await ai.models.generateContent({
+            model,
+            contents: prompt
+        });
+        return response.text || "No answer generated.";
+    } catch (error) {
+        return "Error interacting with network.";
+    }
+}
 
 export const polishContent = async (
   content: string | File, 
@@ -651,52 +727,122 @@ export const refinePolish = async (
     }
 }
 
-export const generateAdvisorReport = async (title: string, journal: string, lang: Language = 'EN'): Promise<string> => {
+export const generateAdvisorReport = async (title: string, journal: string, abstract: string, lang: Language = 'EN'): Promise<AdvisorReport | null> => {
   try {
     const model = 'gemini-2.5-flash';
-    const prompt = `You are an academic publishing advisor helping a researcher evaluate if their paper title fits their target journal.
+    const prompt = `You are an academic publishing advisor helping a researcher evaluate if their paper title and abstract fits their target journal.
     ${getLangInstruction(lang)}
 
     Paper Title: "${title}"
+    Abstract: "${abstract}"
     Target Journal: "${journal}"
 
     TASK:
-    Perform a structured analysis and output the report in strict Markdown format as defined below.
+    Perform a structured analysis.
+    1. Match Assessment (Score 1-100) based on scope, relevance, and innovation.
+    2. Radar Chart Dimensions (0-100): Topic Relevance, Methodological Fit, Novelty Requirement, Journal Scope Match, Language Style.
+    3. Title Optimization: Identify problems and suggest 3 revised options.
+    4. Keyword Trends: Analyze key terms in the title/abstract and predict if they are Rising/Stable/Falling in the last 3 years (simulated based on knowledge).
+    5. Risk Assessment: Identify potential rejection risks.
+    6. Alternatives: Recommend 2-3 alternative journals if the match isn't perfect.
+    7. Detailed Suggestions: Provide specific improvements with "Before vs After" examples (e.g. for Methodology description).
 
-    1. Match Assessment (1-5 Stars) based on scope, relevance, and innovation. Explain reasoning.
-    2. Title Optimization: Identify 3 problems with the current title and suggest 3 better alternatives.
-    3. Supplementary Advice: List 3 recent relevant papers from this journal (make up realistic titles if needed based on the journal's field) and suggest any necessary methodological additions.
-
-    OUTPUT FORMAT:
-    ### Periodical Match Report: 《${journal}》
-    **Match Score**: ⭐️⭐️⭐️⭐️ (Rating/5)
-    **Basis**: [Explanation under 200 words]
-
-    **Title Improvement Suggestions**:
-    - **Issue 1**: [Description]
-    - **Revised Option 1**: [Title]
-    - **Issue 2**: [Description]
-    - **Revised Option 2**: [Title]
-    - **Issue 3**: [Description]
-    - **Revised Option 3**: [Title]
-
-    **Reference Papers (Recent Issue)**:
-    1. [Paper Title 1]
-    2. [Paper Title 2]
-    3. [Paper Title 3]
-
-    **Additional Suggestions**: [Advice on content/methods]
+    OUTPUT JSON.
     `;
 
     const response = await ai.models.generateContent({
       model,
       contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            matchScore: { type: Type.NUMBER },
+            matchLevel: { type: Type.STRING, enum: ['High', 'Medium', 'Low'] },
+            radar: {
+                type: Type.OBJECT,
+                properties: {
+                    topic: { type: Type.NUMBER },
+                    method: { type: Type.NUMBER },
+                    novelty: { type: Type.NUMBER },
+                    scope: { type: Type.NUMBER },
+                    style: { type: Type.NUMBER },
+                }
+            },
+            analysis: { type: Type.STRING },
+            titleSuggestions: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        issue: { type: Type.STRING },
+                        revised: { type: Type.STRING },
+                    }
+                }
+            },
+            keywords: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        term: { type: Type.STRING },
+                        trend: { type: Type.STRING, enum: ['Rising', 'Stable', 'Falling'] },
+                    }
+                }
+            },
+            riskAssessment: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        risk: { type: Type.STRING },
+                        severity: { type: Type.STRING, enum: ['High', 'Medium', 'Low'] },
+                    }
+                }
+            },
+            alternatives: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        name: { type: Type.STRING },
+                        impactFactor: { type: Type.STRING },
+                        reason: { type: Type.STRING },
+                    }
+                }
+            },
+            references: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        title: { type: Type.STRING },
+                        author: { type: Type.STRING },
+                        year: { type: Type.STRING },
+                    }
+                }
+            },
+            improvementSuggestions: {
+                type: Type.ARRAY,
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        content: { type: Type.STRING },
+                        example: { type: Type.STRING },
+                    }
+                }
+            }
+          }
+        }
+      }
     });
 
-    return response.text || "Failed to generate advisor report.";
+    const report = JSON.parse(response.text || '{}');
+    return { ...report, timestamp: Date.now() };
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "Error generating advisor report. Please try again.";
+    return null;
   }
 };
 
@@ -1079,7 +1225,9 @@ export const generateIdeaFollowUp = async (
             },
             recommendedTerms: {
               type: Type.ARRAY,
-              items: { type: Type.STRING }
+              items: {
+                type: Type.STRING
+              }
             }
           }
         }

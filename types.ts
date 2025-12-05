@@ -50,14 +50,29 @@ export interface HotspotItem {
   category: string;
 }
 
+export interface TrackedPaperDetails {
+  id?: string;
+  title: string;
+  author: string;
+  year: number;
+  description: string; // Role
+  citations: number;
+  sentiment: 'Support' | 'Dispute' | 'Mention';
+  snippet: string;
+  isStrong: boolean;
+  doi?: string;
+  userNote?: string;
+}
+
 export interface TrackedReference {
   category: string; // e.g., "Methodology", "Backbone", "Dataset"
-  papers: {
-    title: string;
-    author: string;
-    year: number;
-    description: string; // How it was used in the main paper
-  }[];
+  papers: TrackedPaperDetails[];
+}
+
+export interface GapAnalysisResult {
+  missingThemes: string[];
+  underrepresentedMethods: string[];
+  suggestion: string;
 }
 
 // Polish Types
@@ -187,4 +202,45 @@ export interface OpeningReviewResponse {
     reason: string;
     link?: string;
   }[];
+}
+
+// Advisor Types
+export interface AdvisorReport {
+  matchScore: number; // 1-100
+  matchLevel: 'High' | 'Medium' | 'Low';
+  radar: {
+    topic: number;
+    method: number;
+    novelty: number;
+    scope: number;
+    style: number;
+  };
+  analysis: string;
+  titleSuggestions: {
+    issue: string;
+    revised: string;
+  }[];
+  keywords: {
+    term: string;
+    trend: 'Rising' | 'Stable' | 'Falling';
+  }[];
+  riskAssessment: {
+    risk: string;
+    severity: 'High' | 'Medium' | 'Low';
+  }[];
+  alternatives: {
+    name: string;
+    impactFactor: string;
+    reason: string;
+  }[];
+  references: {
+    title: string;
+    author: string;
+    year: string;
+  }[];
+  improvementSuggestions: {
+    content: string;
+    example: string;
+  }[];
+  timestamp: number; // for history
 }
