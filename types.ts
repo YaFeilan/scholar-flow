@@ -92,3 +92,14 @@ export interface IdeaFollowUpResult {
   }[];
   recommendedTerms: string[];
 }
+
+export interface PeerReviewResponse {
+  summary: string;
+  reviewers: {
+    id: number;
+    role: string;
+    focus: string;
+    content: string; // Markdown content
+    rating: number; // 1-5
+  }[];
+}

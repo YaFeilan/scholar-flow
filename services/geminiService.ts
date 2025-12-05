@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult } from "../types";
+import { TrackedReference, PolishResult, Language, Paper, IdeaGuideResult, IdeaFollowUpResult, PeerReviewResponse } from "../types";
 // @ts-ignore
 import mammoth from "mammoth";
 
@@ -148,49 +148,59 @@ export const generateLiteratureReview = async (papers: string[], lang: Language 
   }
 };
 
-export const performPeerReview = async (content: string, filename: string, lang: Language = 'EN'): Promise<string> => {
+export const performPeerReview = async (content: string, filename: string, lang: Language = 'EN'): Promise<PeerReviewResponse | null> => {
   try {
     const model = 'gemini-2.5-flash';
+    const instruction = lang === 'ZH' ? '请用中文回答 (Respond in Simplified Chinese).' : 'Respond in English.';
+    
     const prompt = `
-    Role: Senior Domain Expert & Peer Reviewer.
-    Task: Review the provided academic paper content ("${filename}") and generate a structured review report.
-    ${getLangInstruction(lang)}
+    Role: Chief Editor of a top-tier academic journal.
+    Task: Conduct a comprehensive peer review process for the manuscript "${filename}".
+    ${instruction}
     
-    Evaluation Criteria:
-    1. Innovation (Originality of views/methods)
-    2. Methodology Feasibility (Logic and data reliability)
-    3. Reference Authenticity (Reality of citations)
+    You must simulate a panel of 3 distinct reviewers plus your own Executive Summary.
     
-    Output Format (Strict Markdown):
+    Reviewer Profiles:
+    1. The Methodologist: Ruthless on data, statistics, logic, and technical implementation.
+    2. The Domain Expert: Focuses on novelty, theoretical depth, and contribution to the specific field.
+    3. The Generalist/Editor: Focuses on readability, structure, logical flow, and broader impact.
     
-    ## Summary
-    [Summarize core value and main issues in under 50 words]
-
-    ## Ratings
-    - Academic Rigor: [1-5 stars, e.g. ★★★★☆]
-    - Practical Application: [1-5 stars]
-    - Readability: [1-5 stars]
-
-    ## Recommendations
-    [List 3-5 specific issues using the format below]
-    1. **[Problem Description]**
-       → Suggestion: [Specific revision advice]
-    2. **[Problem Description]**
-       → Suggestion: [Specific revision advice]
-    
-    Content to Review:
-    "${content.substring(0, 15000)}" 
+    Output strictly in JSON format.
     `;
 
     const response = await ai.models.generateContent({
       model,
-      contents: prompt,
+      contents: [
+        { text: `${prompt}\n\nManuscript Content:\n${content.substring(0, 25000)}` }
+      ],
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            summary: { type: Type.STRING, description: "Executive summary of the manuscript and the decision." },
+            reviewers: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  id: { type: Type.INTEGER },
+                  role: { type: Type.STRING, description: "e.g., Methodology Expert" },
+                  focus: { type: Type.STRING, description: "e.g., Technical Rigor & Data" },
+                  content: { type: Type.STRING, description: "Detailed review markdown." },
+                  rating: { type: Type.INTEGER, description: "Score out of 5" }
+                }
+              }
+            }
+          }
+        }
+      }
     });
 
-    return response.text || "Failed to generate peer review.";
+    return JSON.parse(response.text || 'null');
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "Error generating peer review.";
+    return null;
   }
 };
 
