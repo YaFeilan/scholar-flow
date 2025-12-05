@@ -359,6 +359,13 @@ export const TRANSLATIONS = {
       subtitle: 'Visualize your academic library. AI connects dots between papers and your notes.',
       addNote: 'Add Note / Image',
       connect: 'AI Synthesis',
+      suggestions: 'AI Insights',
+      chatTitle: 'Chat with Library',
+      chatPlaceholder: 'Ask based on your library (e.g. Compare Method A & B)...',
+      chatWelcome: 'I have context from your library. Ask me to compare papers, summarize themes, or find gaps.',
+      gettingSuggestions: 'Thinking...',
+      acceptLink: 'Confirm Link',
+      acceptNode: 'Add to Library',
       filter: {
         time: 'Time Joined',
         partition: 'Partition (SCI/CJR)'
@@ -730,6 +737,13 @@ export const TRANSLATIONS = {
       subtitle: '可视化您的学术文献库。AI 自动关联论文间的相似观点与笔记。',
       addNote: '添加笔记 / 图片',
       connect: 'AI 知识关联',
+      suggestions: 'AI 知识挖掘',
+      chatTitle: '知识库对话 (RAG)',
+      chatPlaceholder: '基于知识库提问 (例: 比较A与B方法)...',
+      chatWelcome: '已读取知识库上下文。您可以要求我比较论文、总结主题或发现研究Gap。',
+      gettingSuggestions: '思考中...',
+      acceptLink: '确认关联',
+      acceptNode: '加入知识库',
       filter: {
         time: '加入时间',
         partition: '分区 (SCI/CJR)'

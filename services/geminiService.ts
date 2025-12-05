@@ -21,7 +21,8 @@ import {
   ExperimentDesignResult,
   GraphNode,
   GraphLink,
-  KnowledgeGraphData
+  KnowledgeGraphData,
+  GraphSuggestionsResult
 } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -544,4 +545,138 @@ export const generateKnowledgeGraph = async (
     
     const links = await getJson(prompt);
     return links || [];
+};
+
+// Find relevant nodes via Semantic Search (using LLM as embedding simulator)
+export const findRelevantNodes = async (
+    query: string,
+    nodes: GraphNode[],
+    language: Language
+): Promise<string[]> => {
+    // We send node headers to the LLM and ask it to pick relevant IDs
+    const nodeHeaders = nodes.map(n => `ID: ${n.id} | Label: ${n.label} | Snippet: ${n.content?.substring(0, 50)}...`).join('\n');
+    
+    const prompt = `Task: Semantic Search.
+    User Query: "${query}"
+    
+    Below is a list of knowledge graph nodes. Identify which node IDs are semantically relevant to the user query.
+    Return a JSON array of strings (node IDs). If none are relevant, return empty array.
+    
+    Nodes:
+    ${nodeHeaders}`;
+    
+    const result = await getJson(prompt, undefined, 'gemini-3-pro-preview');
+    return Array.isArray(result) ? result : [];
+};
+
+// New: RAG Chat with Knowledge Graph
+export const chatWithKnowledgeGraph = async (
+    query: string,
+    nodes: GraphNode[],
+    language: Language,
+    onUpdate?: (partial: string) => void
+): Promise<string> => {
+    try {
+        const model = 'gemini-3-pro-preview'; // Strong model for RAG reasoning
+        
+        // Prepare Context (Truncate to avoid token limits for demo purposes)
+        const context = nodes.slice(0, 50).map(n => 
+            `Node ID: ${n.id} (${n.type})\nLabel: ${n.label}\nSummary/Content: ${n.content || 'N/A'}\nGroup: ${n.group || 'N/A'}\n---`
+        ).join('\n');
+
+        const prompt = `You are an AI Research Assistant managing a user's personal knowledge graph.
+        
+        Context (My Library):
+        ${context}
+        
+        User Question: ${query}
+        
+        Answer based PRIMARILY on the context provided. If the answer is not in the context, say so, but offer general knowledge. 
+        Synthesize connections between the nodes.
+        Language: ${language}.`;
+
+        const responseStream = await ai.models.generateContentStream({
+            model,
+            contents: prompt
+        });
+
+        let fullText = "";
+        for await (const chunk of responseStream) {
+            fullText += chunk.text;
+            if (onUpdate) onUpdate(fullText);
+        }
+        return fullText;
+
+    } catch (e) {
+        console.error("KG Chat Error:", e);
+        return "Error interacting with knowledge base.";
+    }
+};
+
+// New: Generate Graph Suggestions (Links & Ghost Nodes)
+export const generateGraphSuggestions = async (
+    nodes: GraphNode[],
+    language: Language
+): Promise<GraphSuggestionsResult | null> => {
+    const nodeSummaries = nodes.slice(0, 20).map(n => `${n.label}: ${n.content?.substring(0, 50)}...`).join('\n');
+    
+    const prompt = `Analyze this knowledge graph topology and content.
+    Nodes:
+    ${nodeSummaries}
+    
+    Task 1: Identify 2 "missing links" between existing nodes that are logically connected but unlinked.
+    Task 2: Recommend 3 NEW external research topics or papers that would extend this graph (Blue Ocean strategy).
+    
+    Language: ${language}.
+    Return JSON matching { suggestedLinks: [{source, target, label, reason}], recommendedNodes: [{id, label, type, content, reason}] }.
+    Note: For recommendedNodes, use 'Concept' or 'Paper' type.`;
+
+    return getJson(prompt);
+};
+
+// NEW: Deep Parse PDF
+export const deepParsePDF = async (file: File, language: Language): Promise<{ summary: string, elements: { type: string, label: string, content: string }[] } | null> => {
+  try {
+    const base64Data = await fileToBase64(file);
+    const prompt = `Analyze this academic paper PDF.
+    1. Provide a comprehensive summary (Abstract + Key Contributions).
+    2. Extract 3-5 key entities: significant Formulas (latex), Algorithms (pseudocode or python), or key Figures (description).
+    
+    Language: ${language}.
+    Return JSON: {
+      "summary": "...",
+      "elements": [
+        { "type": "Formula" | "Algorithm" | "Figure" | "Concept", "label": "Short Title", "content": "Detail/Latex/Code" }
+      ]
+    }`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: {
+        parts: [
+          { inlineData: { mimeType: 'application/pdf', data: base64Data } },
+          { text: prompt }
+        ]
+      },
+      config: { responseMimeType: "application/json" }
+    });
+    
+    return response.text ? JSON.parse(response.text) : null;
+  } catch (e) {
+    console.error("PDF Parse Error", e);
+    return null;
+  }
+};
+
+// NEW: Run Code Simulation
+export const runCodeSimulation = async (code: string, language: Language): Promise<string> => {
+    const prompt = `Act as a Python/Data Science interpreter.
+    Execute this code conceptually and return the expected textual output (stdout) or a description of the plot it would generate.
+    If it's an algorithm, explain the input/output flow.
+    Code:
+    ${code}
+    
+    Language: ${language}. Keep output concise and mimicking a terminal.`;
+    
+    return getText(prompt, 'gemini-2.5-flash');
 };

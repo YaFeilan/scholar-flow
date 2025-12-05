@@ -352,13 +352,25 @@ export interface GraphNode {
   type: 'Paper' | 'Note' | 'Concept';
   content?: string; // Abstract or Note content
   addedDate: string;
+  year?: number; // Publication year for filtering
   badges?: any[]; // Reusing Paper badges
+  group?: string; // For clustering color coding
+  isSuggestion?: boolean; // New: Is this an AI-recommended ghost node?
+  isStarred?: boolean; // New: Importance flag
+  reason?: string; // New: Why AI recommended this
 }
 
 export interface GraphLink {
   source: string;
   target: string;
-  label: string; // e.g., "Supports", "Uses Method", "Similar To"
+  label: string; // e.g., "Supports", "Uses Method", "Similar To", "Derived From"
+  isSuggestion?: boolean; // New: Is this an AI-predicted link?
+  reason?: string; // New: Reason for connection
+}
+
+export interface GraphSuggestionsResult {
+    suggestedLinks: GraphLink[];
+    recommendedNodes: GraphNode[];
 }
 
 export interface KnowledgeGraphData {
