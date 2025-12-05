@@ -20,7 +20,8 @@ export const TRANSLATIONS = {
       idea: 'Idea Guide', 
       opening: 'Opening Review',
       data: 'Data Analyst',
-      code: 'Code Assistant'
+      code: 'Code Assistant',
+      experimentDesign: 'Exp. Design'
     },
     search: { 
       title: 'Research Assistant', 
@@ -250,6 +251,64 @@ export const TRANSLATIONS = {
       upload: 'Upload Code/Data',
       shortcut: 'Ctrl + Enter to Run',
       newSession: 'New Session'
+    },
+    experimentDesign: {
+      title: 'Experiment Design',
+      subtitle: 'Design experimental flow and calculate sample size based on research hypotheses.',
+      hypothesisLabel: 'Research Hypothesis',
+      hypothesisPlaceholder: 'e.g., Using spaced repetition significantly improves long-term memory retention compared to massed practice.',
+      optimizeBtn: 'AI Optimize',
+      optimizing: 'Optimizing...',
+      ivLabel: 'Independent Variable (IV)',
+      dvLabel: 'Dependent Variable (DV)',
+      fieldLabel: 'Research Field',
+      methodologyLabel: 'Methodology',
+      structureLabel: 'Design Structure',
+      btn: 'Generate Protocol',
+      generating: 'Designing Experiment...',
+      flow: 'Experimental Flow',
+      sampleSize: 'Sample Size Calculation',
+      variables: 'Key Variables',
+      analysis: 'Statistical Analysis Plan',
+      advancedSettings: 'Advanced Statistical Settings',
+      alpha: 'Significance Level (α)',
+      power: 'Statistical Power (1-β)',
+      effectSize: 'Expected Effect Size',
+      effectSizes: { small: 'Small', medium: 'Medium', large: 'Large', custom: 'Custom' },
+      fields: {
+        Psychology: 'Psychology',
+        Medicine: 'Clinical Medicine',
+        Biology: 'Biology',
+        CS: 'Computer Science',
+        Marketing: 'Marketing/Business',
+        Education: 'Education',
+        UX: 'User Experience'
+      },
+      methodologies: {
+        Auto: 'Auto-Recommend (AI)',
+        RCT: 'Randomized Controlled Trial (RCT)',
+        Quasi: 'Quasi-Experiment',
+        Survey: 'Survey/Questionnaire',
+        CaseStudy: 'Case Study',
+        Observational: 'Observational Study'
+      },
+      structures: {
+        Between: 'Between-Subjects',
+        Within: 'Within-Subjects',
+        Mixed: 'Mixed Design',
+        Factorial: 'Factorial Design',
+        Longitudinal: 'Longitudinal'
+      },
+      templates: {
+          title: 'Start with a Template',
+          subtitle: 'Select a common experimental paradigm to get started quickly.',
+          rct: 'Clinical RCT',
+          rctDesc: 'Medicine • Between-Subjects',
+          ab: 'A/B Testing',
+          abDesc: 'UX/Marketing • Between-Subjects',
+          memory: 'Cognitive Task',
+          memoryDesc: 'Psychology • Within-Subjects'
+      }
     }
   },
   ZH: {
@@ -272,7 +331,8 @@ export const TRANSLATIONS = {
       idea: '思路引导', 
       opening: '开题审查',
       data: '数据分析',
-      code: '代码助手'
+      code: '代码助手',
+      experimentDesign: '实验设计'
     },
     search: { 
       title: '科研助手', 
@@ -502,6 +562,64 @@ export const TRANSLATIONS = {
       upload: '上传代码/数据',
       shortcut: 'Ctrl + Enter 运行',
       newSession: '新会话'
+    },
+    experimentDesign: {
+      title: '实验设计优化',
+      subtitle: '基于研究假设，辅助设计实验流程，计算所需的样本量。',
+      hypothesisLabel: '研究假设',
+      hypothesisPlaceholder: '例如：使用间隔重复法相比集中练习能显著提高长期记忆保留率。',
+      optimizeBtn: 'AI 优化',
+      optimizing: '优化中...',
+      ivLabel: '自变量 (IV)',
+      dvLabel: '因变量 (DV)',
+      fieldLabel: '研究领域',
+      methodologyLabel: '研究方法论',
+      structureLabel: '设计架构',
+      btn: '生成实验方案',
+      generating: '正在设计实验...',
+      flow: '实验流程',
+      sampleSize: '样本量计算',
+      variables: '关键变量',
+      analysis: '统计分析方案',
+      advancedSettings: '高级统计设置',
+      alpha: '显著性水平 (α)',
+      power: '统计功效 (1-β)',
+      effectSize: '预期效应量 (Effect Size)',
+      effectSizes: { small: '小 (Small)', medium: '中 (Medium)', large: '大 (Large)', custom: '自定义' },
+      fields: {
+        Psychology: '心理学',
+        Medicine: '临床医学',
+        Biology: '生物学',
+        CS: '计算机科学',
+        Marketing: '市场营销/商科',
+        Education: '教育学',
+        UX: '用户体验'
+      },
+      methodologies: {
+        Auto: '智能推荐 (AI 决策)',
+        RCT: '随机对照试验 (RCT)',
+        Quasi: '准实验设计',
+        Survey: '问卷调查',
+        CaseStudy: '案例研究',
+        Observational: '观察性研究'
+      },
+      structures: {
+        Between: '组间设计 (Between-Subjects)',
+        Within: '组内设计 (Within-Subjects)',
+        Mixed: '混合设计 (Mixed Design)',
+        Factorial: '因子设计 (Factorial)',
+        Longitudinal: '纵向设计 (Longitudinal)'
+      },
+      templates: {
+          title: '使用模板开始',
+          subtitle: '选择一个常见的实验范式快速开始。',
+          rct: '临床随机对照 (RCT)',
+          rctDesc: '医学 • 组间设计',
+          ab: 'A/B 测试',
+          abDesc: '用户体验/营销 • 组间设计',
+          memory: '认知记忆实验',
+          memoryDesc: '心理学 • 组内设计'
+      }
     }
   }
 };

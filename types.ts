@@ -37,7 +37,8 @@ export enum ViewState {
   IDEA_GUIDE = 'IDEA_GUIDE',
   OPENING_REVIEW = 'OPENING_REVIEW',
   DATA_ANALYSIS = 'DATA_ANALYSIS',
-  CODE_ASSISTANT = 'CODE_ASSISTANT', // New ViewState
+  CODE_ASSISTANT = 'CODE_ASSISTANT',
+  EXPERIMENT_DESIGN = 'EXPERIMENT_DESIGN', // New ViewState
 }
 
 // Trend Types
@@ -312,4 +313,25 @@ export interface CodeSession {
   messages: CodeMessage[];
   lastModified: number;
   language: string;
+}
+
+// Experiment Design Types
+export interface ExperimentDesignResult {
+  title: string;
+  flow: { step: number; name: string; description: string }[];
+  sampleSize: {
+    recommended: number;
+    explanation: string;
+    parameters: { label: string; value: string }[]; // e.g. Alpha: 0.05
+  };
+  variables: {
+    independent: string[];
+    dependent: string[];
+    control: string[];
+    confounders: string[];
+  };
+  analysis: {
+    method: string;
+    description: string;
+  };
 }

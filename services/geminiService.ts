@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import {
   Language,
@@ -17,6 +18,7 @@ import {
   TrendPersona,
   TargetType,
   ReviewPersona,
+  ExperimentDesignResult,
 } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -391,4 +393,46 @@ export const performCodeAssistance = async (
     console.error("Code Assistant Error:", error);
     return "Error interacting with Code Assistant.";
   }
+};
+
+// --- Experiment Design ---
+
+export const optimizeHypothesis = async (hypothesis: string, language: Language): Promise<string> => {
+    const prompt = `Optimize the following research hypothesis to make it academic, standard, and falsifiable. 
+    Format it as "If... then... compared to...".
+    Original: "${hypothesis}"
+    Language: ${language}.
+    Return only the optimized hypothesis text.`;
+    return getText(prompt);
+};
+
+export const generateExperimentDesign = async (
+  hypothesis: string, 
+  field: string, 
+  methodology: string, 
+  language: Language,
+  iv?: string,
+  dv?: string,
+  statsParams?: { alpha: number; power: number; effectSize: string },
+  designStructure?: string
+): Promise<ExperimentDesignResult | null> => {
+  
+  const varInfo = iv || dv ? `Specified Variables - IV: ${iv || 'Auto-detect'}, DV: ${dv || 'Auto-detect'}.` : '';
+  const statInfo = statsParams 
+    ? `User provided statistical parameters for Sample Size calculation: Alpha=${statsParams.alpha}, Power=${statsParams.power}, Expected Effect Size=${statsParams.effectSize}. Please use these values explicitly for the calculation.` 
+    : 'Assume Alpha=0.05 and Power=0.8 unless otherwise needed for the field.';
+  const structureInfo = designStructure ? `Design Structure: ${designStructure}.` : '';
+
+  const prompt = `Design an experiment. Hypothesis: "${hypothesis}". Field: "${field}". Methodology: "${methodology}". ${structureInfo}
+  ${varInfo}
+  Language: ${language}.
+  Provide a detailed experimental design including:
+  1. A title.
+  2. Step-by-step flow (array of {step, name, description}).
+  3. Sample size calculation. ${statInfo} Provide the recommended N and parameters used (Alpha, Power, Effect Size).
+  4. Variables (IV, DV, Control, Confounders). If IV/DV were provided, ensure they are reflected here.
+  5. Statistical analysis method.
+  
+  Return JSON matching ExperimentDesignResult interface.`;
+  return getJson(prompt, undefined, 'gemini-3-pro-preview'); // Use smart model for reasoning
 };

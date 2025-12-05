@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal } from 'lucide-react';
+import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -43,6 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
           id: 'experiment',
           title: t.groups.experiment,
           items: [
+             { label: navT.experimentDesign, icon: <Beaker size={16} />, id: ViewState.EXPERIMENT_DESIGN },
              { label: navT.data, icon: <BarChart2 size={16} />, id: ViewState.DATA_ANALYSIS },
              { label: navT.code, icon: <Terminal size={16} />, id: ViewState.CODE_ASSISTANT },
              { label: navT.track, icon: <BookOpen size={16} />, id: ViewState.TRACK },
