@@ -1,3 +1,4 @@
+
 export const TRANSLATIONS = {
   EN: {
     appName: 'Research Assistant',
@@ -21,7 +22,8 @@ export const TRANSLATIONS = {
       data: 'Data Analyst',
       code: 'Code Assistant',
       experimentDesign: 'Exp. Design',
-      pdfChat: 'Chat with PDF'
+      pdfChat: 'AI Paper Guide',
+      knowledge: 'Knowledge Graph'
     },
     search: { 
       title: 'Research Assistant', 
@@ -340,17 +342,32 @@ export const TRANSLATIONS = {
       }
     },
     pdfChat: {
-      title: 'Chat with PDF',
-      subtitle: 'Immersive reading mode. Ask questions about details, formulas, and data in your document.',
+      title: 'AI Paper Guide',
+      subtitle: 'Upload PDF to generate structured reading guides, formula breakdowns, and deep insights.',
       upload: 'Upload PDF',
       dragDrop: 'Drag & Drop PDF here',
       placeholder: 'Ask about this paper (e.g. "What is the main contribution?", "Explain Eq. 3")...',
       analyzing: 'Processing PDF...',
-      welcome: 'Document ready. I can help you understand specific details, methodologies, or data in this paper.',
+      welcome: 'Document ready. I have generated a structured guide. Ask me anything about details, methodologies, or data.',
       clear: 'Clear Chat',
       themes: { light: 'Light', dark: 'Dark', sepia: 'Eye Care' },
       toggleSidebar: 'Toggle Sidebar',
       chatPanel: 'Chat Panel'
+    },
+    knowledge: {
+      title: 'Personal Knowledge Graph',
+      subtitle: 'Visualize your academic library. AI connects dots between papers and your notes.',
+      addNote: 'Add Note / Image',
+      connect: 'AI Synthesis',
+      filter: {
+        time: 'Time Joined',
+        partition: 'Partition (SCI/CJR)'
+      },
+      stats: 'Knowledge Stats',
+      empty: 'Library is empty. Add papers or notes to start building your graph.',
+      imageNote: 'Generate Note from Image',
+      connecting: 'Discovering relationships...',
+      analyzingImage: 'Analyzing Image...'
     }
   }
   ,
@@ -376,7 +393,8 @@ export const TRANSLATIONS = {
       data: '数据分析',
       code: '代码助手',
       experimentDesign: '实验设计',
-      pdfChat: '沉浸式阅读'
+      pdfChat: 'AI论文导读',
+      knowledge: '个人知识库'
     },
     search: { 
       title: '科研助手', 
@@ -695,17 +713,32 @@ export const TRANSLATIONS = {
       }
     },
     pdfChat: {
-      title: '沉浸式阅读',
+      title: 'AI论文导读',
       subtitle: '上传 PDF，AI 助你深度解读论文细节、公式含义及数据来源。',
       upload: '上传 PDF 论文',
       dragDrop: '拖拽文件至此',
       placeholder: '询问论文细节 (例如: "本文的主要贡献是什么?", "解释公式3")...',
       analyzing: '正在解析文档...',
-      welcome: '文档已就绪。我可以帮您解读这篇论文的具体细节、方法论或数据。',
+      welcome: '文档已就绪。已为您生成结构化导读。您可以询问关于论文细节、方法论或数据的任何问题。',
       clear: '清空对话',
       themes: { light: '明亮 (Light)', dark: '深色 (Dark)', sepia: '护眼 (Eye Care)' },
       toggleSidebar: '侧边栏',
       chatPanel: '对话栏'
+    },
+    knowledge: {
+      title: '个人学术知识库',
+      subtitle: '可视化您的学术文献库。AI 自动关联论文间的相似观点与笔记。',
+      addNote: '添加笔记 / 图片',
+      connect: 'AI 知识关联',
+      filter: {
+        time: '加入时间',
+        partition: '分区 (SCI/CJR)'
+      },
+      stats: '知识库统计',
+      empty: '知识库为空。添加论文或笔记以开始构建图谱。',
+      imageNote: '图片转笔记',
+      connecting: '正在发现关联...',
+      analyzingImage: '正在分析图片...'
     }
   }
 };

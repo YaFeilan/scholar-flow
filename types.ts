@@ -39,7 +39,8 @@ export enum ViewState {
   DATA_ANALYSIS = 'DATA_ANALYSIS',
   CODE_ASSISTANT = 'CODE_ASSISTANT',
   EXPERIMENT_DESIGN = 'EXPERIMENT_DESIGN',
-  PDF_CHAT = 'PDF_CHAT', // New ViewState
+  PDF_CHAT = 'PDF_CHAT',
+  KNOWLEDGE_GRAPH = 'KNOWLEDGE_GRAPH', // New
 }
 
 // Trend Types
@@ -342,4 +343,25 @@ export interface ExperimentDesignResult {
     method: string;
     description: string;
   };
+}
+
+// Knowledge Graph Types
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: 'Paper' | 'Note' | 'Concept';
+  content?: string; // Abstract or Note content
+  addedDate: string;
+  badges?: any[]; // Reusing Paper badges
+}
+
+export interface GraphLink {
+  source: string;
+  target: string;
+  label: string; // e.g., "Supports", "Uses Method", "Similar To"
+}
+
+export interface KnowledgeGraphData {
+  nodes: GraphNode[];
+  links: GraphLink[];
 }

@@ -29,6 +29,7 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
   // File State
   const [file, setFile] = useState<File | null>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [isImage, setIsImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // PDF Viewer State
@@ -88,48 +89,61 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
   }, [isResizing]);
 
 
-  // Load PDF Document
+  // Load PDF Document or Image
   useEffect(() => {
     if (fileUrl && file) {
-      const loadPdf = async () => {
-        try {
-          setPdfLoading(true);
-          setLoadProgress(10);
-          
-          const loadingTask = pdfjs.getDocument(fileUrl);
-          loadingTask.onProgress = (progress: any) => {
-             if (progress.total > 0) {
-                 const percent = (progress.loaded / progress.total) * 100;
-                 setLoadProgress(Math.min(90, percent));
-             }
+      if (file.type === 'application/pdf') {
+          setIsImage(false);
+          const loadPdf = async () => {
+            try {
+              setPdfLoading(true);
+              setLoadProgress(10);
+              
+              const loadingTask = pdfjs.getDocument(fileUrl);
+              loadingTask.onProgress = (progress: any) => {
+                 if (progress.total > 0) {
+                     const percent = (progress.loaded / progress.total) * 100;
+                     setLoadProgress(Math.min(90, percent));
+                 }
+              };
+
+              const pdf = await loadingTask.promise;
+              setPdfDoc(pdf);
+              setNumPages(pdf.numPages);
+              setPageNum(1);
+              setLoadProgress(100);
+              setPdfLoading(false);
+
+              // Trigger Active Help (Auto Summary)
+              executeChat(
+                  language === 'ZH' 
+                  ? "文档已加载。请生成一份结构化的导读表单，包含：核心贡献、创新点、方法论概要和主要实验结论。" 
+                  : "Document loaded. Please generate a structured guide including: Core Contribution, Innovation, Methodology, and Experimental Conclusions."
+              );
+
+            } catch (error) {
+              console.error("Error loading PDF:", error);
+              setPdfLoading(false);
+              setLoadProgress(0);
+            }
           };
-
-          const pdf = await loadingTask.promise;
-          setPdfDoc(pdf);
-          setNumPages(pdf.numPages);
-          setPageNum(1);
-          setLoadProgress(100);
-          setPdfLoading(false);
-
-          // Trigger Active Help (Auto Summary)
+          loadPdf();
+      } else if (file.type.startsWith('image/')) {
+          setIsImage(true);
+          // Auto-trigger analysis for image
           executeChat(
               language === 'ZH' 
-              ? "文档已加载。请生成一份结构化的导读表单，包含：核心贡献、创新点、方法论概要和主要实验结论。" 
-              : "Document loaded. Please generate a structured guide including: Core Contribution, Innovation, Methodology, and Experimental Conclusions."
+              ? "这是一张论文截图或图片。请分析其内容，提取关键信息（如标题、图表含义、文本内容）。" 
+              : "This is an image of a paper. Please analyze it and extract key information (title, chart meaning, text)."
           );
-
-        } catch (error) {
-          console.error("Error loading PDF:", error);
-          setPdfLoading(false);
-          setLoadProgress(0);
-        }
-      };
-      loadPdf();
+      }
     }
-  }, [fileUrl]); // Removed `file` from dependency to avoid loop if file object changes ref, but url is stable
+  }, [fileUrl]); 
 
-  // Render Page (Canvas + TextLayer)
+  // Render Page (Canvas + TextLayer) - ONLY FOR PDF
   useEffect(() => {
+    if (isImage) return;
+
     const renderPage = async () => {
       if (!pdfDoc || !canvasRef.current || !textLayerRef.current) return;
 
@@ -197,7 +211,7 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
     };
 
     renderPage();
-  }, [pdfDoc, pageNum, scale]);
+  }, [pdfDoc, pageNum, scale, isImage]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -219,6 +233,7 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
   // --- Interaction Handlers ---
 
   const handleTextSelection = (e: React.MouseEvent) => {
+      if (isImage) return; // No text selection on standard image tag easily
       const selection = window.getSelection();
       const text = selection?.toString().trim();
 
@@ -405,7 +420,7 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
                onClick={() => fileInputRef.current?.click()}
                className="w-full max-w-xl p-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer flex flex-col items-center group transition-colors"
             >
-               <input type="file" ref={fileInputRef} className="hidden" accept="application/pdf" onChange={handleFileChange} />
+               <input type="file" ref={fileInputRef} className="hidden" accept="application/pdf, image/png, image/jpeg, image/jpg" onChange={handleFileChange} />
                <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                   <FileText size={40} />
                </div>
@@ -417,7 +432,7 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
 
       {file && fileUrl && (
          <div className="flex w-full h-full relative overflow-hidden">
-            {/* Left Panel: PDF Viewer */}
+            {/* Left Panel: PDF Viewer / Image Viewer */}
             <div className={`flex-1 h-full flex flex-col relative transition-colors duration-300 ${readingTheme === 'dark' ? 'border-r border-slate-700' : 'border-r border-slate-200'}`}>
                 {/* Toolbar */}
                 <div className={`h-14 flex items-center justify-between px-4 shadow-sm z-10 flex-shrink-0 transition-colors ${readingTheme === 'dark' ? 'bg-slate-900 border-b border-slate-700 text-slate-200' : readingTheme === 'sepia' ? 'bg-[#e8dec0] border-b border-[#d0c6a8] text-[#5b4636]' : 'bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700'}`}>
@@ -426,7 +441,7 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
                          {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
                       </button>
                       <div className="flex items-center gap-2 truncate max-w-[150px]">
-                         <FileText size={16} />
+                         {isImage ? <ImageIcon size={16} /> : <FileText size={16} />}
                          <span className="font-bold text-sm truncate">{file.name}</span>
                       </div>
                    </div>
@@ -436,15 +451,20 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
                            <button onClick={() => setReadingTheme('sepia')} className={`p-1.5 rounded ${readingTheme === 'sepia' ? 'bg-[#f4ecd8] shadow text-[#8b5e3c]' : 'text-slate-400'}`}><Eye size={14} /></button>
                            <button onClick={() => setReadingTheme('dark')} className={`p-1.5 rounded ${readingTheme === 'dark' ? 'bg-slate-700 shadow text-blue-300' : 'text-slate-400'}`}><Moon size={14} /></button>
                        </div>
-                       <div className="w-px h-4 bg-slate-300"></div>
-                       <div className="flex items-center gap-1 rounded-lg p-1 border border-black/10 bg-white/50">
-                          <button onClick={() => changePage(-1)} disabled={pageNum <= 1} className="p-1.5 hover:bg-black/10 rounded disabled:opacity-30"><ChevronLeft size={16} /></button>
-                          <span className="text-xs font-mono font-bold w-16 text-center">{pageNum} / {numPages || '-'}</span>
-                          <button onClick={() => changePage(1)} disabled={pageNum >= numPages} className="p-1.5 hover:bg-black/10 rounded disabled:opacity-30"><ChevronRight size={16} /></button>
-                          <div className="w-px h-4 mx-1 bg-slate-300"></div>
-                          <button onClick={() => setScale(s => Math.max(0.5, s - 0.1))} className="p-1.5 hover:bg-black/10 rounded"><ZoomOut size={16} /></button>
-                          <button onClick={() => setScale(s => Math.min(3.0, s + 0.1))} className="p-1.5 hover:bg-black/10 rounded"><ZoomIn size={16} /></button>
-                       </div>
+                       
+                       {!isImage && (
+                           <>
+                               <div className="w-px h-4 bg-slate-300"></div>
+                               <div className="flex items-center gap-1 rounded-lg p-1 border border-black/10 bg-white/50">
+                                  <button onClick={() => changePage(-1)} disabled={pageNum <= 1} className="p-1.5 hover:bg-black/10 rounded disabled:opacity-30"><ChevronLeft size={16} /></button>
+                                  <span className="text-xs font-mono font-bold w-16 text-center">{pageNum} / {numPages || '-'}</span>
+                                  <button onClick={() => changePage(1)} disabled={pageNum >= numPages} className="p-1.5 hover:bg-black/10 rounded disabled:opacity-30"><ChevronRight size={16} /></button>
+                                  <div className="w-px h-4 mx-1 bg-slate-300"></div>
+                                  <button onClick={() => setScale(s => Math.max(0.5, s - 0.1))} className="p-1.5 hover:bg-black/10 rounded"><ZoomOut size={16} /></button>
+                                  <button onClick={() => setScale(s => Math.min(3.0, s + 0.1))} className="p-1.5 hover:bg-black/10 rounded"><ZoomIn size={16} /></button>
+                               </div>
+                           </>
+                       )}
                    </div>
                 </div>
 
@@ -462,14 +482,18 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
                        </div>
                    )}
                    
-                   <div className="relative shadow-2xl transition-all duration-300 group">
-                      <canvas ref={canvasRef} className={`block ${getCanvasStyle()}`} />
-                      {/* Text Layer Overlay */}
-                      <div ref={textLayerRef} className="textLayer" />
-                   </div>
+                   {isImage ? (
+                       <img src={fileUrl} alt="Paper" className="max-w-full shadow-lg rounded-lg object-contain" style={{ maxHeight: '90%' }} />
+                   ) : (
+                       <div className="relative shadow-2xl transition-all duration-300 group">
+                          <canvas ref={canvasRef} className={`block ${getCanvasStyle()}`} />
+                          {/* Text Layer Overlay */}
+                          <div ref={textLayerRef} className="textLayer" />
+                       </div>
+                   )}
 
-                   {/* Floating Action Menu */}
-                   {selectionMenu && (
+                   {/* Floating Action Menu (Only for PDF text selection) */}
+                   {selectionMenu && !isImage && (
                        <div 
                          className="fixed z-50 bg-slate-900 text-white rounded-lg shadow-xl p-1 flex items-center gap-1 animate-fadeIn transform -translate-x-1/2"
                          style={{ left: selectionMenu.x, top: selectionMenu.y }}
