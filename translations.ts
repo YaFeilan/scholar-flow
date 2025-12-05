@@ -144,7 +144,8 @@ export const TRANSLATIONS = {
         titleCheck: 'Title Analysis',
         methodCheck: 'Methodology Review',
         logicCheck: 'Logic & Flow',
-        journalMatch: 'Journal Alignment'
+        journalMatch: 'Journal Alignment',
+        literatureRec: 'Literature Recommendation'
       }
     }
   },
@@ -216,7 +217,7 @@ export const TRANSLATIONS = {
     },
     track: {
       title: '引用网络追踪',
-      subtitle: '分析并分类参考文献全景。快速识别方法论基础、数据集和基线模型。',
+      subtitle: '分析并分类参考文献全景。快速识别方法论基础、数据集和研究模型。',
       tabSearch: '标题搜索',
       tabUpload: '文件上传',
       placeholder: '输入论文标题...',
@@ -291,7 +292,8 @@ export const TRANSLATIONS = {
         titleCheck: '题目解析',
         methodCheck: '方法论审查',
         logicCheck: '逻辑思路检查',
-        journalMatch: '期刊/目标匹配度'
+        journalMatch: '期刊/目标匹配度',
+        literatureRec: '相关文献推荐'
       }
     }
   }

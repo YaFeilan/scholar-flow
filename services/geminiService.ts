@@ -890,6 +890,7 @@ export const generateOpeningReview = async (file: File, target: string, lang: La
     2. **Methodology Check**: Are the proposed methods feasible? Are they state-of-the-art? Is the technical path clear?
     3. **Logic & Flow (思路)**: Is there a clear problem definition? Does the solution logically follow the problem? Is there a hypothesis?
     4. **Target Alignment**: Does this proposal meet the standards of "${target}"?
+    5. **Literature Check**: Based on the content, suggest relevant classic or state-of-the-art papers they might have missed or should reference.
 
     OUTPUT FORMAT (Strict Markdown for Report Generation):
 
@@ -917,6 +918,11 @@ export const generateOpeningReview = async (file: File, target: string, lang: La
     1. [Actionable item 1]
     2. [Actionable item 2]
     3. [Actionable item 3]
+
+    ## 6. Recommended Literature
+    [Suggest 3-5 specific papers formatted as follows]
+    - **[Title]** (Year), Author
+      > *Relevance*: [Why they should read this]
     `;
 
     const response = await ai.models.generateContent({

@@ -164,6 +164,10 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5"></span>
                    <span>{t.sections.journalMatch}</span>
                 </li>
+                <li className="flex items-start gap-2">
+                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5"></span>
+                   <span>{t.sections.literatureRec}</span>
+                </li>
              </ul>
           </div>
         </div>
