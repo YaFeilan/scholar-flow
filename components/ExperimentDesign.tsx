@@ -68,7 +68,6 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
       setOptimizing(false);
   };
 
-  // ... (handleTemplateClick, handleExport logic same as before) ...
   const handleTemplateClick = (template: 'rct' | 'ab' | 'memory') => {
       if (template === 'rct') {
           setField('Medicine');
@@ -77,7 +76,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
           setHypothesis(language === 'ZH' ? '新药物X相比安慰剂能显著降低高血压患者的收缩压。' : 'New Drug X significantly reduces systolic blood pressure in hypertensive patients compared to placebo.');
       } else if (template === 'ab') {
           setField('UX');
-          setMethodology('Survey'); // Or observational/AB if listed, mapping closer to AB
+          setMethodology('Survey'); 
           setStructure('Between');
           setHypothesis(language === 'ZH' ? '绿色购买按钮相比红色按钮能提高结账转化率。' : 'A green checkout button increases conversion rate compared to a red button.');
       } else {
@@ -109,42 +108,48 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
     y += hLines.length * 5 + 5;
 
     // Sample Size
-    doc.setFont("helvetica", "bold");
-    doc.text("Sample Size Calculation", margin, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    doc.text(`Recommended N: ${result.sampleSize.recommended}`, margin, y);
-    y += 6;
-    result.sampleSize.parameters.forEach(p => {
-        doc.text(`- ${p.label}: ${p.value}`, margin + 5, y);
+    if (result.sampleSize) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Sample Size Calculation", margin, y);
         y += 6;
-    });
-    const expLines = doc.splitTextToSize(`Reasoning: ${result.sampleSize.explanation}`, maxWidth);
-    doc.text(expLines, margin, y);
-    y += expLines.length * 5 + 10;
+        doc.setFont("helvetica", "normal");
+        doc.text(`Recommended N: ${result.sampleSize.recommended}`, margin, y);
+        y += 6;
+        result.sampleSize.parameters?.forEach(p => {
+            doc.text(`- ${p.label}: ${p.value}`, margin + 5, y);
+            y += 6;
+        });
+        const expLines = doc.splitTextToSize(`Reasoning: ${result.sampleSize.explanation}`, maxWidth);
+        doc.text(expLines, margin, y);
+        y += expLines.length * 5 + 10;
+    }
 
     // Variables
-    doc.setFont("helvetica", "bold");
-    doc.text("Variables", margin, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    doc.text(`IV: ${result.variables.independent.join(', ')}`, margin, y); y += 6;
-    doc.text(`DV: ${result.variables.dependent.join(', ')}`, margin, y); y += 6;
-    doc.text(`Control: ${result.variables.control.join(', ')}`, margin, y); y += 6;
-    doc.text(`Confounders: ${result.variables.confounders.join(', ')}`, margin, y); y += 10;
+    if (result.variables) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Variables", margin, y);
+        y += 6;
+        doc.setFont("helvetica", "normal");
+        if (result.variables.independent) { doc.text(`IV: ${result.variables.independent.join(', ')}`, margin, y); y += 6; }
+        if (result.variables.dependent) { doc.text(`DV: ${result.variables.dependent.join(', ')}`, margin, y); y += 6; }
+        if (result.variables.control) { doc.text(`Control: ${result.variables.control.join(', ')}`, margin, y); y += 6; }
+        if (result.variables.confounders) { doc.text(`Confounders: ${result.variables.confounders.join(', ')}`, margin, y); y += 10; }
+    }
 
     // Flow
-    doc.setFont("helvetica", "bold");
-    doc.text("Experimental Flow", margin, y);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    result.flow.forEach(step => {
-        if (y > 270) { doc.addPage(); y = margin; }
-        const sText = `${step.step}. ${step.name}: ${step.description}`;
-        const sLines = doc.splitTextToSize(sText, maxWidth);
-        doc.text(sLines, margin, y);
-        y += sLines.length * 5 + 4;
-    });
+    if (result.flow && result.flow.length > 0) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Experimental Flow", margin, y);
+        y += 6;
+        doc.setFont("helvetica", "normal");
+        result.flow.forEach(step => {
+            if (y > 270) { doc.addPage(); y = margin; }
+            const sText = `${step.step}. ${step.name}: ${step.description}`;
+            const sLines = doc.splitTextToSize(sText, maxWidth);
+            doc.text(sLines, margin, y);
+            y += sLines.length * 5 + 4;
+        });
+    }
 
     doc.save("Experiment_Design.pdf");
   };
@@ -341,98 +346,112 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
                       </div>
 
                       {/* Sample Size Card */}
-                      <div className="bg-white rounded-xl p-6 border border-purple-100 shadow-sm relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-bl-full -mr-10 -mt-10"></div>
-                          <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4 relative z-10">
-                              <Calculator className="text-purple-500" /> {t.sampleSize}
-                          </h4>
-                          
-                          <div className="flex flex-col md:flex-row gap-8 relative z-10">
-                              <div className="flex-shrink-0">
-                                  <div className="text-5xl font-black text-purple-600 mb-1">{result.sampleSize.recommended}</div>
-                                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Participants</div>
-                              </div>
-                              <div className="flex-grow space-y-4">
-                                  <div className="flex flex-wrap gap-2">
-                                      {result.sampleSize.parameters.map((p, i) => (
-                                          <span key={i} className="bg-purple-50 text-purple-800 px-3 py-1 rounded-full text-xs font-bold border border-purple-100">
-                                              {p.label}: {p.value}
-                                          </span>
-                                      ))}
+                      {result.sampleSize && (
+                          <div className="bg-white rounded-xl p-6 border border-purple-100 shadow-sm relative overflow-hidden">
+                              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-bl-full -mr-10 -mt-10"></div>
+                              <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4 relative z-10">
+                                  <Calculator className="text-purple-500" /> {t.sampleSize}
+                              </h4>
+                              
+                              <div className="flex flex-col md:flex-row gap-8 relative z-10">
+                                  <div className="flex-shrink-0">
+                                      <div className="text-5xl font-black text-purple-600 mb-1">{result.sampleSize.recommended}</div>
+                                      <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Participants</div>
                                   </div>
-                                  <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                      <span className="font-bold text-slate-700">Calculation Logic:</span> {result.sampleSize.explanation}
-                                  </p>
+                                  <div className="flex-grow space-y-4">
+                                      <div className="flex flex-wrap gap-2">
+                                          {result.sampleSize.parameters?.map((p, i) => (
+                                              <span key={i} className="bg-purple-50 text-purple-800 px-3 py-1 rounded-full text-xs font-bold border border-purple-100">
+                                                  {p.label}: {p.value}
+                                              </span>
+                                          ))}
+                                      </div>
+                                      <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                          <span className="font-bold text-slate-700">Calculation Logic:</span> {result.sampleSize.explanation}
+                                      </p>
+                                  </div>
                               </div>
                           </div>
-                      </div>
+                      )}
 
                       {/* ... Variables, Analysis, Flow Sections ... */}
                       {/* Variables */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                              <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
-                                  <GitBranch className="text-blue-500" /> {t.variables}
-                              </h4>
-                              <div className="space-y-4">
-                                  <div>
-                                      <span className="text-xs font-bold text-slate-400 uppercase">Independent Variables (IV)</span>
-                                      <div className="flex flex-wrap gap-2 mt-1">
-                                          {result.variables.independent.map((v, i) => (
-                                              <span key={i} className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-sm font-medium">{v}</span>
-                                          ))}
-                                      </div>
-                                  </div>
-                                  <div>
-                                      <span className="text-xs font-bold text-slate-400 uppercase">Dependent Variables (DV)</span>
-                                      <div className="flex flex-wrap gap-2 mt-1">
-                                          {result.variables.dependent.map((v, i) => (
-                                              <span key={i} className="bg-green-50 text-green-700 px-2 py-1 rounded text-sm font-medium">{v}</span>
-                                          ))}
-                                      </div>
-                                  </div>
-                                  <div>
-                                      <span className="text-xs font-bold text-slate-400 uppercase">Control / Confounders</span>
-                                      <div className="flex flex-wrap gap-2 mt-1">
-                                          {[...result.variables.control, ...result.variables.confounders].map((v, i) => (
-                                              <span key={i} className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-sm">{v}</span>
-                                          ))}
-                                      </div>
+                          {result.variables && (
+                              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                                  <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
+                                      <GitBranch className="text-blue-500" /> {t.variables}
+                                  </h4>
+                                  <div className="space-y-4">
+                                      {result.variables.independent && (
+                                          <div>
+                                              <span className="text-xs font-bold text-slate-400 uppercase">Independent Variables (IV)</span>
+                                              <div className="flex flex-wrap gap-2 mt-1">
+                                                  {result.variables.independent.map((v, i) => (
+                                                      <span key={i} className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-sm font-medium">{v}</span>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      )}
+                                      {result.variables.dependent && (
+                                          <div>
+                                              <span className="text-xs font-bold text-slate-400 uppercase">Dependent Variables (DV)</span>
+                                              <div className="flex flex-wrap gap-2 mt-1">
+                                                  {result.variables.dependent.map((v, i) => (
+                                                      <span key={i} className="bg-green-50 text-green-700 px-2 py-1 rounded text-sm font-medium">{v}</span>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      )}
+                                      {(result.variables.control || result.variables.confounders) && (
+                                          <div>
+                                              <span className="text-xs font-bold text-slate-400 uppercase">Control / Confounders</span>
+                                              <div className="flex flex-wrap gap-2 mt-1">
+                                                  {[...(result.variables.control || []), ...(result.variables.confounders || [])].map((v, i) => (
+                                                      <span key={i} className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-sm">{v}</span>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      )}
                                   </div>
                               </div>
-                          </div>
+                          )}
                           
-                          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm flex flex-col">
-                              <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
-                                  <Settings className="text-amber-500" /> {t.analysis}
-                              </h4>
-                              <div className="flex-grow flex flex-col justify-center">
-                                  <div className="text-lg font-bold text-slate-800 mb-2">{result.analysis.method}</div>
-                                  <p className="text-sm text-slate-600 leading-relaxed">{result.analysis.description}</p>
+                          {result.analysis && (
+                              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm flex flex-col">
+                                  <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-4">
+                                      <Settings className="text-amber-500" /> {t.analysis}
+                                  </h4>
+                                  <div className="flex-grow flex flex-col justify-center">
+                                      <div className="text-lg font-bold text-slate-800 mb-2">{result.analysis.method}</div>
+                                      <p className="text-sm text-slate-600 leading-relaxed">{result.analysis.description}</p>
+                                  </div>
                               </div>
-                          </div>
+                          )}
                       </div>
 
                       {/* Flow */}
-                      <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                          <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-6">
-                              <ListOrdered className="text-emerald-500" /> {t.flow}
-                          </h4>
-                          <div className="space-y-0 relative">
-                              <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-slate-100"></div>
-                              {result.flow.map((step, idx) => (
-                                  <div key={idx} className="relative pl-12 pb-8 last:pb-0">
-                                      <div className="absolute left-0 w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm z-10">
-                                          {step.step}
+                      {result.flow && result.flow.length > 0 && (
+                          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                              <h4 className="font-bold text-slate-800 flex items-center gap-2 mb-6">
+                                  <ListOrdered className="text-emerald-500" /> {t.flow}
+                              </h4>
+                              <div className="space-y-0 relative">
+                                  <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-slate-100"></div>
+                                  {result.flow.map((step, idx) => (
+                                      <div key={idx} className="relative pl-12 pb-8 last:pb-0">
+                                          <div className="absolute left-0 w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm z-10">
+                                              {step.step}
+                                          </div>
+                                          <div>
+                                              <h5 className="font-bold text-slate-800 text-sm mb-1">{step.name}</h5>
+                                              <p className="text-sm text-slate-600 leading-relaxed">{step.description}</p>
+                                          </div>
                                       </div>
-                                      <div>
-                                          <h5 className="font-bold text-slate-800 text-sm mb-1">{step.name}</h5>
-                                          <p className="text-sm text-slate-600 leading-relaxed">{step.description}</p>
-                                      </div>
-                                  </div>
-                              ))}
+                                  ))}
+                              </div>
                           </div>
-                      </div>
+                      )}
                   </div>
               ) : (
                   <div className="flex-grow flex flex-col items-center justify-center text-center p-8">

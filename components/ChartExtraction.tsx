@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle, Crop, Check, RotateCcw, MousePointer2, Plus, Trash2, LayoutGrid, Edit2, GripVertical, ScanEye, TrendingUp, BarChart as BarChartIcon, Code, ArrowRight, Sparkles, MessageSquare, Filter, Calendar, Tag, FileSearch, Terminal, Database, FileOutput, Eye, Calculator, PenTool } from 'lucide-react';
 import { Language, ChartExtractionResult } from '../types';
@@ -185,12 +184,10 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
           if (item.type.indexOf('image') !== -1) {
             const blob = item.getAsFile();
             if (blob) {
-                // Explicitly cast to File to ensure it matches the ChartFile interface and URL.createObjectURL parameter type
-                const file = new File([blob], "pasted_image.png", { type: item.type }) as File;
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
-                    file: file,
-                    previewUrl: URL.createObjectURL(file),
+                    file: blob,
+                    previewUrl: URL.createObjectURL(blob),
                     metadata: { addedDate: new Date().toISOString().split('T')[0], partition: 'SCI' }
                 });
             }
