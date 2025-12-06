@@ -497,17 +497,30 @@ export const generateScientificFigure = async (prompt: string, style: string, mo
   return generateSlideImage(prompt, style); 
 };
 
-export const extractChartData = async (file: File, language: Language): Promise<ChartExtractionResult | null> => {
-  const prompt = `Extract ALL data from this chart image.
+export const extractChartData = async (file: File, language: Language, mode: 'chart' | 'formula' | 'text' | 'auto' = 'auto'): Promise<ChartExtractionResult | null> => {
+  let specificInstructions = "";
+  if (mode === 'formula') {
+      specificInstructions = "Focus on identifying and converting mathematical formulas. Return valid LaTeX code in the 'ocrText' field. Provide a brief explanation in 'fullDescription'. Set type to 'Formula'. Data array can be empty.";
+  } else if (mode === 'text') {
+      specificInstructions = "Focus on transcribing handwritten or printed text including notes. Return the full text in 'ocrText'. Set type to 'Text'. Data array can be empty.";
+  } else {
+      specificInstructions = "If it's a chart, extract data points into 'data' JSON array. If formula, return LaTeX in 'ocrText'. If text, transcribe.";
+  }
+
+  const prompt = `Analyze this image. Mode: ${mode}.
   Language: ${language}.
+  ${specificInstructions}
   
   Requirements:
-  1. Perform full OCR of all text labels, legends, and data points.
-  2. Provide a 'fullDescription' that comprehensively describes every element in the image.
-  3. Extract data points into a structured JSON array.
-  4. Identify the chart type.
+  1. Identify the content type (Chart, Formula, Text, Diagram).
+  2. Provide a 'fullDescription' describing the content (or formula explanation).
+  3. If Chart: Extract data into JSON 'data' array.
+  4. If Formula: Output standard LaTeX string in 'ocrText'.
+  5. If Text: Output transcription in 'ocrText'.
+  6. If Auto: Detect type and fill corresponding fields.
   
   Return JSON matching ChartExtractionResult (title, type, summary, data[], ocrText, fullDescription).`;
+  
   return getJson(prompt, file);
 };
 

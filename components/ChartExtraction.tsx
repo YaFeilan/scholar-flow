@@ -1,11 +1,13 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle, Crop, Check, RotateCcw, MousePointer2, Plus, Trash2, LayoutGrid, Edit2, GripVertical, ScanEye, TrendingUp, BarChart as BarChartIcon, Code, ArrowRight, Sparkles, MessageSquare, Filter, Calendar, Tag, FileSearch, Terminal, Database, FileOutput, Eye } from 'lucide-react';
+import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle, Crop, Check, RotateCcw, MousePointer2, Plus, Trash2, LayoutGrid, Edit2, GripVertical, ScanEye, TrendingUp, BarChart as BarChartIcon, Code, ArrowRight, Sparkles, MessageSquare, Filter, Calendar, Tag, FileSearch, Terminal, Database, FileOutput, Eye, Calculator, PenTool } from 'lucide-react';
 import { Language, ChartExtractionResult } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { extractChartData, generateChartTrendAnalysis } from '../services/geminiService';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import { jsPDF } from 'jspdf';
 
 interface ChartExtractionProps {
@@ -27,6 +29,8 @@ interface ChartFile {
   metadata: ChartFileMetadata;
 }
 
+type ExtractionMode = 'chart' | 'formula' | 'text' | 'auto';
+
 const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataToAnalysis }) => {
   const t = TRANSLATIONS[language].chart;
   
@@ -36,14 +40,15 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
   const [analyzingTrend, setAnalyzingTrend] = useState(false);
   
   const [resultTab, setResultTab] = useState<'data' | 'code' | 'analysis' | 'full'>('data');
+  const [extractionMode, setExtractionMode] = useState<ExtractionMode>('auto');
   
   const [loadingStep, setLoadingStep] = useState(0);
   const loadingSteps = [
       language === 'ZH' ? '正在预处理图片...' : 'Preprocessing image...',
-      language === 'ZH' ? '正在识别坐标轴体系...' : 'Identifying axes system...',
-      language === 'ZH' ? '正在检测数据点...' : 'Detecting data points...',
-      language === 'ZH' ? '正在拟合数值...' : 'Fitting numerical values...',
-      language === 'ZH' ? '正在生成结构化数据与全内容...' : 'Generating structured data & full content...'
+      language === 'ZH' ? '正在识别坐标轴/文本/公式...' : 'Identifying content...',
+      language === 'ZH' ? '正在检测数据点与结构...' : 'Detecting structures...',
+      language === 'ZH' ? '正在拟合数值与转录...' : 'Transcribing...',
+      language === 'ZH' ? '正在生成最终报告...' : 'Generating output...'
   ];
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,6 +78,18 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
           return matchPart && matchDate;
       });
   }, [chartFiles, filterPartition, filterDate]);
+
+  // Effect to switch default tab based on result type
+  useEffect(() => {
+      if (result) {
+          const type = (result.type || '').toLowerCase();
+          if (type.includes('formula') || type.includes('text') || (result.data && result.data.length === 0)) {
+              setResultTab('full');
+          } else {
+              setResultTab('data');
+          }
+      }
+  }, [result]);
 
   const updateMetadata = (id: string, key: keyof ChartFileMetadata, value: string) => {
       setChartFiles(prev => prev.map(f => f.id === id ? { ...f, metadata: { ...f.metadata, [key]: value } } : f));
@@ -168,7 +185,8 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
           if (item.type.indexOf('image') !== -1) {
             const blob = item.getAsFile();
             if (blob) {
-                const file = new File([blob], "pasted_image.png", { type: item.type });
+                // Explicitly cast to File to ensure it matches the ChartFile interface and URL.createObjectURL parameter type
+                const file = new File([blob], "pasted_image.png", { type: item.type }) as File;
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
                     file: file,
@@ -229,7 +247,8 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
     }
 
     try {
-        const data = await extractChartData(uploadFile as File, language);
+        // Pass the selected mode to the service
+        const data = await extractChartData(uploadFile as File, language, extractionMode);
         
         clearInterval(stepInterval);
         setLoadingStep(loadingSteps.length - 1); 
@@ -305,7 +324,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
 
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("Chart Analysis Report", margin, y);
+    doc.text("Image Analysis Report", margin, y);
     y += 12;
 
     doc.setFontSize(10);
@@ -313,16 +332,14 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
     doc.setTextColor(100);
     doc.text(`Filename: ${activeFile.file.name}`, margin, y);
     y += 6;
-    doc.text(`Date Added: ${activeFile.metadata.addedDate}`, margin, y);
-    y += 6;
-    doc.text(`Source/Partition: ${activeFile.metadata.partition}`, margin, y);
+    doc.text(`Type: ${result.type}`, margin, y);
     y += 10;
     doc.setTextColor(0);
 
     if (result && result.fullDescription) {
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        doc.text("1. Visual Description", margin, y);
+        doc.text("1. Content Description", margin, y);
         y += 8;
         
         doc.setFontSize(10);
@@ -336,7 +353,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
         if (y > 250) { doc.addPage(); y = margin; }
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        doc.text("2. Trend Analysis", margin, y);
+        doc.text("2. Analysis", margin, y);
         y += 8;
         
         doc.setFontSize(10);
@@ -347,56 +364,30 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
         y += lines.length * 5 + 10;
     }
 
-    if (result && result.data && result.data.length > 0) {
-        if (y > 240) { doc.addPage(); y = margin; }
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("3. Extracted Data (Top 50 Rows)", margin, y);
-        y += 10;
-        
-        doc.setFontSize(8);
-        doc.setFont("courier", "normal");
-        const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
-        const colWidth = contentWidth / Math.min(headers.length, 5);
-        let x = margin;
-        headers.slice(0, 5).forEach(h => {
-            doc.text(h.substring(0, 15), x, y);
-            x += colWidth;
-        });
-        y += 4;
-        doc.line(margin, y, margin + contentWidth, y);
-        y += 6;
-
-        result.data.slice(0, 50).forEach(row => {
-            if (y > 280) { doc.addPage(); y = margin; }
-            let x = margin;
-            headers.slice(0, 5).forEach(h => {
-                const val = row[h] ? String(row[h]) : '-';
-                doc.text(val.substring(0, 15), x, y);
-                x += colWidth;
-            });
-            y += 5;
-        });
-    }
-
     if (result && result.ocrText) {
-        doc.addPage();
-        y = margin;
+        if (y > 240) { doc.addPage(); y = margin; }
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.text("4. Raw OCR Text", margin, y);
+        doc.text("3. Extracted Text / Formula", margin, y);
         y += 10;
         
         doc.setFont("courier", "normal");
-        doc.setFontSize(8);
+        doc.setFontSize(10);
         const lines = doc.splitTextToSize(result.ocrText, contentWidth);
         doc.text(lines, margin, y);
     }
 
-    doc.save(`${activeFile.file.name.replace(/\.[^/.]+$/, "")}_FullReport.pdf`);
+    doc.save(`${activeFile.file.name.replace(/\.[^/.]+$/, "")}_Report.pdf`);
   };
 
   const handleCopyLatex = () => {
+      // If it's formula mode or just raw LaTeX text
+      if (result?.ocrText) {
+          navigator.clipboard.writeText(result.ocrText);
+          alert("Content Copied");
+          return;
+      }
+      
       if (!result || !result.data || result.data.length === 0) return;
       const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
       let latex = `\\begin{table}[htbp]\n  \\centering\n  \\caption{${result.title || 'Extracted Data'}}\n  \\label{tab:data}\n  \\begin{tabular}{|${headers.map(() => 'c').join('|')}|}\n    \\hline\n`;
@@ -414,7 +405,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
   };
 
   const generateCode = (lang: 'Python' | 'R') => {
-      if (!result || !result.data || result.data.length === 0) return "";
+      if (!result || !result.data || result.data.length === 0) return "# No tabular data available for code generation.";
       const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
       if (headers.length < 2) return "# Not enough data to generate plot code.";
       const xKey = headers[0];
@@ -574,11 +565,22 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
       );
   };
 
+  // Helper to determine the button label based on mode
+  const getExtractButtonLabel = () => {
+      if (loading) return t.extracting;
+      switch (extractionMode) {
+          case 'chart': return language === 'ZH' ? '提取图表数据' : 'Extract Chart Data';
+          case 'formula': return language === 'ZH' ? '识别数学公式' : 'Recognize Formula';
+          case 'text': return language === 'ZH' ? '手写/文本转录' : 'Transcribe Text';
+          default: return language === 'ZH' ? '智能识别 (Auto)' : 'Deep Scan (Auto)';
+      }
+  };
+
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-8 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
        <div className="flex-shrink-0 mb-6">
           <h2 className="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <Table2 className="text-blue-600" /> {t.title}
+              <Table2 className="text-blue-600" /> {language === 'ZH' ? '图像内容提取 (图表/公式/手写)' : 'Image Content Extraction'}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm">{t.subtitle}</p>
        </div>
@@ -595,11 +597,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                            <option value="SSCI">SSCI</option>
                            <option value="CJR">CJR</option>
                        </select>
-                   </div>
-                   <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1">
-                       <Calendar size={12} className="text-slate-400" />
-                       <span className="text-[10px] text-slate-400 font-bold">&gt;</span>
-                       <input type="date" className="text-xs bg-transparent border-none outline-none text-slate-600 dark:text-slate-300 w-24" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
                    </div>
                </div>
 
@@ -627,20 +624,12 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
 
                        <div className="flex-grow flex flex-col p-4 overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
                            {activeFile && (
-                               <div className="mb-4 grid grid-cols-2 gap-2 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
-                                   <div>
-                                       <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Paper Added Date</label>
-                                       <input type="date" value={activeFile.metadata.addedDate} onChange={(e) => updateMetadata(activeFile.id, 'addedDate', e.target.value)} className="w-full text-xs bg-slate-50 dark:bg-slate-900 border-none rounded px-2 py-1 font-mono" />
-                                   </div>
-                                   <div>
-                                       <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Partition / Source</label>
-                                       <select value={activeFile.metadata.partition} onChange={(e) => updateMetadata(activeFile.id, 'partition', e.target.value)} className="w-full text-xs bg-slate-50 dark:bg-slate-900 border-none rounded px-2 py-1 font-bold text-blue-600">
-                                           <option value="SCI">SCI</option>
-                                           <option value="SSCI">SSCI</option>
-                                           <option value="CJR">CJR</option>
-                                           <option value="EI">EI</option>
-                                           <option value="Other">Other</option>
-                                       </select>
+                               <div className="mb-4 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                                   <div className="flex gap-1 mb-2">
+                                       <button onClick={() => setExtractionMode('auto')} className={`flex-1 py-1.5 text-xs font-bold rounded flex items-center justify-center gap-1 ${extractionMode === 'auto' ? 'bg-blue-50 text-blue-600' : 'text-slate-500'}`}><Sparkles size={12}/> Auto</button>
+                                       <button onClick={() => setExtractionMode('chart')} className={`flex-1 py-1.5 text-xs font-bold rounded flex items-center justify-center gap-1 ${extractionMode === 'chart' ? 'bg-blue-50 text-blue-600' : 'text-slate-500'}`}><BarChartIcon size={12}/> Chart</button>
+                                       <button onClick={() => setExtractionMode('formula')} className={`flex-1 py-1.5 text-xs font-bold rounded flex items-center justify-center gap-1 ${extractionMode === 'formula' ? 'bg-blue-50 text-blue-600' : 'text-slate-500'}`}><Calculator size={12}/> Math</button>
+                                       <button onClick={() => setExtractionMode('text')} className={`flex-1 py-1.5 text-xs font-bold rounded flex items-center justify-center gap-1 ${extractionMode === 'text' ? 'bg-blue-50 text-blue-600' : 'text-slate-500'}`}><PenTool size={12}/> Text</button>
                                    </div>
                                </div>
                            )}
@@ -649,7 +638,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                                {activeFile && (
                                    <div className="relative inline-block">
                                        <img ref={imageRef} src={croppedImageUrl || activeFile.previewUrl} alt="Chart" className={`max-h-[350px] max-w-full rounded shadow-sm object-contain select-none block ${isCropping ? 'opacity-80' : ''}`} draggable={false} />
-                                       {result && result.data && showOverlay && !isCropping && (
+                                       {result && result.data && showOverlay && !isCropping && extractionMode === 'chart' && (
                                            <svg className="absolute inset-0 w-full h-full pointer-events-none">
                                                {result.data.map((row, i) => {
                                                    if (row._box_2d) {
@@ -690,8 +679,12 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                            {isCropping && <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs p-3 rounded-lg mb-4 flex items-center gap-2 border border-blue-200 dark:border-blue-800"><MousePointer2 size={16} />{language === 'ZH' ? '请在图片上拖拽框选图表区域（排除无关文字）。' : 'Drag on the image to select the chart area (exclude captions).'}</div>}
 
                            <button onClick={handleExtract} disabled={!activeFile || loading || isCropping} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-auto">
-                              {loading ? <Loader2 className="animate-spin" /> : <FileText size={18} />}
-                              {loading ? t.extracting : language === 'ZH' ? '全内容分析' : 'Deep Scan (Full Analysis)'}
+                              {loading ? <Loader2 className="animate-spin" /> : (
+                                  extractionMode === 'formula' ? <Calculator size={18} /> : 
+                                  extractionMode === 'text' ? <FileText size={18} /> : 
+                                  <FileText size={18} />
+                              )}
+                              {getExtractButtonLabel()}
                            </button>
                        </div>
                    </div>
@@ -719,15 +712,19 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                            </div>
                            
                            <div className="flex px-4 gap-1">
-                               <button onClick={() => setResultTab('data')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'data' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Table2 size={14}/> Data</div></button>
-                               <button onClick={() => setResultTab('full')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'full' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Eye size={14}/> Full Content</div></button>
-                               <button onClick={() => setResultTab('code')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'code' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Code size={14}/> Code</div></button>
-                               <button onClick={() => setResultTab('analysis')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'analysis' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Sparkles size={14}/> Analysis</div></button>
+                               <button onClick={() => setResultTab('full')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'full' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Eye size={14}/> {language === 'ZH' ? '全内容 / 公式' : 'Content / Formula'}</div></button>
+                               {result.data && result.data.length > 0 && (
+                                   <>
+                                       <button onClick={() => setResultTab('data')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'data' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Table2 size={14}/> Data</div></button>
+                                       <button onClick={() => setResultTab('code')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'code' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Code size={14}/> Code</div></button>
+                                       <button onClick={() => setResultTab('analysis')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'analysis' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Sparkles size={14}/> Analysis</div></button>
+                                   </>
+                               )}
                            </div>
                        </div>
                        
                        <div className="flex-grow overflow-hidden flex flex-col bg-white dark:bg-slate-900 relative">
-                           {resultTab === 'data' && (
+                           {resultTab === 'data' && result.data && result.data.length > 0 && (
                                <>
                                    <div className="h-48 flex-shrink-0 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 p-4 animate-fadeIn">
                                        {renderReplot() || <div className="h-full flex flex-col items-center justify-center text-slate-400"><BarChartIcon size={24} className="mb-2 opacity-50" /><p className="text-xs">Not enough data to re-plot.</p></div>}
@@ -767,17 +764,29 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                            {resultTab === 'full' && (
                                <div className="flex-grow overflow-auto p-6 space-y-6">
                                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
-                                       <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 mb-4"><FileSearch size={16} /> Visual Description & OCR</h4>
+                                       <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 mb-4"><FileSearch size={16} /> {language === 'ZH' ? '内容识别与OCR' : 'Content Recognition & OCR'}</h4>
                                        <div className="space-y-6">
                                            <div>
-                                               <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Detailed Visual Breakdown</h5>
+                                               <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{language === 'ZH' ? '视觉描述 / 公式解析' : 'Visual Description / Explanation'}</h5>
                                                <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 text-xs"><ReactMarkdown>{result.fullDescription || "No detailed description available."}</ReactMarkdown></div>
                                            </div>
                                            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
                                                <div className="flex justify-between items-center mb-2">
-                                                   <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Raw Text (OCR)</h5>
-                                                   <button onClick={() => { navigator.clipboard.writeText(result.ocrText || ""); alert("OCR Text Copied"); }} className="text-[10px] text-blue-600 hover:underline">Copy Text</button>
+                                                   <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                                       {result.type === 'Formula' ? 'LaTeX Source' : 'Extracted Text / OCR'}
+                                                   </h5>
+                                                   <button onClick={() => { navigator.clipboard.writeText(result.ocrText || ""); alert("Content Copied"); }} className="text-[10px] text-blue-600 hover:underline">Copy Content</button>
                                                </div>
+                                               
+                                               {/* Latex Rendering if Formula */}
+                                               {(result.type === 'Formula' || extractionMode === 'formula') && result.ocrText ? (
+                                                   <div className="mb-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-lg text-center overflow-x-auto">
+                                                       <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                                           {`$$${result.ocrText}$$`}
+                                                       </ReactMarkdown>
+                                                   </div>
+                                               ) : null}
+
                                                <pre className="bg-white dark:bg-slate-900 p-4 rounded border border-slate-200 dark:border-slate-700 text-xs font-mono whitespace-pre-wrap text-slate-600 dark:text-slate-400 max-h-60 overflow-y-auto">{result.ocrText || "No text detected."}</pre>
                                            </div>
                                        </div>
@@ -816,16 +825,16 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                        <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
                            <div className="flex gap-2">
                                <button onClick={handleExportFullReport} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 shadow-sm text-purple-600 dark:text-purple-400"><FileOutput size={14} /> Full Report (PDF)</button>
-                               <button onClick={handleCopyLatex} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"><span className="font-mono text-[10px]">TeX</span> LaTeX</button>
-                               <button onClick={handleDownloadCSV} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"><Download size={14} /> Excel/CSV</button>
+                               <button onClick={handleCopyLatex} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"><span className="font-mono text-[10px]">TeX</span> {result.type === 'Formula' ? 'LaTeX Equation' : 'LaTeX Table'}</button>
+                               {result.data && result.data.length > 0 && <button onClick={handleDownloadCSV} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"><Download size={14} /> Excel/CSV</button>}
                            </div>
                            <div className="flex gap-2">
-                               <button onClick={() => setResultTab('code')} className="text-xs font-bold bg-slate-800 dark:bg-slate-700 text-white px-3 py-2 rounded hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"><Terminal size={14} /> Generate Python</button>
-                               {onSendDataToAnalysis && <button onClick={handleSendToAnalysis} className="text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2 rounded flex items-center gap-2 transition-colors"><Database size={14} /> Send to Analysis</button>}
+                               {result.data && result.data.length > 0 && <button onClick={() => setResultTab('code')} className="text-xs font-bold bg-slate-800 dark:bg-slate-700 text-white px-3 py-2 rounded hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"><Terminal size={14} /> Generate Python</button>}
+                               {onSendDataToAnalysis && result.data && result.data.length > 0 && <button onClick={handleSendToAnalysis} className="text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2 rounded flex items-center gap-2 transition-colors"><Database size={14} /> Send to Analysis</button>}
                            </div>
                        </div>
                    </div>
-               ) : <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-60 p-8 text-center"><Table2 size={64} className="mb-4" /><p className="text-lg font-bold">No Data Extracted Yet</p><p className="text-sm max-w-xs mt-2">Upload images, select the chart area, and click "Deep Scan" to extract data and full content.</p></div>}
+               ) : <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-60 p-8 text-center"><Table2 size={64} className="mb-4" /><p className="text-lg font-bold">No Data Extracted Yet</p><p className="text-sm max-w-xs mt-2">Upload images, select area, and click extraction button.</p></div>}
            </div>
        </div>
     </div>
