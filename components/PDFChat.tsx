@@ -13,7 +13,8 @@ import * as pdfjsLib from 'pdfjs-dist';
 const pdfjs = (pdfjsLib as any).default || pdfjsLib;
 
 // Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://esm.sh/pdfjs-dist@3.11.174/build/pdf.worker.min.js`;
+// Use CDNJS which is reliable for worker scripts
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
 
 interface PDFChatProps {
   language: Language;
