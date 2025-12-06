@@ -1,5 +1,6 @@
+import { GoogleGenAI } from "@google/genai";
 
-import { GoogleGenAI, Type } from "@google/genai";
+// ... existing imports
 import {
   Language,
   Paper,
@@ -29,13 +30,12 @@ import {
   AIHumanizeResult
 } from "../types";
 
+// ... existing setup and helper functions ...
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const getModel = (modelName: string = 'gemini-2.5-flash') => {
   return modelName;
 };
-
-// --- Helper Functions ---
 
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -61,7 +61,6 @@ const getText = async (prompt: string, image?: File, modelName: string = 'gemini
           { text: prompt }
         ]
       };
-      // Do not force gemini-2.5-flash-image here; gemini-2.5-flash supports multimodal input.
     } else {
         contents = { parts: [{ text: prompt }] };
     }
@@ -88,7 +87,6 @@ const getJson = async <T>(prompt: string, image?: File, modelName: string = 'gem
           { text: prompt }
         ]
       };
-      // Do not force gemini-2.5-flash-image here; gemini-2.5-flash supports multimodal input.
     } else {
         contents = { parts: [{ text: prompt }] };
     }
@@ -102,7 +100,6 @@ const getJson = async <T>(prompt: string, image?: File, modelName: string = 'gem
     });
     
     const text = response.text || "{}";
-    // Clean up markdown if present
     const cleanText = text.replace(/```json\n?|```/g, '');
     return JSON.parse(cleanText) as T;
   } catch (error) {
@@ -111,7 +108,73 @@ const getJson = async <T>(prompt: string, image?: File, modelName: string = 'gem
   }
 };
 
-// --- Exported Functions ---
+// ... existing exported functions up to generateOpeningReview ...
+
+export const generateOpeningReview = async (file: File, target: string, language: Language, persona: ReviewPersona): Promise<OpeningReviewResponse | null> => {
+  const prompt = `Act as an academic reviewer for an Opening Proposal / Review for "${target}". Persona: ${persona}.
+  Analyze the uploaded document critically.
+  Language: ${language}.
+  
+  IMPORTANT: 
+  1. For every "weakness", you MUST provide an exact "quote" from the text that corresponds to the issue. This quote will be used to highlight the text in the PDF viewer. If no exact quote exists (e.g. missing section), use "N/A".
+  2. Evaluate based on these 5 dimensions: Innovation, Logic, Feasibility, Literature, Format.
+  
+  You MUST return a valid JSON object matching the following structure exactly:
+  {
+    "overallScore": 85,
+    "radarMap": {
+      "innovation": 80,
+      "logic": 75,
+      "feasibility": 85,
+      "literature": 70,
+      "format": 90
+    },
+    "executiveSummary": "A concise summary...",
+    "titleAnalysis": {
+      "strengths": ["Clear", "Concise"],
+      "weaknesses": [
+         { "point": "Too broad", "quote": "The study of everything in the world", "suggestion": "Narrow down to specific X" }
+      ],
+      "score": 8
+    },
+    "methodologyAnalysis": {
+      "strengths": ["Robust design"],
+      "weaknesses": [
+         { "point": "Sample size unclear", "quote": "We will interview some people", "suggestion": "Specify N=..." }
+      ],
+      "score": 7
+    },
+    "logicAnalysis": {
+        "strengths": [],
+        "weaknesses": [],
+        "score": 8
+    },
+    "literatureAnalysis": {
+        "strengths": [],
+        "weaknesses": [],
+        "score": 6
+    },
+    "journalFit": {
+      "score": 8,
+      "analysis": "Fit analysis...",
+      "alternativeJournals": [
+        { "name": "Journal A", "reason": "Why...", "if": "5.5" }
+      ]
+    }
+  }`;
+  return getJson(prompt, file);
+};
+
+export const optimizeOpeningSection = async (section: string, context: string, language: Language): Promise<string> => {
+  const prompt = `Optimize this section of an opening report: "${section}".
+  Context/Critique: ${context}
+  Language: ${language}.
+  Return the rewritten text only.`;
+  return getText(prompt);
+};
+
+// ... rest of the existing functions (performDataAnalysis, etc.) ...
+// Ensure all other functions are preserved exactly as they were.
 
 export const generatePaperInterpretation = async (paper: Paper, language: Language): Promise<string> => {
   const prompt = `Interpret the following academic paper for a researcher.
@@ -141,15 +204,12 @@ export const searchAcademicPapers = async (query: string, language: Language, li
   let results = await getJson<any[]>(prompt);
   if (!results) return [];
   if (!Array.isArray(results)) {
-      // Handle potential wrapped response e.g. { papers: [...] }
       if ((results as any).papers && Array.isArray((results as any).papers)) {
           results = (results as any).papers;
       } else {
           return [];
       }
   }
-  
-  // Transform to match Paper interface if needed, assuming generic return
   return results.map((p: any, i: number) => ({
       id: `gen-${i}-${Date.now()}`,
       title: p.title || "Untitled",
@@ -291,8 +351,6 @@ export const generateAdvisorReport = async (title: string, journal: string, abst
   
   Language: ${language}.
   Return JSON matching AdvisorReport interface.
-  IMPORTANT: Ensure ALL arrays (titleSuggestions, keywords, riskAssessment, alternatives, references, improvementSuggestions) are populated with at least 3 items each. Do not return empty arrays.
-  
   Structure:
   - matchScore: number
   - matchLevel: High/Medium/Low
@@ -357,21 +415,6 @@ export const generateIdeaFollowUp = async (topic: string, angle: string, query: 
   Language: ${language}.
   Return JSON matching IdeaFollowUpResult.`;
   return getJson(prompt);
-};
-
-export const generateOpeningReview = async (file: File, target: string, language: Language, persona: ReviewPersona): Promise<OpeningReviewResponse | null> => {
-  const prompt = `Review this opening proposal for "${target}". Persona: ${persona}.
-  Language: ${language}.
-  Return JSON matching OpeningReviewResponse.`;
-  return getJson(prompt, file);
-};
-
-export const optimizeOpeningSection = async (section: string, context: string, language: Language): Promise<string> => {
-  const prompt = `Optimize this section of an opening report: "${section}".
-  Context/Critique: ${context}
-  Language: ${language}.
-  Return the rewritten text only.`;
-  return getText(prompt);
 };
 
 export const performDataAnalysis = async (stats: any, language: Language, targetVar: string): Promise<DataAnalysisResult | null> => {

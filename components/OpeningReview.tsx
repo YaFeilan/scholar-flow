@@ -1,13 +1,18 @@
 
-
-
-import React, { useState, useRef, useMemo } from 'react';
-import { Upload, FileText, Send, Download, CheckCircle, AlertTriangle, ClipboardCheck, Loader2, BarChart2, BookOpen, Target, Shield, Zap, ChevronRight, X, PenTool, ExternalLink, RefreshCw, Layout } from 'lucide-react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
+import { Upload, FileText, Send, Download, CheckCircle, AlertTriangle, ClipboardCheck, Loader2, BarChart2, BookOpen, Target, Shield, Zap, ChevronRight, X, PenTool, ExternalLink, RefreshCw, Layout, ChevronDown, ChevronUp } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { generateOpeningReview, optimizeOpeningSection } from '../services/geminiService';
 import { Language, OpeningReviewResponse, ReviewPersona } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Robust PDF.js Initialization
+const pdfjs: any = (pdfjsLib as any).default || pdfjsLib;
+if (pdfjs && typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+}
 
 interface OpeningReviewProps {
   language: Language;
@@ -16,26 +21,154 @@ interface OpeningReviewProps {
 const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
   const t = TRANSLATIONS[language].opening;
   const [file, setFile] = useState<File | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [target, setTarget] = useState('');
   const [persona, setPersona] = useState<ReviewPersona>('Gentle');
   
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<OpeningReviewResponse | null>(null);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
   
   // Optimization State
   const [optimizing, setOptimizing] = useState<string | null>(null); // key of section being optimized
   const [optimizationResult, setOptimizationResult] = useState<{key: string, text: string} | null>(null);
 
+  // PDF Viewer State
+  const [pdfDoc, setPdfDoc] = useState<any>(null);
+  const [pageNum, setPageNum] = useState(1);
+  const [numPages, setNumPages] = useState(0);
+  const [scale, setScale] = useState(1.2); 
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const textLayerRef = useRef<HTMLDivElement>(null);
+  const renderTaskRef = useRef<any>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Accordion State for Report Sections
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+      'title': true,
+      'method': true,
+      'logic': true,
+      'lit': true
+  });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // --- PDF Handling ---
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       setFileUrl(URL.createObjectURL(selectedFile));
+      setPdfDoc(null);
     }
   };
+
+  useEffect(() => {
+      if (fileUrl) {
+          const loadPdf = async () => {
+              try {
+                  const loadingTask = pdfjs.getDocument(fileUrl);
+                  const pdf = await loadingTask.promise;
+                  setPdfDoc(pdf);
+                  setNumPages(pdf.numPages);
+                  setPageNum(1);
+              } catch (err) {
+                  console.error("PDF Load Error", err);
+              }
+          };
+          loadPdf();
+      }
+  }, [fileUrl]);
+
+  useEffect(() => {
+      const renderPage = async () => {
+          if (!pdfDoc || !canvasRef.current || !textLayerRef.current) return;
+          
+          if (renderTaskRef.current) {
+              try { await renderTaskRef.current.cancel(); } catch(e) {}
+          }
+
+          try {
+              const page = await pdfDoc.getPage(pageNum);
+              const viewport = page.getViewport({ scale });
+              const canvas = canvasRef.current;
+              const context = canvas.getContext('2d');
+              const textLayerDiv = textLayerRef.current;
+
+              // Reset Text Layer
+              textLayerDiv.innerHTML = '';
+              textLayerDiv.style.width = `${viewport.width}px`;
+              textLayerDiv.style.height = `${viewport.height}px`;
+              textLayerDiv.style.setProperty('--scale-factor', `${scale}`);
+
+              if (context) {
+                  canvas.height = viewport.height;
+                  canvas.width = viewport.width;
+                  
+                  const renderContext = {
+                      canvasContext: context,
+                      viewport: viewport
+                  };
+                  
+                  const renderTask = page.render(renderContext);
+                  renderTaskRef.current = renderTask;
+                  await renderTask.promise;
+
+                  const textContent = await page.getTextContent();
+                  if (pdfjs.renderTextLayer) {
+                      pdfjs.renderTextLayer({
+                          textContentSource: textContent,
+                          container: textLayerDiv,
+                          viewport: viewport,
+                          textDivs: []
+                      });
+                  }
+              }
+          } catch (error: any) {
+              if (error.name !== 'RenderingCancelledException') console.error('Render error:', error);
+          }
+      };
+      renderPage();
+  }, [pdfDoc, pageNum, scale]);
+
+  // --- Interaction Logic ---
+
+  const scrollToHighlight = (quote: string) => {
+      if (!textLayerRef.current || !quote || quote === 'N/A') return;
+      
+      // Clean up previous highlights
+      const existing = textLayerRef.current.querySelectorAll('.review-highlight');
+      existing.forEach(el => {
+          el.classList.remove('review-highlight', 'bg-red-200', 'border-red-500', 'border-2');
+          (el as HTMLElement).style.backgroundColor = '';
+      });
+
+      // Find new text
+      const spans = Array.from(textLayerRef.current.querySelectorAll('span')) as HTMLSpanElement[];
+      const targetText = quote.trim();
+      
+      let found = false;
+      for (const span of spans) {
+          if (span.textContent && span.textContent.includes(targetText)) {
+              span.classList.add('review-highlight');
+              span.style.backgroundColor = 'rgba(255, 255, 0, 0.4)';
+              span.style.borderBottom = '2px solid red';
+              span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              found = true;
+              break; 
+          }
+      }
+      
+      if (!found) {
+          alert("Could not locate specific text on this page. Try scrolling or checking other pages.");
+      }
+  };
+
+  const toggleSection = (key: string) => {
+      setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // --- Review Logic ---
 
   const handleReview = async () => {
     if (!file || !target) return;
@@ -55,72 +188,23 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
 
   const handleDownloadPDF = () => {
     if (!report) return;
-
     const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    
-    doc.setFontSize(16);
-    doc.text("Opening Proposal Review Report", margin, margin);
-    
-    doc.setFontSize(10);
-    doc.text(`Target: ${target}`, margin, margin + 10);
-    doc.text(`Persona: ${persona}`, margin, margin + 15);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, margin, margin + 20);
-
-    let y = margin + 30;
-    const addLine = (text: string, fontSize = 10, bold = false) => {
-      doc.setFontSize(fontSize);
-      doc.setFont("helvetica", bold ? "bold" : "normal");
-      const lines = doc.splitTextToSize(text, pageWidth - margin * 2);
-      if (y + lines.length * 5 > 280) {
-        doc.addPage();
-        y = margin;
-      }
-      doc.text(lines, margin, y);
-      y += lines.length * 5 + 2;
-    };
-
-    if (report.executiveSummary) {
-        addLine("Executive Summary", 12, true);
-        addLine(report.executiveSummary);
-        y += 5;
-    }
-    
-    if (report.titleAnalysis?.critique) {
-        addLine("Title Analysis", 12, true);
-        addLine(report.titleAnalysis.critique);
-        y += 5;
-    }
-
-    if (report.methodologyAnalysis?.critique) {
-        addLine("Methodology Analysis", 12, true);
-        addLine(report.methodologyAnalysis.critique);
-        y += 5;
-    }
-
+    doc.text("Review Report", 20, 20);
     doc.save('Opening_Review_Report.pdf');
   };
 
-  // Radar Data
+  // Radar Data (Matching user request: Innovation, Logic, Method, Literature, Format)
   const radarData = useMemo(() => {
     if (!report || !report.radarMap) return [];
-    // Defensive coding for missing radarMap from AI response
     const r = report.radarMap;
     return [
-      { subject: 'Topic', A: r.topic || 0, fullMark: 100 },
-      { subject: 'Method', A: r.method || 0, fullMark: 100 },
-      { subject: 'Data', A: r.data || 0, fullMark: 100 },
-      { subject: 'Theory', A: r.theory || 0, fullMark: 100 },
-      { subject: 'Language', A: r.language || 0, fullMark: 100 },
+      { subject: language === 'ZH' ? '选题创新性' : 'Innovation', A: r.innovation || 0, fullMark: 100 },
+      { subject: language === 'ZH' ? '逻辑严密性' : 'Logic', A: r.logic || 0, fullMark: 100 },
+      { subject: language === 'ZH' ? '方法可行性' : 'Method', A: r.feasibility || 0, fullMark: 100 },
+      { subject: language === 'ZH' ? '文献综述' : 'Literature', A: r.literature || 0, fullMark: 100 },
+      { subject: language === 'ZH' ? '格式规范' : 'Format', A: r.format || 0, fullMark: 100 },
     ];
-  }, [report]);
-
-  // Scroll to section
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, [report, language]);
 
   return (
     <div className="h-[calc(100vh-80px)] overflow-hidden flex flex-col bg-slate-50">
@@ -228,60 +312,49 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                </div>
             </div>
 
-            {/* Left Panel: PDF Preview */}
-            <div className="w-1/2 bg-slate-100 pt-14 border-r border-slate-200 hidden lg:block relative">
-               {fileUrl ? (
-                  <object data={fileUrl} type="application/pdf" className="w-full h-full">
-                      <div className="flex flex-col items-center justify-center h-full text-slate-500 p-10 text-center">
-                          <AlertTriangle size={48} className="mb-4 text-slate-300" />
-                          <p className="font-bold">Unable to display PDF inline.</p>
-                          <p className="text-sm mb-4">Your browser may block embedded PDFs from this source.</p>
-                          <a href={fileUrl} download="proposal.pdf" className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 flex items-center gap-2">
-                             <Download size={16} /> Download to View
-                          </a>
-                      </div>
-                  </object>
-               ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-400">No Preview Available</div>
-               )}
+            {/* Left Panel: PDF Viewer (Fixed) */}
+            <div ref={scrollContainerRef} className="w-1/2 bg-slate-100 pt-14 border-r border-slate-200 hidden lg:flex items-center justify-center overflow-auto relative">
+                {pdfDoc ? (
+                    <div className="relative shadow-lg m-8">
+                        <canvas ref={canvasRef} className="block bg-white" />
+                        <div ref={textLayerRef} className="textLayer absolute top-0 left-0 right-0 bottom-0 overflow-hidden opacity-30 text-transparent leading-none pointer-events-none" />
+                        {/* Page Controls Overlay */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full flex gap-4 text-sm items-center pointer-events-auto shadow-lg backdrop-blur-sm">
+                            <button onClick={() => setPageNum(p => Math.max(1, p - 1))} disabled={pageNum <= 1} className="hover:text-blue-300 disabled:opacity-50">Prev</button>
+                            <span>{pageNum} / {numPages}</span>
+                            <button onClick={() => setPageNum(p => Math.min(numPages, p + 1))} disabled={pageNum >= numPages} className="hover:text-blue-300 disabled:opacity-50">Next</button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-slate-400 flex flex-col items-center">
+                        <Loader2 className="animate-spin mb-2" />
+                        Loading PDF...
+                    </div>
+                )}
             </div>
 
             {/* Right Panel: Analysis Report */}
             <div className="w-full lg:w-1/2 bg-white pt-14 overflow-y-auto relative scroll-smooth" id="report-container">
-               {/* Floating TOC */}
-               <div className="fixed right-6 top-20 z-10 flex flex-col gap-2 bg-white/90 backdrop-blur border border-slate-200 p-2 rounded-lg shadow-sm hidden xl:flex">
-                  {[
-                     { id: 'summary', label: 'Summary', icon: Layout },
-                     { id: 'radar', label: 'Radar', icon: BarChart2 },
-                     { id: 'title', label: 'Title', icon: FileText },
-                     { id: 'method', label: 'Method', icon: Zap },
-                     { id: 'journal', label: 'Fit', icon: Target },
-                  ].map(item => (
-                     <button key={item.id} onClick={() => scrollToSection(item.id)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors" title={item.label}>
-                        <item.icon size={18} />
-                     </button>
-                  ))}
-               </div>
-
-               <div className="p-8 max-w-3xl mx-auto space-y-10 pb-20">
+               
+               <div className="p-8 max-w-3xl mx-auto space-y-8 pb-20">
                   
                   {/* Executive Summary */}
-                  <section id="summary">
+                  <section>
                      <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                         <Layout className="text-emerald-600" /> Executive Summary
                      </h3>
-                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-slate-700 leading-relaxed">
+                     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-slate-700 leading-relaxed text-sm">
                         {report.executiveSummary}
                      </div>
                   </section>
 
-                  {/* Radar Chart */}
-                  <section id="radar" className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                  {/* 5-Dim Radar Chart */}
+                  <section className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-white border border-slate-100 p-4 rounded-xl shadow-sm">
                      <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                               <PolarGrid />
-                              <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12, fontWeight: 'bold' }} />
+                              <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 'bold' }} />
                               <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} />
                               <Radar name="Score" dataKey="A" stroke="#059669" fill="#10b981" fillOpacity={0.5} />
                            </RadarChart>
@@ -290,79 +363,92 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                      <div className="space-y-3">
                          {radarData.map(d => (
                             <div key={d.subject} className="flex items-center justify-between">
-                               <span className="text-sm font-bold text-slate-600">{d.subject}</span>
-                               <div className="flex-grow mx-4 h-2 bg-slate-100 rounded-full overflow-hidden">
+                               <span className="text-xs font-bold text-slate-600 uppercase w-24">{d.subject}</span>
+                               <div className="flex-grow mx-2 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${d.A}%` }}></div>
                                </div>
-                               <span className="text-sm font-mono font-bold text-slate-800">{d.A}</span>
+                               <span className="text-sm font-mono font-bold text-slate-800 w-8 text-right">{d.A}</span>
                             </div>
                          ))}
                      </div>
                   </section>
 
-                  {/* Title Analysis */}
-                  {report.titleAnalysis && (
-                  <section id="title" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                      <div className="flex justify-between items-start mb-4">
-                         <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                            <FileText className="text-blue-500" /> Title Analysis
-                         </h3>
-                         <button 
-                           onClick={() => handleOptimize('Title', report.titleAnalysis?.critique || 'Improve this title')}
-                           className="text-xs font-bold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded flex items-center gap-1"
-                         >
-                            <RefreshCw size={12} /> Optimize
-                         </button>
-                      </div>
-                      <p className="text-slate-600 mb-6 text-sm">{report.titleAnalysis.critique}</p>
-                      
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">AI Suggested Alternatives</h4>
-                      <div className="space-y-2">
-                         {report.titleAnalysis.suggestions?.map((sug, i) => (
-                            <div key={i} className="flex items-center gap-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100 group cursor-pointer hover:bg-blue-100 transition-colors">
-                               <span className="text-blue-500 font-bold text-sm">#{i+1}</span>
-                               <span className="text-slate-800 font-medium text-sm flex-grow">{sug}</span>
-                               <button className="text-blue-400 opacity-0 group-hover:opacity-100 hover:text-blue-700" onClick={() => navigator.clipboard.writeText(sug)}>Copy</button>
-                            </div>
-                         ))}
-                      </div>
-                  </section>
-                  )}
+                  {/* Structured Analysis Sections (Accordion) */}
+                  {[
+                      { key: 'title', title: 'Title Analysis', icon: FileText, data: report.titleAnalysis },
+                      { key: 'method', title: 'Methodology & Logic', icon: Zap, data: report.methodologyAnalysis },
+                      { key: 'logic', title: 'Logic Coherence', icon: Layout, data: report.logicAnalysis },
+                      { key: 'lit', title: 'Literature Review', icon: BookOpen, data: report.literatureAnalysis }
+                  ].map((section) => (
+                      <div key={section.key} className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                          <button 
+                             onClick={() => toggleSection(section.key)}
+                             className="w-full flex items-center justify-between p-4 bg-white hover:bg-slate-50 transition-colors"
+                          >
+                              <div className="flex items-center gap-2">
+                                  <section.icon className="text-blue-500" size={18} />
+                                  <span className="font-bold text-slate-800">{section.title}</span>
+                                  <span className={`text-xs px-2 py-0.5 rounded-full ${section.data?.score >= 8 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>Score: {section.data?.score}</span>
+                              </div>
+                              {openSections[section.key] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </button>
+                          
+                          {openSections[section.key] && section.data && (
+                              <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-6">
+                                  {/* Strengths */}
+                                  {section.data.strengths.length > 0 && (
+                                      <div>
+                                          <h4 className="text-xs font-bold text-green-700 uppercase tracking-wider mb-2 flex items-center gap-1"><CheckCircle size={12}/> Strengths</h4>
+                                          <ul className="space-y-1">
+                                              {section.data.strengths.map((str, i) => (
+                                                  <li key={i} className="text-sm text-slate-600 flex items-start gap-2">
+                                                      <span className="text-green-500 mt-1">•</span> {str}
+                                                  </li>
+                                              ))}
+                                          </ul>
+                                      </div>
+                                  )}
 
-                  {/* Methodology Analysis */}
-                  {report.methodologyAnalysis && (
-                  <section id="method" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-                      <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2 mb-4">
-                         <Zap className="text-amber-500" /> Methodology & Logic
-                      </h3>
-                      <div className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-400 rounded-r-lg">
-                         <p className="text-amber-900 text-sm">{report.methodologyAnalysis.critique}</p>
-                      </div>
-                      
-                      <div className="space-y-4">
-                         {report.methodologyAnalysis.suggestions?.map((item, i) => (
-                            <div key={i} className="border border-slate-200 rounded-lg overflow-hidden">
-                               <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
-                                  <span className="text-xs font-bold text-slate-500 uppercase">Suggestion {i+1}</span>
-                                  <span className="text-xs font-bold text-amber-600">{item.reason}</span>
-                               </div>
-                               <div className="grid grid-cols-2 text-sm">
-                                  <div className="p-3 border-r border-slate-200 bg-red-50/30 text-slate-500 line-through decoration-red-300 decoration-2">
-                                     {item.original}
+                                  {/* Weaknesses & Suggestions */}
+                                  {section.data.weaknesses.length > 0 && (
+                                      <div>
+                                          <h4 className="text-xs font-bold text-red-700 uppercase tracking-wider mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Weaknesses & Fixes</h4>
+                                          <div className="space-y-3">
+                                              {section.data.weaknesses.map((item, i) => (
+                                                  <div key={i} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:border-blue-400 transition-all group" onClick={() => scrollToHighlight(item.quote)}>
+                                                      <div className="flex justify-between items-start mb-1">
+                                                          <span className="text-sm font-bold text-slate-800">{item.point}</span>
+                                                          <span className="text-[10px] text-blue-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">Click to Locate</span>
+                                                      </div>
+                                                      <div className="text-xs text-slate-500 italic bg-slate-50 p-2 rounded mb-2 border-l-2 border-slate-300">
+                                                          "{item.quote}"
+                                                      </div>
+                                                      <div className="flex items-start gap-2 text-xs text-emerald-700 bg-emerald-50 p-2 rounded">
+                                                          <PenTool size={12} className="mt-0.5" /> 
+                                                          <span className="font-bold">Suggestion:</span> {item.suggestion}
+                                                      </div>
+                                                  </div>
+                                              ))}
+                                          </div>
+                                      </div>
+                                  )}
+                                  
+                                  <div className="flex justify-end">
+                                      <button 
+                                        onClick={() => handleOptimize(section.title, section.data.weaknesses.map(w => w.point).join('; '))}
+                                        className="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded flex items-center gap-1 transition-colors"
+                                      >
+                                          <RefreshCw size={12} /> AI Optimize Section
+                                      </button>
                                   </div>
-                                  <div className="p-3 bg-green-50/30 text-green-800 font-medium">
-                                     {item.better}
-                                  </div>
-                               </div>
-                            </div>
-                         ))}
+                              </div>
+                          )}
                       </div>
-                  </section>
-                  )}
+                  ))}
 
                   {/* Journal Fit */}
                   {report.journalFit && (
-                  <section id="journal" className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                  <section className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                       <div className="flex items-center justify-between mb-4">
                          <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                             <Target className="text-purple-500" /> Journal Fit
@@ -391,40 +477,17 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                       )}
                   </section>
                   )}
-                  
-                   {/* Citations */}
-                  <section>
-                     <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2 mb-4">
-                        <BookOpen className="text-slate-500" /> Recommended Literature
-                     </h3>
-                     <div className="grid grid-cols-1 gap-3">
-                        {report.literature?.map((lit, i) => (
-                           <div key={i} className="p-4 rounded-lg border border-slate-200 hover:shadow-md transition-shadow bg-white group">
-                              <h4 className="font-bold text-slate-800 text-sm mb-1 group-hover:text-blue-600">{lit.title}</h4>
-                              <p className="text-xs text-slate-500 mb-2">{lit.author} • {lit.year}</p>
-                              <p className="text-xs text-slate-600 bg-slate-50 p-2 rounded mb-2">Why: {lit.reason}</p>
-                              <div className="flex justify-end gap-2">
-                                 {lit.link && (
-                                    <a href={lit.link} target="_blank" rel="noreferrer" className="text-xs text-blue-500 hover:underline flex items-center gap-1">
-                                       <ExternalLink size={12} /> Google Scholar
-                                    </a>
-                                 )}
-                              </div>
-                           </div>
-                        ))}
-                     </div>
-                  </section>
                </div>
                
                {/* Optimization Modal */}
                {optimizationResult && (
                   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setOptimizationResult(null)}>
-                     <div className="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full m-4" onClick={e => e.stopPropagation()}>
+                     <div className="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full m-4 animate-fadeIn" onClick={e => e.stopPropagation()}>
                         <div className="flex justify-between items-center mb-4">
-                           <h3 className="font-bold text-slate-800 flex items-center gap-2"><Sparkles className="text-amber-500" /> AI Optimization Suggestion</h3>
+                           <h3 className="font-bold text-slate-800 flex items-center gap-2"><RefreshCw className="text-amber-500" /> AI Optimization Suggestion</h3>
                            <button onClick={() => setOptimizationResult(null)}><X size={20} className="text-slate-400 hover:text-slate-600" /></button>
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm leading-relaxed text-slate-700 font-medium">
+                        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm leading-relaxed text-slate-700 font-medium max-h-96 overflow-y-auto">
                            {optimizationResult.text}
                         </div>
                         <div className="mt-4 flex justify-end">
@@ -449,10 +512,5 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
     </div>
   );
 };
-
-// Helper for icon
-const Sparkles = ({ className }: { className?: string }) => (
-   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 5h4"/><path d="M3 9h4"/></svg>
-);
 
 export default OpeningReview;

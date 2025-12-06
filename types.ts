@@ -206,44 +206,31 @@ export interface PeerReviewResponse {
 // Opening Review Types
 export type ReviewPersona = 'Gentle' | 'Critical';
 
+export interface OpeningSectionAnalysis {
+    strengths: string[];
+    weaknesses: { point: string; quote: string; suggestion: string }[];
+    score: number;
+}
+
 export interface OpeningReviewResponse {
   overallScore: number;
   radarMap: {
-    topic: number; // Topic Heat
-    method: number; // Method Difficulty
-    data: number; // Data Quality
-    theory: number; // Theoretical Contribution
-    language: number; // Language Style
+    innovation: number; // 选题创新性
+    logic: number;      // 逻辑严密性
+    feasibility: number;// 方法可行性
+    literature: number; // 文献综述
+    format: number;     // 格式规范
   };
   executiveSummary: string;
-  titleAnalysis: {
-    critique: string;
-    suggestions: string[];
-  };
-  methodologyAnalysis: {
-    critique: string;
-    suggestions: { original: string; better: string; reason: string }[];
-  };
-  logicAnalysis: {
-    critique: string;
-    gaps: string[];
-  };
+  titleAnalysis: OpeningSectionAnalysis;
+  methodologyAnalysis: OpeningSectionAnalysis;
+  logicAnalysis: OpeningSectionAnalysis;
+  literatureAnalysis: OpeningSectionAnalysis;
   journalFit: {
     score: number;
     analysis: string;
     alternativeJournals: { name: string; reason: string; if: string }[];
   };
-  formatCheck: {
-    status: 'Pass' | 'Warning' | 'Fail';
-    issues: string[];
-  };
-  literature: {
-    title: string;
-    author: string;
-    year: string;
-    reason: string;
-    link?: string;
-  }[];
 }
 
 // Advisor Types
