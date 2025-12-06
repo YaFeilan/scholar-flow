@@ -73,12 +73,15 @@ Research Assistant 是一款基于人工智能的学术研究辅助工具，旨�
      GEMINI_API_KEY=输入Google Gemini秘钥
      ```
 
-4. **运行应用**
-   * 在项目文件夹空白处按住 `Shift` 键 + **鼠标右键**
-   * 选择 **打开 Powershell 窗口**
-   * 输入以下命令：
-     npm run dev
-   * 对生成的网址按 `Ctrl` + **鼠标左键** 即可访问。
+ 4.运行应用
+
+* 在项目文件夹空白处按住 **Shift** 键 + **鼠标右键**
+* 选择 **打开 Powershell 窗口**
+* 输入以下命令：
+```bash
+npm run dev
+```
+* 对生成的网址按 **Ctrl** + **鼠标左键**即可访问
 
 ## 🤝 贡献 (Contribution)
 
