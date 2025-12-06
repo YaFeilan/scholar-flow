@@ -316,30 +316,28 @@ export const generateSimulatedFullText = async (paper: Paper, language: Language
 };
 
 export const extractChartData = async (file: File, language: Language, mode: 'chart' | 'formula' | 'text' | 'auto'): Promise<ChartExtractionResult> => {
-  const prompt = `Analyze this image thoroughly. Mode: ${mode}.
+  const prompt = `Analyze this image thoroughly to extract ALL content. Mode: ${mode}.
   Language: ${language}.
   
-  If Mode is 'chart' or 'auto':
-  Extract data from the chart/table.
+  Goal: Extract all meaningful information from the image.
   
-  If Mode is 'formula' or 'auto' and you see math:
-  Convert the math formula to LaTeX format.
+  1. If Mode is 'chart' or 'auto': Extract data into a structured JSON array.
+  2. If Mode is 'formula' or 'auto': Identify math formulas and convert to LaTeX.
+  3. If Mode is 'text' or 'auto': Perform comprehensive OCR on all visible text.
+  4. ALWAYS provide a 'fullDescription' encompassing all visual elements, relationships, and key insights.
   
-  If Mode is 'text' or 'auto':
-  Perform OCR on any text visible.
-
   Return a JSON object:
   {
-    "title": "Chart Title or Main Topic",
-    "type": "Bar Chart / Formula / Text / etc.",
-    "summary": "Brief summary of contents",
-    "fullDescription": "Detailed visual description of the image contents.",
+    "title": "Main Title or Topic",
+    "type": "Chart / Formula / Text / etc.",
+    "summary": "Concise summary",
+    "fullDescription": "Detailed visual description of the image contents including text analysis.",
     "data": [
        // If chart/table: Array of objects representing rows. Keys should be column headers.
        // Example: [{"Year": "2020", "Value": 10}, ...]
        // If no chart data, return empty array [].
     ],
-    "ocrText": "Full raw text or LaTeX code extracted from the image."
+    "ocrText": "Full raw text or LaTeX code extracted from the image. If it's a document, transcribe everything."
   }`;
 
   const result = await getJson<ChartExtractionResult>(prompt, file, 'gemini-2.5-flash');
