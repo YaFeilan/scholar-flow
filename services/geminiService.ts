@@ -1,6 +1,7 @@
 
 
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 import {
   Language,
@@ -417,11 +418,26 @@ export const optimizeHypothesis = async (hypothesis: string, language: Language)
 
 export const performPDFChat = async (query: string, language: Language, file: File, history: any[], onStream: (text: string) => void, signal?: AbortSignal): Promise<string> => {
   // Mock streaming by just getting text.
+  // Updated prompt to encourage linking to source text
   const prompt = `Context: PDF Document.
   Chat History: ${JSON.stringify(history)}
   User Query: ${query}
   Language: ${language}.
-  Answer the user.`;
+  
+  Answer the user comprehensively. 
+  IMPORTANT: When referring to specific concepts, data points, models, or headers found in the document, create a clickable link using the format: [Keyword](source:Keyword).
+  For example, if discussing "Spatial Durbin Model", write it as [Spatial Durbin Model](source:Spatial Durbin Model) or [SDM](source:SDM).
+  This allows the user to click and jump to the original text.`;
+  
+  return getText(prompt, file);
+};
+
+export const explainVisualContent = async (imageBlob: Blob, promptText: string, language: Language): Promise<string> => {
+  const file = new File([imageBlob], "visual_content.png", { type: "image/png" });
+  const prompt = `Analyze this visual content (formula, chart, or figure crop) from a paper.
+  User Question: ${promptText}
+  Language: ${language}.
+  Provide a clear, technical explanation.`;
   return getText(prompt, file);
 };
 
