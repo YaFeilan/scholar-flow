@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import {
   Language,
@@ -407,13 +408,44 @@ export const performCodeAssistance = async (
 };
 
 export const generateExperimentDesign = async (hypothesis: string, field: string, method: string, language: Language, iv: string, dv: string, statsParams: any, structure: string): Promise<ExperimentDesignResult | null> => {
-  const prompt = `Design an experiment.
-  Hypothesis: ${hypothesis}
-  Field: ${field}. Method: ${method}. Structure: ${structure}.
-  IV: ${iv}. DV: ${dv}.
-  Stats: ${JSON.stringify(statsParams)}.
+  const prompt = `Design a rigorous academic experiment based on the following:
+  - Hypothesis: "${hypothesis}"
+  - Field: ${field}
+  - Method: ${method}
+  - Structure: ${structure}
+  - Independent Variable (IV): ${iv}
+  - Dependent Variable (DV): ${dv}
+  - Statistical Parameters: ${JSON.stringify(statsParams)}
+  
   Language: ${language}.
-  Return JSON matching ExperimentDesignResult.`;
+  
+  You MUST return a VALID JSON object with the following structure:
+  {
+    "title": "Experiment Title",
+    "flow": [
+      { "step": 1, "name": "Step Name", "description": "Details..." },
+      { "step": 2, "name": "Step Name", "description": "Details..." }
+    ],
+    "sampleSize": {
+      "recommended": 100,
+      "explanation": "Brief reasoning...",
+      "parameters": [
+        { "label": "Alpha", "value": "0.05" },
+        { "label": "Power", "value": "0.80" },
+        { "label": "Effect Size", "value": "Medium" }
+      ]
+    },
+    "variables": {
+      "independent": ["IV1"],
+      "dependent": ["DV1"],
+      "control": ["C1"],
+      "confounders": ["Potential Confounder"]
+    },
+    "analysis": {
+      "method": "Statistical Test Name",
+      "description": "Analysis description..."
+    }
+  }`;
   return getJson(prompt);
 };
 
@@ -504,7 +536,7 @@ export const extractChartData = async (file: File, language: Language, mode: 'ch
   } else if (mode === 'text') {
       specificInstructions = "Focus on transcribing handwritten or printed text including notes. Return the full text in 'ocrText'. Set type to 'Text'. Data array can be empty.";
   } else {
-      specificInstructions = "If it's a chart, extract data points into 'data' JSON array. If formula, return LaTeX in 'ocrText'. If text, transcribe.";
+      specificInstructions = "If 'auto' mode: Detect type (Chart, Formula, Text). If Chart: Extract data into JSON 'data' array AND transcribe any visible text/labels/captions into 'ocrText'. If Formula: Return LaTeX in 'ocrText'.";
   }
 
   const prompt = `Analyze this image. Mode: ${mode}.
@@ -517,7 +549,7 @@ export const extractChartData = async (file: File, language: Language, mode: 'ch
   3. If Chart: Extract data into JSON 'data' array.
   4. If Formula: Output standard LaTeX string in 'ocrText'.
   5. If Text: Output transcription in 'ocrText'.
-  6. If Auto: Detect type and fill corresponding fields.
+  6. If Auto: Detect type and fill corresponding fields. For Charts, include any non-data text in ocrText.
   
   Return JSON matching ChartExtractionResult (title, type, summary, data[], ocrText, fullDescription).`;
   
