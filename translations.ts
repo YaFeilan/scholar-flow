@@ -190,6 +190,11 @@ export const TRANSLATIONS = {
       noTarget: 'None',
       cleaning: 'Cleaning Strategy',
       cleaningStrategies: { auto: 'Auto', drop: 'Drop Missing', mean: 'Fill Mean', zero: 'Fill Zero' },
+      dataScope: 'Data Scope',
+      rows50: 'Random Sample 50 Rows (Fast)',
+      rowsAll: 'All Rows (Full Analysis)',
+      limitWarning: 'Warning: Analyzing all rows may consume high API quota.',
+      fastModeTip: '✅ Fast Mode Active: Consumes very few tokens.',
       colName: 'Column Name',
       colType: 'Type',
       limitBanner: 'Data preview limited to first 20 rows.',
@@ -203,7 +208,9 @@ export const TRANSLATIONS = {
       summary: 'Summary',
       featureImportance: 'Feature Importance',
       correlations: 'Correlations',
-      models: 'Recommended Models'
+      models: 'Recommended Models',
+      selectAll: 'All',
+      deselectAll: 'None'
     },
     code: {
       title: 'Code Assistant',
@@ -619,6 +626,11 @@ export const TRANSLATIONS = {
       noTarget: '无 (无监督)',
       cleaning: '清洗策略',
       cleaningStrategies: { auto: '自动', drop: '删除缺失', mean: '均值填充', zero: '零值填充' },
+      dataScope: '分析范围',
+      rows50: '随机采样 50 行 (快速)',
+      rowsAll: '全部数据 (完整)',
+      limitWarning: '警告：分析全部数据可能会消耗大量 API 配额。',
+      fastModeTip: '✅ 正在使用快速模式，消耗极少 Token。',
       colName: '列名',
       colType: '类型',
       limitBanner: '预览仅显示前 20 行。',
@@ -632,7 +644,9 @@ export const TRANSLATIONS = {
       summary: '数据概览',
       featureImportance: '特征重要性',
       correlations: '相关性分析',
-      models: '推荐模型'
+      models: '推荐模型',
+      selectAll: '全选',
+      deselectAll: '反选'
     },
     code: {
       title: '代码助手',

@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { jsPDF } from 'jspdf';
+import * as XLSX from 'xlsx';
 
 interface ChartExtractionProps {
   language: Language;
@@ -185,8 +186,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
           if (item.type.indexOf('image') !== -1) {
             const blob = item.getAsFile();
             if (blob) {
-                // Fix: Cast blob to any to bypass type check issues, then treat as File
-                const file = blob as any;
+                const file = blob as File;
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
                     file: file,
@@ -842,3 +842,4 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
 };
 
 export default ChartExtraction;
+    

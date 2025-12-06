@@ -1,7 +1,11 @@
 
+
+
+
+
 // ... imports ...
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Upload, FileText, BarChart2, Zap, Table, Code, Loader2, ArrowRight, PieChart, Activity, LayoutGrid, Download, Eye, CheckCircle, RefreshCcw, Target, Filter, Settings, Type, ListFilter, MessageCircle, Send, Check, X, AlertTriangle, Info } from 'lucide-react';
+import { Upload, FileText, BarChart2, Zap, Table, Code, Loader2, ArrowRight, PieChart, Activity, LayoutGrid, Download, Eye, CheckCircle, RefreshCcw, Target, Filter, Settings, Type, ListFilter, MessageCircle, Send, Check, X, AlertTriangle, Info, Database } from 'lucide-react';
 import { performDataAnalysis, chatWithDataAnalysis } from '../services/geminiService';
 import { Language, DataAnalysisResult, CleaningStrategy } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -206,7 +210,7 @@ const calculateLocalStats = (data: any[], configs: ColumnConfig[]) => {
       columns: columnStats,
       correlations: correlations.sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 10),
       visualData,
-      rawSample: data
+      rawSample: data.slice(0, 100) // Always slice raw sample for display performance
   };
 };
 
@@ -225,6 +229,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
   const [columnConfigs, setColumnConfigs] = useState<ColumnConfig[]>([]);
   const [targetVariable, setTargetVariable] = useState<string>('');
   const [cleaningStrategy, setCleaningStrategy] = useState<CleaningStrategy>('auto');
+  const [rowLimit, setRowLimit] = useState<'50' | 'all'>('50');
   
   // Local Stats & Visuals
   const [localStats, setLocalStats] = useState<any>(null);
@@ -325,6 +330,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
       setLocalStats(null);
       setTargetVariable('');
       setCleaningStrategy('auto');
+      setRowLimit('50');
       
       try {
         const rawData = await parseFileRaw(selectedFile);
@@ -367,9 +373,14 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
               return obj;
           });
 
-          const SAMPLE_SIZE = 50;
-          const sampleData = processedData.slice(0, SAMPLE_SIZE);
           const fullCount = processedData.length;
+          let sampleData = processedData;
+          if (rowLimit === '50') {
+              // Random sample 50
+              sampleData = [...processedData].sort(() => 0.5 - Math.random()).slice(0, 50);
+          } else if (rowLimit !== 'all') {
+              sampleData = processedData.slice(0, 50);
+          }
 
           await new Promise(r => setTimeout(r, 800));
           const cleanedSample = cleanData(sampleData, columnConfigs, cleaningStrategy);
@@ -411,6 +422,14 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
 
   const toggleColumnInclude = (index: number) => {
       setColumnConfigs(prev => prev.map((c, i) => i === index ? { ...c, included: !c.included } : c));
+  };
+
+  const handleSelectAll = () => {
+      setColumnConfigs(prev => prev.map(c => ({ ...c, included: true })));
+  };
+
+  const handleDeselectAll = () => {
+      setColumnConfigs(prev => prev.map(c => ({ ...c, included: false })));
   };
 
   const updateColumnType = (index: number, newType: ColumnType) => {
@@ -552,10 +571,36 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
                                          {Object.entries(t.cleaningStrategies).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                                      </select>
                                  </div>
+                                 <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                        <Database size={14} /> {t.dataScope}
+                                    </label>
+                                    <select value={rowLimit} onChange={(e) => setRowLimit(e.target.value as any)} className="w-full border border-slate-300 rounded-lg p-2 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <option value="50">{t.rows50}</option>
+                                        <option value="all">{t.rowsAll}</option>
+                                    </select>
+                                    {rowLimit === '50' && (
+                                        <div className="mt-2 text-[10px] text-emerald-600 bg-emerald-50 p-2 rounded border border-emerald-100 flex items-start gap-1">
+                                            {t.fastModeTip}
+                                        </div>
+                                    )}
+                                    {rowLimit === 'all' && (
+                                        <div className="mt-2 text-[10px] text-amber-600 bg-amber-50 p-2 rounded border border-amber-100 flex items-start gap-1">
+                                            <AlertTriangle size={12} className="flex-shrink-0 mt-0.5" />
+                                            {t.limitWarning}
+                                        </div>
+                                    )}
+                                </div>
                              </div>
                              
                              <div className="p-2 bg-slate-100 border-b border-slate-200 flex justify-between items-center text-xs font-bold text-slate-500 px-4">
-                                 <span>{t.colName}</span>
+                                 <div className="flex items-center gap-2">
+                                     <span>{t.colName}</span>
+                                     <div className="flex gap-1">
+                                         <button onClick={handleSelectAll} className="text-[10px] text-blue-600 hover:underline">[{t.selectAll}]</button>
+                                         <button onClick={handleDeselectAll} className="text-[10px] text-slate-400 hover:text-slate-600">[{t.deselectAll}]</button>
+                                     </div>
+                                 </div>
                                  <span>{t.colType}</span>
                              </div>
 
@@ -640,7 +685,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
                  <div className="w-10 h-0.5 bg-slate-200 mt-5"></div>
                  <ProgressStep num={4} label={t.progress.ai} active={loadingStep === 3} completed={loadingStep > 3} />
              </div>
-             <p className="text-xs text-slate-400 max-w-md text-center bg-slate-50 p-3 rounded border border-slate-100">{t.limitNotice}</p>
+             {rowLimit === '50' && <p className="text-xs text-slate-400 max-w-md text-center bg-slate-50 p-3 rounded border border-slate-100">{t.limitNotice}</p>}
           </div>
        )}
 
