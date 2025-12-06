@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef } from 'react';
-import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar } from 'lucide-react';
+import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
 import { MOCK_PAPERS } from '../constants';
 import { TRANSLATIONS } from '../translations';
@@ -18,7 +18,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   const [query, setQuery] = useState('');
   const [selectedPapers, setSelectedPapers] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<SearchFilters>({
-    databases: ['Google Scholar', 'SCI', 'SSCI', 'CJR'],
+    databases: [],
     timeRange: 'All Time',
     partition: [],
   });
@@ -68,7 +68,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   const handleInterpret = async () => {
     if (!viewingPaper) return;
     setIsInterpreting(true);
-    // For local papers, we might need to pass the file content if supported
     const result = await generatePaperInterpretation(viewingPaper, language);
     setInterpretation(result);
     setIsInterpreting(false);
@@ -76,7 +75,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
 
   const handleDownload = () => {
     if (viewingPaper?.source === 'local' && viewingPaper.file) {
-      // Create a URL for the local file and download it
       const url = URL.createObjectURL(viewingPaper.file);
       const a = document.createElement('a');
       a.href = url;
@@ -104,13 +102,11 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
     setIsSearching(true);
     setHasSearched(true);
     
-    // Perform real search via Gemini
     const foundPapers = await searchAcademicPapers(query, language, resultLimit);
     
     if (foundPapers.length > 0) {
       setResults(foundPapers);
     } else {
-       // Fallback logic for demo purposes if API fails or returns nothing
        const q = query.toLowerCase();
        const fallbackMocks = MOCK_PAPERS.filter(p => 
           p.title.toLowerCase().includes(q) || 
@@ -127,22 +123,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
     if (e.target.files && e.target.files.length > 0) {
       if (e.target.files.length > 100) {
         alert(language === 'ZH' ? '一次最多只能上传100篇论文。' : 'You can only upload a maximum of 100 papers at a time.');
-        // Slice the first 100
-        const files = Array.from(e.target.files).slice(0, 100) as File[];
-        const newPapers: Paper[] = files.map((file, idx) => ({
-           id: `local-${file.name}-${Date.now()}-${idx}`,
-           title: file.name,
-           authors: ['Local File'],
-           journal: 'Imported',
-           year: new Date(file.lastModified).getFullYear(),
-           citations: 0,
-           badges: [{ type: 'LOCAL' }],
-           abstract: 'Click to analyze content.',
-           source: 'local',
-           file: file,
-           addedDate: new Date().toISOString().split('T')[0]
-        }));
-        setLocalPapers(prev => [...prev, ...newPapers]);
         return;
       }
       
@@ -164,16 +144,13 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   };
 
   const handleBatchInterpret = async () => {
-    // Placeholder for future batch functionality
     alert("Batch interpretation started for selected local files...");
   };
 
-  // Client-side Sort & Filter of the fetched results
+  // Client-side Sort & Filter
   const sortedPapers = useMemo(() => {
-    // Switch data source based on toggle
     let papers = searchSource === 'online' ? [...results] : [...localPapers];
 
-    // Online specific filters
     if (searchSource === 'online') {
       const currentYear = new Date().getFullYear();
       if (filters.timeRange === 'Last 1 Year') {
@@ -184,25 +161,23 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
         papers = papers.filter(p => p.year >= currentYear - 5);
       } 
       
-      // Database Filter (Expanded for CJR, SCI, SSCI)
-      const dbFilters = filters.databases.filter(d => ['SCI', 'SSCI', 'EI', 'CNKI', 'PubMed', 'CJR'].includes(d));
-      if (dbFilters.length > 0) {
+      // Database Filter (SCI/SSCI/CJR/EI...)
+      if (filters.databases.length > 0) {
         papers = papers.filter(p => {
-          if (!p.badges || p.badges.length === 0) return true;
-          return p.badges.some(b => dbFilters.includes(b.type));
+          if (!p.badges || p.badges.length === 0) return false;
+          // Check if paper has ANY of the selected database badges
+          return p.badges.some(b => filters.databases.includes(b.type));
         });
       }
 
-      // Partition Filter (JCR/CAS Q1-Q4)
+      // Partition Filter (Q1-Q4)
       if (filters.partition && filters.partition.length > 0) {
         papers = papers.filter(p => {
-            // Check if any of the paper's badges match any of the selected partitions
             return p.badges.some(b => b.partition && filters.partition.includes(b.partition));
         });
       }
     }
 
-    // Apply specific year filter
     if (filterYear) {
       const y = parseInt(filterYear);
       if (!isNaN(y)) {
@@ -210,7 +185,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }
     }
 
-    // Apply minimum citations filter
     if (minCitations) {
       const min = parseInt(minCitations);
       if (!isNaN(min)) {
@@ -218,7 +192,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }
     }
 
-    // Apply "Added After" filter
     if (addedAfter) {
       papers = papers.filter(p => {
          if (!p.addedDate) return false;
@@ -226,14 +199,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       });
     }
 
-    // Sort
     return papers.sort((a, b) => {
-      if (sortBy === 'date') {
-        return b.year - a.year;
-      }
-      if (sortBy === 'added') {
-        return (b.addedDate || '').localeCompare(a.addedDate || '');
-      }
+      if (sortBy === 'date') return b.year - a.year;
+      if (sortBy === 'added') return (b.addedDate || '').localeCompare(a.addedDate || '');
       if (sortBy === 'if') {
         const getIf = (p: Paper) => p.badges?.find(badge => badge.if)?.if || 0;
         return getIf(b) - getIf(a);
@@ -245,9 +213,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   const FilterButton: React.FC<{ active: boolean; label: string; onClick?: () => void }> = ({ active, label, onClick }) => (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 text-sm rounded-md border transition-all ${
+      className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
         active 
-        ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium dark:bg-blue-900/30 dark:border-blue-600 dark:text-blue-400' 
+        ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/30 dark:border-blue-600 dark:text-blue-400' 
         : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-600'
       }`}
     >
@@ -255,23 +223,20 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
     </button>
   );
 
+  // Database options including requested SCI/SSCI/CJR
   const dbOptions = [
-    { id: 'Google Scholar', label: language === 'ZH' ? '谷歌学术' : 'Google Scholar' },
-    { id: 'PubMed', label: 'PubMed' },
-    { id: 'Sci-Hub', label: 'Sci-Hub' },
-    { id: 'CNKI', label: language === 'ZH' ? '中国知网' : 'CNKI' },
     { id: 'SCI', label: 'SCI' },
     { id: 'SSCI', label: 'SSCI' },
+    { id: 'CJR', label: language === 'ZH' ? '中科院分区(CJR)' : 'CJR/CAS' },
     { id: 'EI', label: 'EI' },
-    { id: 'CJR', label: language === 'ZH' ? '中科院/CJR' : 'CJR/CAS' },
+    { id: 'CNKI', label: 'CNKI' },
+    { id: 'PubMed', label: 'PubMed' },
   ];
 
   const partitionOptions = ['Q1', 'Q2', 'Q3', 'Q4'];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      
-      {/* Search Card */}
       <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-6 transition-colors">
         <h2 className="text-2xl font-serif font-bold text-center text-slate-800 dark:text-slate-100 mb-2">{t.title}</h2>
         <p className="text-center text-slate-500 dark:text-slate-400 mb-6 text-sm">{t.subtitle}</p>
@@ -306,7 +271,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-l-lg leading-5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:placeholder-slate-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-base transition-colors"
+                  className="block w-full pl-10 pr-3 py-3 border border-slate-300 dark:border-slate-600 rounded-l-lg leading-5 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-base transition-colors"
                   placeholder={t.placeholder}
                 />
               </div>
@@ -319,10 +284,13 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
               </button>
             </div>
             
-            {/* Filters */}
+            {/* Detailed Filters */}
              <div className="flex flex-col items-center gap-4">
-                {/* DB Filters */}
-                <div className="flex flex-wrap justify-center gap-2">
+                {/* Database Filters */}
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mr-1 flex items-center gap-1">
+                        <Database size={12} /> DB:
+                    </span>
                     {dbOptions.map(opt => (
                         <FilterButton 
                             key={opt.id} 
@@ -341,7 +309,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                 {/* Partition Filters */}
                 <div className="flex items-center gap-2 flex-wrap justify-center">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mr-1 flex items-center gap-1">
-                        <Layers size={12} /> {t.filters.partition} (JCR/CAS/CJR):
+                        <Layers size={12} /> Partition:
                     </span>
                     {partitionOptions.map(opt => (
                         <FilterButton 
@@ -375,26 +343,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                         <ChevronDown size={14} className="text-slate-400 pointer-events-none" />
                      </div>
                      
-                     {/* Specific Year Filter */}
-                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium">{language === 'ZH' ? '年份' : 'Year'}:</span>
-                        <input
-                           type="number"
-                           value={filterYear}
-                           onChange={(e) => setFilterYear(e.target.value)}
-                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm w-16 p-0 placeholder-slate-400"
-                           placeholder={language === 'ZH' ? '全部' : 'All'}
-                        />
-                     </div>
-
                      {/* Added After Date Filter */}
                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium">{language === 'ZH' ? '加入时间 >' : 'Added After:'}</span>
+                        <span className="font-medium flex items-center gap-1"><Clock size={14}/> {language === 'ZH' ? '加入时间 >' : 'Added After:'}</span>
                         <input
                            type="date"
                            value={addedAfter}
                            onChange={(e) => setAddedAfter(e.target.value)}
-                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm p-0 placeholder-slate-400 cursor-pointer"
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm p-0 cursor-pointer"
                         />
                      </div>
 
@@ -409,21 +365,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                            className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm w-12 p-0 placeholder-slate-400"
                            placeholder="0"
                         />
-                     </div>
-
-                     {/* Result Limit Filter */}
-                     <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium">{t.filters.resultCount}:</span>
-                        <select 
-                           value={resultLimit}
-                           onChange={(e) => setResultLimit(Number(e.target.value))}
-                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm cursor-pointer p-0"
-                        >
-                           {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(val => (
-                              <option key={val} value={val} className="dark:bg-slate-800">{val}</option>
-                           ))}
-                        </select>
-                        <ChevronDown size={14} className="text-slate-400 pointer-events-none" />
                      </div>
                 </div>
              </div>
@@ -444,7 +385,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                <UploadCloud size={48} className="mx-auto text-blue-400 mb-4" />
                <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">{t.upload.btn}</h3>
                <p className="text-slate-400 dark:text-slate-500 text-sm mt-2">{t.upload.tip}</p>
-               <p className="text-xs text-slate-300 dark:text-slate-600 mt-4">{t.upload.drag}</p>
             </div>
         )}
       </div>
@@ -481,14 +421,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                     {isGenerating ? <Loader2 className="animate-spin h-4 w-4" /> : <Sparkles className="h-4 w-4 text-yellow-400" />}
                     {t.generateBtn}
                  </button>
-               )}
-               {searchSource === 'local' && selectedPapers.size > 0 && (
-                  <button 
-                    onClick={handleBatchInterpret}
-                    className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                  >
-                    {t.batchInterpret}
-                  </button>
                )}
             </div>
          </div>
@@ -540,11 +472,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                          <span key={i} className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
                             b.type === 'SCI' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' :
                             b.type === 'SSCI' ? 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-900/20 dark:text-teal-400 dark:border-teal-800' :
-                            b.type === 'PubMed' ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800' :
                             b.type === 'CJR' ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800' :
                             b.type === 'Q1' ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800' :
-                            b.type === 'Q2' ? 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' :
-                            b.type === 'LOCAL' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' :
                             'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600'
                          }`}>
                             {b.type} {b.partition && `(${b.partition})`} {b.if && `IF: ${b.if}`}
@@ -609,24 +538,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                   <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base">
                      {viewingPaper.abstract || "No abstract available for this paper."}
                   </p>
-
-                  {/* Image Preview for Local Files */}
-                  {viewingPaper.source === 'local' && viewingPaper.file && viewingPaper.file.type.startsWith('image/') && (
-                     <div className="mt-6 mb-4">
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 mb-2 uppercase tracking-wide opacity-50">Image Preview</h3>
-                        <img 
-                          src={URL.createObjectURL(viewingPaper.file)} 
-                          alt="Paper Content" 
-                          className="max-w-full rounded-lg border border-slate-200 dark:border-slate-600 shadow-sm max-h-64 object-contain bg-slate-50 dark:bg-slate-900" 
-                        />
-                     </div>
-                  )}
-                  
-                  {viewingPaper.source === 'local' && (
-                     <div className="mt-6 bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-100 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm">
-                        <span className="font-bold">Note:</span> This is a local file. AI analysis uses the extracted text content.
-                     </div>
-                  )}
                </div>
             </div>
          </div>

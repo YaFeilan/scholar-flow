@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useRef } from 'react';
 import { performPeerReview, generateRebuttalLetter, generateCoverLetter } from '../services/geminiService';
 import { Upload, CheckCircle, FileText, Loader2, ShieldCheck, User, Building, BookOpen, AlertTriangle, PenTool, Gavel, Award, Feather, Send, Copy, Mail } from 'lucide-react';
@@ -25,7 +23,7 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
   // States
   const [reviewResult, setReviewResult] = useState<PeerReviewResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<number>(0); // 0 = Checklist/Summary, 1-3 = Reviewers
+  const [activeTab, setActiveTab] = useState<number>(0); 
   
   // Action Item States
   const [generatingAction, setGeneratingAction] = useState<string | null>(null);
@@ -70,7 +68,6 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
   const handleGenerateRebuttal = async () => {
     if (!reviewResult) return;
     setGeneratingAction('rebuttal');
-    // Aggregate critiques
     const allCritiques = reviewResult.reviewers.map(r => r.critiques.map(c => c.point).join('\n')).join('\n');
     const result = await generateRebuttalLetter(allCritiques, language);
     setRebuttalLetter(result);
@@ -80,7 +77,6 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
   const handleGenerateCoverLetter = async () => {
     if (!reviewResult) return;
     setGeneratingAction('cover');
-    // Use summary as context
     const result = await generateCoverLetter(reviewResult.summary, journalName || targetType, language);
     setCoverLetter(result);
     setGeneratingAction(null);
@@ -110,7 +106,6 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
           {/* Left Inputs */}
           <div className="lg:col-span-4 space-y-6">
             
-            {/* File Upload Zone */}
             <div 
                className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition-colors cursor-pointer relative"
                onClick={() => fileInputRef.current?.click()}
@@ -143,7 +138,6 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
                )}
             </div>
 
-            {/* Target Settings */}
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <div className="mb-4">
                     <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">{t.targetLabel}</label>
@@ -177,7 +171,6 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
                 </div>
             </div>
 
-            {/* Manual Content / Fallback */}
             <div>
               <div className="flex justify-between items-center mb-2">
                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">{t.contentLabel}</label>
@@ -203,7 +196,6 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
             </button>
           </div>
 
-          {/* Right Panel / Review Output */}
           <div className="lg:col-span-8 flex flex-col h-full">
             {!reviewResult && !loading && (
               <div className="flex-grow border-2 border-dashed border-slate-200 rounded-xl bg-slate-50 p-8 flex flex-col items-center justify-center text-center">
@@ -230,7 +222,6 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
             {reviewResult && (
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm animate-fadeIn flex flex-col h-full">
                  
-                 {/* Tabs */}
                  <div className="flex border-b border-slate-100 bg-slate-50/50 rounded-t-xl overflow-x-auto no-scrollbar">
                     <button
                       onClick={() => setActiveTab(0)}
@@ -251,11 +242,9 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
                     ))}
                  </div>
 
-                 {/* Content Area */}
                  <div className="p-6 overflow-y-auto max-h-[600px] flex-grow">
                     {activeTab === 0 ? (
                       <div className="space-y-6">
-                         {/* Checklist Dashboard */}
                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                              {Object.entries(reviewResult.checklist).map(([key, value]) => (
                                  <div key={key} className="bg-slate-50 border border-slate-100 rounded-lg p-3 text-center">
@@ -264,7 +253,8 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
                                          value === 'Accept' || value === 'High' || value === 'Excellent' || value === 'Yes' ? 'text-green-600' :
                                          value === 'Reject' || value === 'Low' || value === 'No' ? 'text-red-500' : 'text-amber-600'
                                      }`}>
-                                         {value}
+                                         {/* Explicitly rendering string value to avoid object errors */}
+                                         {String(value)}
                                      </div>
                                  </div>
                              ))}
@@ -275,7 +265,6 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
                             <p className="text-blue-900/80 text-sm leading-relaxed">{reviewResult.summary}</p>
                          </div>
 
-                         {/* Action Buttons */}
                          <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-100">
                              <button 
                                onClick={handleGenerateRebuttal}
@@ -295,7 +284,6 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
                              </button>
                          </div>
 
-                         {/* Generated Letters Display */}
                          {(rebuttalLetter || coverLetter) && (
                              <div className="mt-6 animate-fadeIn">
                                  {rebuttalLetter && (
@@ -370,7 +358,6 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
   );
 };
 
-// Helper component for icon
 const TargetIcon = ({ size }: { size: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10"/>

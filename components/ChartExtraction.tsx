@@ -1,8 +1,6 @@
 
-
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle, Crop, Check, RotateCcw, MousePointer2, Plus, Trash2, LayoutGrid, Edit2, GripVertical, ScanEye, TrendingUp, BarChart as BarChartIcon, Code, ArrowRight, Sparkles, MessageSquare, Filter, Calendar, Tag, FileSearch, Terminal, Database, FileOutput } from 'lucide-react';
+import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle, Crop, Check, RotateCcw, MousePointer2, Plus, Trash2, LayoutGrid, Edit2, GripVertical, ScanEye, TrendingUp, BarChart as BarChartIcon, Code, ArrowRight, Sparkles, MessageSquare, Filter, Calendar, Tag, FileSearch, Terminal, Database, FileOutput, Eye } from 'lucide-react';
 import { Language, ChartExtractionResult } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { extractChartData, generateChartTrendAnalysis } from '../services/geminiService';
@@ -32,16 +30,13 @@ interface ChartFile {
 const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataToAnalysis }) => {
   const t = TRANSLATIONS[language].chart;
   
-  // State for multiple files
   const [chartFiles, setChartFiles] = useState<ChartFile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [analyzingTrend, setAnalyzingTrend] = useState(false);
   
-  // Tab State for Right Panel
-  const [resultTab, setResultTab] = useState<'data' | 'code' | 'analysis'>('data');
+  const [resultTab, setResultTab] = useState<'data' | 'code' | 'analysis' | 'full'>('data');
   
-  // Loading Visualization State
   const [loadingStep, setLoadingStep] = useState(0);
   const loadingSteps = [
       language === 'ZH' ? '正在预处理图片...' : 'Preprocessing image...',
@@ -53,15 +48,12 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Filter State
   const [filterPartition, setFilterPartition] = useState('All');
   const [filterDate, setFilterDate] = useState('');
 
-  // Derived active state
   const activeFile = chartFiles.find(f => f.id === activeId) || null;
   const result = activeFile?.result || null;
 
-  // Cropping State
   const [isCropping, setIsCropping] = useState(false);
   const [selection, setSelection] = useState<{x: number, y: number, w: number, h: number} | null>(null);
   const [dragStart, setDragStart] = useState<{x: number, y: number} | null>(null);
@@ -69,35 +61,27 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
   const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
-  // Overlay & Replot Interaction State
   const [hoveredRowIndex, setHoveredRowIndex] = useState<number | null>(null);
   const [showOverlay, setShowOverlay] = useState(true);
 
-  // Code Generation State
   const [codeLang, setCodeLang] = useState<'Python' | 'R'>('Python');
 
-  // Filter Logic
   const filteredFiles = useMemo(() => {
       return chartFiles.filter(f => {
           const matchPart = filterPartition === 'All' || f.metadata.partition === filterPartition;
-          // Filter by "Added After" (>=)
           const matchDate = !filterDate || f.metadata.addedDate >= filterDate;
           return matchPart && matchDate;
       });
   }, [chartFiles, filterPartition, filterDate]);
 
-  // --- Metadata Handlers ---
   const updateMetadata = (id: string, key: keyof ChartFileMetadata, value: string) => {
       setChartFiles(prev => prev.map(f => f.id === id ? { ...f, metadata: { ...f.metadata, [key]: value } } : f));
   };
-
-  // --- Data Editing Handlers ---
 
   const updateCell = (fileId: string, rowIndex: number, key: string, value: string) => {
     setChartFiles(prev => prev.map(f => {
         if (f.id === fileId && f.result && f.result.data) {
             const newData = [...f.result.data];
-            // Update the specific row's property
             newData[rowIndex] = { ...newData[rowIndex], [key]: value };
             return { ...f, result: { ...f.result, data: newData } };
         }
@@ -111,7 +95,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
         if (f.id === fileId && f.result && f.result.data) {
             const newData = f.result.data.map(row => {
                 const newRow: any = {};
-                // Preserve order of keys (columns)
                 Object.keys(row).forEach(k => {
                     if (k === oldKey) {
                         newRow[newKey] = row[oldKey];
@@ -174,7 +157,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
       }
   };
 
-  // Handle Paste Event
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       if (e.clipboardData && e.clipboardData.items) {
@@ -232,13 +214,12 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
     setLoading(true);
     setLoadingStep(0);
 
-    // Simulate progress steps purely for visual feedback during the API call
     const stepInterval = setInterval(() => {
         setLoadingStep(prev => {
             if (prev < loadingSteps.length - 1) return prev + 1;
             return prev;
         });
-    }, 2000); // Advance step every 2 seconds
+    }, 2000); 
 
     const fileToUpload = croppedBlob || activeFile.file;
     
@@ -251,9 +232,8 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
         const data = await extractChartData(uploadFile as File, language);
         
         clearInterval(stepInterval);
-        setLoadingStep(loadingSteps.length - 1); // Ensure it hits the last step visually
+        setLoadingStep(loadingSteps.length - 1); 
         
-        // Small delay to allow user to see "Finalizing..." before showing result
         setTimeout(() => {
             setChartFiles(prev => prev.map(f => 
                 f.id === activeId ? { ...f, result: data } : f
@@ -294,7 +274,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
   const handleDownloadCSV = () => {
     if (!result || !result.data || result.data.length === 0) return;
     
-    // Exclude internal props like _box_2d
     const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
     const csvRows = [headers.join(',')];
     
@@ -316,21 +295,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
     document.body.removeChild(link);
   };
 
-  const copyTableToClipboard = () => {
-      if (!result || !result.data || result.data.length === 0) return;
-      
-      const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
-      let text = headers.join('\t') + '\n';
-      
-      result.data.forEach(row => {
-          text += headers.map(h => row[h]).join('\t') + '\n';
-      });
-      
-      navigator.clipboard.writeText(text);
-      alert(language === 'ZH' ? '表格已复制到剪贴板' : 'Table copied to clipboard');
-  };
-
-  // --- Export Full Report ---
   const handleExportFullReport = () => {
     if (!activeFile || !result) return;
     const doc = new jsPDF();
@@ -339,13 +303,11 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
     const width = doc.internal.pageSize.getWidth();
     const contentWidth = width - margin * 2;
 
-    // Header
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
     doc.text("Chart Analysis Report", margin, y);
     y += 12;
 
-    // Metadata Section
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100);
@@ -357,7 +319,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
     y += 10;
     doc.setTextColor(0);
 
-    // 1. Visual Description
     if (result && result.fullDescription) {
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
@@ -371,7 +332,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
         y += lines.length * 5 + 10;
     }
 
-    // 2. Trend Analysis
     if (activeFile.trendAnalysis) {
         if (y > 250) { doc.addPage(); y = margin; }
         doc.setFontSize(14);
@@ -387,7 +347,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
         y += lines.length * 5 + 10;
     }
 
-    // 3. Extracted Data Table
     if (result && result.data && result.data.length > 0) {
         if (y > 240) { doc.addPage(); y = margin; }
         doc.setFontSize(14);
@@ -398,21 +357,16 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
         doc.setFontSize(8);
         doc.setFont("courier", "normal");
         const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
-        
-        // Simple fixed-width table simulation
         const colWidth = contentWidth / Math.min(headers.length, 5);
-        
-        // Header Row
         let x = margin;
         headers.slice(0, 5).forEach(h => {
             doc.text(h.substring(0, 15), x, y);
             x += colWidth;
         });
         y += 4;
-        doc.line(margin, y, margin + contentWidth, y); // header line
+        doc.line(margin, y, margin + contentWidth, y);
         y += 6;
 
-        // Rows
         result.data.slice(0, 50).forEach(row => {
             if (y > 280) { doc.addPage(); y = margin; }
             let x = margin;
@@ -425,7 +379,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
         });
     }
 
-    // 4. OCR Raw Text
     if (result && result.ocrText) {
         doc.addPage();
         y = margin;
@@ -443,59 +396,27 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
     doc.save(`${activeFile.file.name.replace(/\.[^/.]+$/, "")}_FullReport.pdf`);
   };
 
-  // --- New Export Functions ---
   const handleCopyLatex = () => {
       if (!result || !result.data || result.data.length === 0) return;
-      
       const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
-      // Basic LaTeX table structure
       let latex = `\\begin{table}[htbp]\n  \\centering\n  \\caption{${result.title || 'Extracted Data'}}\n  \\label{tab:data}\n  \\begin{tabular}{|${headers.map(() => 'c').join('|')}|}\n    \\hline\n`;
-      
-      // Header row
       latex += `    ${headers.map(h => h.replace(/_/g, '\\_')).join(' & ')} \\\\\n    \\hline\n`;
-      
-      // Data rows
       result.data.forEach(row => {
           const rowStr = headers.map(h => {
               const val = row[h] !== undefined ? String(row[h]) : '';
-              // Escape special LaTeX characters: & % $ # _ { } ~ ^ \
               return val.replace(/([&%$#_{}])/g, '\\$1');
           }).join(' & ');
           latex += `    ${rowStr} \\\\\n    \\hline\n`;
       });
-      
       latex += `  \\end{tabular}\n\\end{table}`;
-      
       navigator.clipboard.writeText(latex);
       alert(language === 'ZH' ? 'LaTeX 表格代码已复制' : 'LaTeX table code copied');
   };
 
-  const handleCopyMarkdown = () => {
-      if (!result || !result.data || result.data.length === 0) return;
-      
-      const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
-      let md = `| ${headers.join(' | ')} |\n`;
-      md += `| ${headers.map(() => '---').join(' | ')} |\n`;
-      
-      result.data.forEach(row => {
-          const rowStr = headers.map(h => {
-              const val = row[h] !== undefined ? String(row[h]) : '';
-              return val;
-          }).join(' | ');
-          md += `| ${rowStr} |\n`;
-      });
-      
-      navigator.clipboard.writeText(md);
-      alert(language === 'ZH' ? 'Markdown 表格已复制' : 'Markdown table copied');
-  };
-
-  // --- Code Generation Logic ---
   const generateCode = (lang: 'Python' | 'R') => {
       if (!result || !result.data || result.data.length === 0) return "";
-
       const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
       if (headers.length < 2) return "# Not enough data to generate plot code.";
-
       const xKey = headers[0];
       const yKeys = headers.slice(1);
       const title = result.title || "Extracted Chart";
@@ -515,7 +436,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
           });
           code += `}\n\ndf = pd.DataFrame(data)\n\n`;
           code += `# Plotting\nplt.figure(figsize=(10, 6))\n`;
-          
           if (isBar) {
                code += `df.plot(x='${xKey}', kind='bar', ax=plt.gca())\n`;
           } else {
@@ -524,19 +444,11 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                });
                code += `plt.legend()\n`;
           }
-          
-          code += `plt.title('${title}')\n`;
-          code += `plt.xlabel('${xKey}')\n`;
-          code += `plt.ylabel('Value')\n`;
-          code += `plt.grid(True, linestyle='--', alpha=0.7)\n`;
-          code += `plt.tight_layout()\nplt.show()`;
+          code += `plt.title('${title}')\nplt.xlabel('${xKey}')\nplt.ylabel('Value')\nplt.grid(True, linestyle='--', alpha=0.7)\nplt.tight_layout()\nplt.show()`;
           return code;
       } else {
-          // R Code
           let code = `library(ggplot2)\nlibrary(tidyr)\n\n`;
-          code += `# Data Preparation\ndf <- data.frame(\n`;
-          code += `  \`${xKey}\` = c(${result.data.map(r => `'${r[xKey]}'`).join(', ')}),\n`;
-          
+          code += `# Data Preparation\ndf <- data.frame(\n  \`${xKey}\` = c(${result.data.map(r => `'${r[xKey]}'`).join(', ')}),\n`;
           const seriesParams: string[] = [];
           yKeys.forEach(k => {
               const vals = result.data.map(r => {
@@ -546,24 +458,14 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
               seriesParams.push(`  \`${k}\` = c(${vals.join(', ')})`);
           });
           code += seriesParams.join(',\n') + `\n)\n\n`;
-          
-          code += `# Reshape for ggplot\n`;
-          code += `df_long <- pivot_longer(df, cols = -c(\`${xKey}\`), names_to = "Series", values_to = "Value")\n\n`;
-          
+          code += `# Reshape for ggplot\ndf_long <- pivot_longer(df, cols = -c(\`${xKey}\`), names_to = "Series", values_to = "Value")\n\n`;
           code += `# Plotting\nggplot(df_long, aes(x = \`${xKey}\`, y = Value, fill = Series, color = Series${!isBar ? ', group = Series' : ''})) +\n`;
-          if (isBar) {
-              code += `  geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +\n`;
-          } else {
-              code += `  geom_line(size = 1) +\n  geom_point(size = 3) +\n`;
-          }
-          code += `  labs(title = "${title}", x = "${xKey}", y = "Value") +\n`;
-          code += `  theme_minimal()\n`;
-          
+          if (isBar) code += `  geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +\n`;
+          else code += `  geom_line(size = 1) +\n  geom_point(size = 3) +\n`;
+          code += `  labs(title = "${title}", x = "${xKey}", y = "Value") +\n  theme_minimal()\n`;
           return code;
       }
   };
-
-  // --- Cropping Logic ---
 
   const getImgCoords = (e: React.MouseEvent) => {
       if (!imageRef.current) return { x: 0, y: 0 };
@@ -586,19 +488,14 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
       if (!isCropping || !dragStart) return;
       e.preventDefault();
       const coords = getImgCoords(e);
-      
-      const currentX = coords.x;
-      const currentY = coords.y;
-      
-      const width = Math.abs(currentX - dragStart.x);
-      const height = Math.abs(currentY - dragStart.y);
-      const x = Math.min(currentX, dragStart.x);
-      const y = Math.min(currentY, dragStart.y);
+      const width = Math.abs(coords.x - dragStart.x);
+      const height = Math.abs(coords.y - dragStart.y);
+      const x = Math.min(coords.x, dragStart.x);
+      const y = Math.min(coords.y, dragStart.y);
 
       if (imageRef.current) {
           const maxWidth = imageRef.current.width;
           const maxHeight = imageRef.current.height;
-          
           setSelection({
               x: Math.max(0, x),
               y: Math.max(0, y),
@@ -614,29 +511,14 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
 
   const performCrop = () => {
       if (!imageRef.current || !selection || selection.w < 10 || selection.h < 10) return;
-      
       const canvas = document.createElement('canvas');
       const scaleX = imageRef.current.naturalWidth / imageRef.current.width;
       const scaleY = imageRef.current.naturalHeight / imageRef.current.height;
-      
       canvas.width = selection.w * scaleX;
       canvas.height = selection.h * scaleY;
-      
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
-      
-      ctx.drawImage(
-          imageRef.current,
-          selection.x * scaleX,
-          selection.y * scaleY,
-          selection.w * scaleX,
-          selection.h * scaleY,
-          0,
-          0,
-          canvas.width,
-          canvas.height
-      );
-      
+      ctx.drawImage(imageRef.current, selection.x * scaleX, selection.y * scaleY, selection.w * scaleX, selection.h * scaleY, 0, 0, canvas.width, canvas.height);
       canvas.toBlob((blob) => {
           if (blob) {
               setCroppedBlob(blob);
@@ -647,21 +529,14 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
       }, 'image/png');
   };
 
-  // --- Replotting Logic ---
   const renderReplot = () => {
       if (!result || !result.data || result.data.length === 0) return null;
-
-      // Safe access: Ensure result.data[0] exists
       const firstRow = result.data[0];
       if (!firstRow) return null;
-
       const keys = Object.keys(firstRow).filter(k => !k.startsWith('_'));
       if (keys.length < 2) return null;
-
-      const xKey = keys[0]; // Assume first column is Label/X
-      const yKeys = keys.slice(1); // Assume rest are series
-
-      // Convert data for Recharts (parse numbers)
+      const xKey = keys[0];
+      const yKeys = keys.slice(1);
       const chartData = result.data.map(row => {
           const newRow: any = { [xKey]: row[xKey] };
           yKeys.forEach(k => {
@@ -670,7 +545,6 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
           });
           return newRow;
       });
-
       const chartType = (result.type || '').toLowerCase();
       const isLine = chartType.includes('line') || chartType.includes('scatter');
       const colors = ['#2563eb', '#16a34a', '#d97706', '#9333ea', '#db2777'];
@@ -682,27 +556,18 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey={xKey} tick={{fontSize: 10}} stroke="#64748b" />
                       <YAxis tick={{fontSize: 10}} stroke="#64748b" />
-                      <Tooltip 
-                          contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                      />
+                      <Tooltip contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
                       <Legend />
-                      {yKeys.map((k, i) => (
-                          <Line key={k} type="monotone" dataKey={k} stroke={colors[i % colors.length]} strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                      ))}
+                      {yKeys.map((k, i) => <Line key={k} type="monotone" dataKey={k} stroke={colors[i % colors.length]} strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />)}
                   </LineChart>
               ) : (
                   <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey={xKey} tick={{fontSize: 10}} stroke="#64748b" />
                       <YAxis tick={{fontSize: 10}} stroke="#64748b" />
-                      <Tooltip 
-                          contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                          cursor={{fill: 'rgba(59, 130, 246, 0.1)'}}
-                      />
+                      <Tooltip contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
                       <Legend />
-                      {yKeys.map((k, i) => (
-                          <Bar key={k} dataKey={k} fill={colors[i % colors.length]} radius={[4, 4, 0, 0]} maxBarSize={50} />
-                      ))}
+                      {yKeys.map((k, i) => <Bar key={k} dataKey={k} fill={colors[i % colors.length]} radius={[4, 4, 0, 0]} maxBarSize={50} />)}
                   </BarChart>
               )}
           </ResponsiveContainer>
@@ -719,19 +584,12 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
        </div>
 
        <div className="flex-grow flex flex-col md:flex-row gap-8 overflow-hidden">
-           {/* Left Panel: Upload & Image Preview */}
            <div className="w-full md:w-1/3 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleFileChange} />
-               
-               {/* Filter Bar */}
                <div className="p-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex flex-wrap gap-2 items-center">
                    <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1">
                        <Filter size={12} className="text-slate-400" />
-                       <select 
-                          className="text-xs bg-transparent border-none outline-none text-slate-600 dark:text-slate-300 font-bold w-16"
-                          value={filterPartition}
-                          onChange={(e) => setFilterPartition(e.target.value)}
-                       >
+                       <select className="text-xs bg-transparent border-none outline-none text-slate-600 dark:text-slate-300 font-bold w-16" value={filterPartition} onChange={(e) => setFilterPartition(e.target.value)}>
                            <option value="All">All</option>
                            <option value="SCI">SCI</option>
                            <option value="SSCI">SSCI</option>
@@ -741,12 +599,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                    <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1">
                        <Calendar size={12} className="text-slate-400" />
                        <span className="text-[10px] text-slate-400 font-bold">&gt;</span>
-                       <input 
-                          type="date" 
-                          className="text-xs bg-transparent border-none outline-none text-slate-600 dark:text-slate-300 w-24"
-                          value={filterDate}
-                          onChange={(e) => setFilterDate(e.target.value)}
-                       />
+                       <input type="date" className="text-xs bg-transparent border-none outline-none text-slate-600 dark:text-slate-300 w-24" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
                    </div>
                </div>
 
@@ -757,65 +610,31 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                        </div>
                        <h3 className="font-bold text-slate-700 dark:text-slate-200 mb-1">{t.upload}</h3>
                        <p className="text-xs text-slate-400 mb-4">JPG, PNG, WEBP</p>
-                       <p className="text-[10px] text-blue-500 font-bold bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded">
-                          {language === 'ZH' ? '支持 Ctrl+V 粘贴' : 'Ctrl+V to Paste'}
-                       </p>
+                       <p className="text-[10px] text-blue-500 font-bold bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded">{language === 'ZH' ? '支持 Ctrl+V 粘贴' : 'Ctrl+V to Paste'}</p>
                    </div>
                ) : (
                    <div className="flex h-full">
-                       {/* Thumbnail Sidebar */}
                        <div className="w-20 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex flex-col items-center py-4 gap-3 overflow-y-auto custom-scrollbar">
                            {filteredFiles.map((f, i) => (
-                               <div 
-                                  key={f.id} 
-                                  onClick={() => handleSwitchFile(f.id)}
-                                  className={`relative w-14 h-14 rounded-lg cursor-pointer overflow-hidden border-2 transition-all flex-shrink-0 group ${
-                                      activeId === f.id ? 'border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900' : 'border-slate-200 dark:border-slate-600 opacity-70 hover:opacity-100'
-                                  }`}
-                               >
+                               <div key={f.id} onClick={() => handleSwitchFile(f.id)} className={`relative w-14 h-14 rounded-lg cursor-pointer overflow-hidden border-2 transition-all flex-shrink-0 group ${activeId === f.id ? 'border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900' : 'border-slate-200 dark:border-slate-600 opacity-70 hover:opacity-100'}`}>
                                    <img src={f.previewUrl} className="w-full h-full object-cover" alt="thumbnail" />
-                                   {f.result && (
-                                       <div className="absolute bottom-0 right-0 bg-green-500 w-3 h-3 rounded-tl-md flex items-center justify-center">
-                                           <Check size={8} className="text-white" />
-                                       </div>
-                                   )}
-                                   <button 
-                                      onClick={(e) => handleRemoveFile(f.id, e)}
-                                      className="absolute top-0 right-0 bg-black/50 text-white w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
-                                   >
-                                       <X size={8} />
-                                   </button>
+                                   {f.result && <div className="absolute bottom-0 right-0 bg-green-500 w-3 h-3 rounded-tl-md flex items-center justify-center"><Check size={8} className="text-white" /></div>}
+                                   <button onClick={(e) => handleRemoveFile(f.id, e)} className="absolute top-0 right-0 bg-black/50 text-white w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"><X size={8} /></button>
                                </div>
                            ))}
-                           <button 
-                              onClick={() => fileInputRef.current?.click()}
-                              className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 hover:text-blue-500 hover:border-blue-500 transition-colors"
-                           >
-                               <Plus size={18} />
-                           </button>
+                           <button onClick={() => fileInputRef.current?.click()} className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 hover:text-blue-500 hover:border-blue-500 transition-colors"><Plus size={18} /></button>
                        </div>
 
-                       {/* Active Image Preview & Controls */}
                        <div className="flex-grow flex flex-col p-4 overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                           {/* Metadata Inputs */}
                            {activeFile && (
                                <div className="mb-4 grid grid-cols-2 gap-2 bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
                                    <div>
                                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Paper Added Date</label>
-                                       <input 
-                                          type="date" 
-                                          value={activeFile.metadata.addedDate}
-                                          onChange={(e) => updateMetadata(activeFile.id, 'addedDate', e.target.value)}
-                                          className="w-full text-xs bg-slate-50 dark:bg-slate-900 border-none rounded px-2 py-1 font-mono"
-                                       />
+                                       <input type="date" value={activeFile.metadata.addedDate} onChange={(e) => updateMetadata(activeFile.id, 'addedDate', e.target.value)} className="w-full text-xs bg-slate-50 dark:bg-slate-900 border-none rounded px-2 py-1 font-mono" />
                                    </div>
                                    <div>
                                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Partition / Source</label>
-                                       <select 
-                                          value={activeFile.metadata.partition}
-                                          onChange={(e) => updateMetadata(activeFile.id, 'partition', e.target.value)}
-                                          className="w-full text-xs bg-slate-50 dark:bg-slate-900 border-none rounded px-2 py-1 font-bold text-blue-600"
-                                       >
+                                       <select value={activeFile.metadata.partition} onChange={(e) => updateMetadata(activeFile.id, 'partition', e.target.value)} className="w-full text-xs bg-slate-50 dark:bg-slate-900 border-none rounded px-2 py-1 font-bold text-blue-600">
                                            <option value="SCI">SCI</option>
                                            <option value="SSCI">SSCI</option>
                                            <option value="CJR">CJR</option>
@@ -826,68 +645,26 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                                </div>
                            )}
 
-                           <div 
-                              className={`border-2 border-dashed rounded-xl p-2 text-center transition-colors mb-4 flex flex-col items-center justify-center min-h-[250px] relative bg-white dark:bg-slate-800
-                                  ${isCropping ? 'border-blue-500 cursor-crosshair' : 'border-slate-300 dark:border-slate-600'}
-                              `}
-                              onMouseDown={handleMouseDown}
-                              onMouseMove={handleMouseMove}
-                              onMouseUp={handleMouseUp}
-                              onMouseLeave={handleMouseUp}
-                           >
+                           <div className={`border-2 border-dashed rounded-xl p-2 text-center transition-colors mb-4 flex flex-col items-center justify-center min-h-[250px] relative bg-white dark:bg-slate-800 ${isCropping ? 'border-blue-500 cursor-crosshair' : 'border-slate-300 dark:border-slate-600'}`} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
                                {activeFile && (
                                    <div className="relative inline-block">
-                                       <img 
-                                          ref={imageRef}
-                                          src={croppedImageUrl || activeFile.previewUrl} 
-                                          alt="Chart" 
-                                          className={`max-h-[350px] max-w-full rounded shadow-sm object-contain select-none block ${isCropping ? 'opacity-80' : ''}`} 
-                                          draggable={false}
-                                       />
-                                       
-                                       {/* Interactive Overlay */}
+                                       <img ref={imageRef} src={croppedImageUrl || activeFile.previewUrl} alt="Chart" className={`max-h-[350px] max-w-full rounded shadow-sm object-contain select-none block ${isCropping ? 'opacity-80' : ''}`} draggable={false} />
                                        {result && result.data && showOverlay && !isCropping && (
                                            <svg className="absolute inset-0 w-full h-full pointer-events-none">
                                                {result.data.map((row, i) => {
                                                    if (row._box_2d) {
-                                                       const [ymin, xmin, ymax, xmax] = row._box_2d; // Normalized 0-1000
+                                                       const [ymin, xmin, ymax, xmax] = row._box_2d;
                                                        const width = xmax - xmin;
                                                        const height = ymax - ymin;
-                                                       return (
-                                                           <rect 
-                                                               key={i}
-                                                               x={`${xmin/10}%`}
-                                                               y={`${ymin/10}%`}
-                                                               width={`${width/10}%`}
-                                                               height={`${height/10}%`}
-                                                               className={`transition-all duration-200 pointer-events-auto cursor-pointer ${
-                                                                   hoveredRowIndex === i 
-                                                                   ? 'fill-blue-500/20 stroke-blue-500 stroke-2' 
-                                                                   : 'fill-transparent stroke-transparent hover:stroke-blue-300 hover:stroke-1'
-                                                               }`}
-                                                               onMouseEnter={() => setHoveredRowIndex(i)}
-                                                               onMouseLeave={() => setHoveredRowIndex(null)}
-                                                           />
-                                                       )
+                                                       return <rect key={i} x={`${xmin/10}%`} y={`${ymin/10}%`} width={`${width/10}%`} height={`${height/10}%`} className={`transition-all duration-200 pointer-events-auto cursor-pointer ${hoveredRowIndex === i ? 'fill-blue-500/20 stroke-blue-500 stroke-2' : 'fill-transparent stroke-transparent hover:stroke-blue-300 hover:stroke-1'}`} onMouseEnter={() => setHoveredRowIndex(i)} onMouseLeave={() => setHoveredRowIndex(null)} />
                                                    }
                                                    return null;
                                                })}
                                            </svg>
                                        )}
-
                                        {isCropping && selection && (
-                                           <div 
-                                              className="absolute border-2 border-blue-500 bg-blue-500/20 pointer-events-none"
-                                              style={{
-                                                  left: selection.x,
-                                                  top: selection.y,
-                                                  width: selection.w,
-                                                  height: selection.h
-                                              }}
-                                           >
-                                               <div className="absolute -top-6 left-0 bg-blue-600 text-white text-[10px] px-1 rounded font-bold">
-                                                   {Math.round(selection.w)}x{Math.round(selection.h)}
-                                               </div>
+                                           <div className="absolute border-2 border-blue-500 bg-blue-500/20 pointer-events-none" style={{ left: selection.x, top: selection.y, width: selection.w, height: selection.h }}>
+                                               <div className="absolute -top-6 left-0 bg-blue-600 text-white text-[10px] px-1 rounded font-bold">{Math.round(selection.w)}x{Math.round(selection.h)}</div>
                                            </div>
                                        )}
                                    </div>
@@ -898,53 +675,21 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                                <div className="mb-4 flex gap-2">
                                    {!isCropping ? (
                                        <>
-                                           <button 
-                                              onClick={() => setIsCropping(true)}
-                                              className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
-                                           >
-                                               <Crop size={14} /> {language === 'ZH' ? '裁剪模式' : 'Crop Area'}
-                                           </button>
-                                           {croppedImageUrl && (
-                                               <button 
-                                                  onClick={resetCrop}
-                                                  className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
-                                               >
-                                                   <RotateCcw size={14} /> {language === 'ZH' ? '重置原图' : 'Reset'}
-                                               </button>
-                                           )}
+                                           <button onClick={() => setIsCropping(true)} className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"><Crop size={14} /> {language === 'ZH' ? '裁剪模式' : 'Crop Area'}</button>
+                                           {croppedImageUrl && <button onClick={resetCrop} className="flex-1 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"><RotateCcw size={14} /> {language === 'ZH' ? '重置原图' : 'Reset'}</button>}
                                        </>
                                    ) : (
                                        <>
-                                           <button 
-                                              onClick={performCrop}
-                                              disabled={!selection || selection.w < 10}
-                                              className="flex-1 bg-green-600 text-white font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-green-700 transition-colors disabled:opacity-50"
-                                           >
-                                               <Check size={14} /> {language === 'ZH' ? '确认裁剪' : 'Confirm Crop'}
-                                           </button>
-                                           <button 
-                                              onClick={() => { setIsCropping(false); setSelection(null); }}
-                                              className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
-                                           >
-                                               <X size={14} /> {language === 'ZH' ? '取消' : 'Cancel'}
-                                           </button>
+                                           <button onClick={performCrop} disabled={!selection || selection.w < 10} className="flex-1 bg-green-600 text-white font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-green-700 transition-colors disabled:opacity-50"><Check size={14} /> {language === 'ZH' ? '确认裁剪' : 'Confirm Crop'}</button>
+                                           <button onClick={() => { setIsCropping(false); setSelection(null); }} className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"><X size={14} /> {language === 'ZH' ? '取消' : 'Cancel'}</button>
                                        </>
                                    )}
                                </div>
                            )}
                            
-                           {isCropping && (
-                               <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs p-3 rounded-lg mb-4 flex items-center gap-2 border border-blue-200 dark:border-blue-800">
-                                   <MousePointer2 size={16} />
-                                   {language === 'ZH' ? '请在图片上拖拽框选图表区域（排除无关文字）。' : 'Drag on the image to select the chart area (exclude captions).'}
-                               </div>
-                           )}
+                           {isCropping && <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs p-3 rounded-lg mb-4 flex items-center gap-2 border border-blue-200 dark:border-blue-800"><MousePointer2 size={16} />{language === 'ZH' ? '请在图片上拖拽框选图表区域（排除无关文字）。' : 'Drag on the image to select the chart area (exclude captions).'}</div>}
 
-                           <button 
-                              onClick={handleExtract}
-                              disabled={!activeFile || loading || isCropping}
-                              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
-                           >
+                           <button onClick={handleExtract} disabled={!activeFile || loading || isCropping} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-auto">
                               {loading ? <Loader2 className="animate-spin" /> : <FileText size={18} />}
                               {loading ? t.extracting : language === 'ZH' ? '全内容分析' : 'Deep Scan (Full Analysis)'}
                            </button>
@@ -953,80 +698,40 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                )}
            </div>
 
-           {/* Right Panel: Result Spreadsheet */}
            <div className="w-full md:w-2/3 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden relative">
                {loading ? (
                    <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-fadeIn">
                        <div className="relative mb-6">
                            <div className="w-20 h-20 border-4 border-blue-100 rounded-full animate-spin border-t-blue-600"></div>
-                           <div className="absolute inset-0 flex items-center justify-center text-blue-600">
-                               <ScanEye size={32} className="animate-pulse" />
-                           </div>
+                           <div className="absolute inset-0 flex items-center justify-center text-blue-600"><ScanEye size={32} className="animate-pulse" /></div>
                        </div>
                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">{loadingSteps[loadingStep]}</h3>
-                       <div className="w-64 h-2 bg-slate-100 rounded-full overflow-hidden mt-4">
-                           <div 
-                               className="h-full bg-blue-600 transition-all duration-500 ease-out" 
-                               style={{ width: `${((loadingStep + 1) / loadingSteps.length) * 100}%` }}
-                           ></div>
-                       </div>
+                       <div className="w-64 h-2 bg-slate-100 rounded-full overflow-hidden mt-4"><div className="h-full bg-blue-600 transition-all duration-500 ease-out" style={{ width: `${((loadingStep + 1) / loadingSteps.length) * 100}%` }}></div></div>
                    </div>
                ) : result && activeId ? (
                    <div className="flex flex-col h-full animate-fadeIn">
-                       {/* Header with Tabs */}
                        <div className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
                            <div className="p-4 flex justify-between items-center pb-2">
                                <div className="flex items-center gap-2">
-                                   <div className="bg-green-100 dark:bg-green-900/30 p-1.5 rounded-lg text-green-600 dark:text-green-400">
-                                       <CheckCircle size={16} />
-                                   </div>
-                                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                                       {result.title || t.resultTitle} 
-                                       <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 font-normal uppercase tracking-wider">{result.type}</span>
-                                   </h3>
+                                   <div className="bg-green-100 dark:bg-green-900/30 p-1.5 rounded-lg text-green-600 dark:text-green-400"><CheckCircle size={16} /></div>
+                                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">{result.title || t.resultTitle} <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-500 font-normal uppercase tracking-wider">{result.type}</span></h3>
                                </div>
                            </div>
                            
-                           {/* Tabs */}
                            <div className="flex px-4 gap-1">
-                               <button 
-                                  onClick={() => setResultTab('data')}
-                                  className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'data' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                               >
-                                   <div className="flex items-center gap-2"><Table2 size={14}/> Data View</div>
-                               </button>
-                               <button 
-                                  onClick={() => setResultTab('code')}
-                                  className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'code' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                               >
-                                   <div className="flex items-center gap-2"><Code size={14}/> Code View</div>
-                               </button>
-                               <button 
-                                  onClick={() => setResultTab('analysis')}
-                                  className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'analysis' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                               >
-                                   <div className="flex items-center gap-2"><Sparkles size={14}/> Smart Analysis</div>
-                               </button>
+                               <button onClick={() => setResultTab('data')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'data' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Table2 size={14}/> Data</div></button>
+                               <button onClick={() => setResultTab('full')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'full' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Eye size={14}/> Full Content</div></button>
+                               <button onClick={() => setResultTab('code')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'code' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Code size={14}/> Code</div></button>
+                               <button onClick={() => setResultTab('analysis')} className={`px-4 py-2 text-sm font-bold rounded-t-lg transition-colors border-t border-x ${resultTab === 'analysis' ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-blue-600 border-b-white dark:border-b-slate-900' : 'bg-transparent border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}><div className="flex items-center gap-2"><Sparkles size={14}/> Analysis</div></button>
                            </div>
                        </div>
                        
-                       {/* Content Area */}
                        <div className="flex-grow overflow-hidden flex flex-col bg-white dark:bg-slate-900 relative">
-                           
-                           {/* DATA VIEW TAB */}
                            {resultTab === 'data' && (
                                <>
-                                   {/* Re-plot Preview Window */}
                                    <div className="h-48 flex-shrink-0 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700 p-4 animate-fadeIn">
-                                       {renderReplot() || (
-                                           <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                                               <BarChartIcon size={24} className="mb-2 opacity-50" />
-                                               <p className="text-xs">Not enough data to re-plot.</p>
-                                           </div>
-                                       )}
+                                       {renderReplot() || <div className="h-full flex flex-col items-center justify-center text-slate-400"><BarChartIcon size={24} className="mb-2 opacity-50" /><p className="text-xs">Not enough data to re-plot.</p></div>}
                                    </div>
-
-                                   {/* Editable Grid */}
                                    <div className="flex-grow overflow-auto">
                                        {result.data && result.data.length > 0 ? (
                                            <table className="w-full text-sm text-left border-collapse">
@@ -1035,206 +740,92 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                                                        <th className="w-10 border border-slate-200 dark:border-slate-700 p-2 text-center bg-slate-100 dark:bg-slate-800 text-slate-400">#</th>
                                                        {Object.keys(result.data[0]).filter(k => !k.startsWith('_')).map((header, i) => (
                                                            <th key={i} className="border border-slate-200 dark:border-slate-700 p-0 min-w-[100px] relative group">
-                                                               <input 
-                                                                  className="w-full h-full bg-transparent px-3 py-2 font-bold outline-none focus:bg-white dark:focus:bg-slate-700 text-slate-700 dark:text-slate-200"
-                                                                  defaultValue={header}
-                                                                  onBlur={(e) => updateHeader(activeId, header, e.target.value)}
-                                                               />
+                                                               <input className="w-full h-full bg-transparent px-3 py-2 font-bold outline-none focus:bg-white dark:focus:bg-slate-700 text-slate-700 dark:text-slate-200" defaultValue={header} onBlur={(e) => updateHeader(activeId, header, e.target.value)} />
                                                                <Edit2 size={10} className="absolute right-1 top-1 text-slate-400 opacity-0 group-hover:opacity-100 pointer-events-none" />
                                                            </th>
                                                        ))}
-                                                       <th className="w-10 border border-slate-200 dark:border-slate-700 p-0 bg-slate-50 dark:bg-slate-800">
-                                                            <button onClick={() => addRow(activeId)} className="w-full h-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400"><Plus size={14}/></button>
-                                                       </th>
+                                                       <th className="w-10 border border-slate-200 dark:border-slate-700 p-0 bg-slate-50 dark:bg-slate-800"><button onClick={() => addRow(activeId)} className="w-full h-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400"><Plus size={14}/></button></th>
                                                    </tr>
                                                </thead>
                                                <tbody>
                                                    {result.data.map((row, i) => (
-                                                       <tr 
-                                                          key={i} 
-                                                          className={`transition-colors group ${hoveredRowIndex === i ? 'bg-blue-100 dark:bg-blue-900/50' : 'hover:bg-blue-50 dark:hover:bg-slate-800/50'}`}
-                                                          onMouseEnter={() => setHoveredRowIndex(i)}
-                                                          onMouseLeave={() => setHoveredRowIndex(null)}
-                                                       >
-                                                           <td className="border border-slate-200 dark:border-slate-700 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800 font-mono">
-                                                               {i + 1}
-                                                           </td>
+                                                       <tr key={i} className={`transition-colors group ${hoveredRowIndex === i ? 'bg-blue-100 dark:bg-blue-900/50' : 'hover:bg-blue-50 dark:hover:bg-slate-800/50'}`} onMouseEnter={() => setHoveredRowIndex(i)} onMouseLeave={() => setHoveredRowIndex(null)}>
+                                                           <td className="border border-slate-200 dark:border-slate-700 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800 font-mono">{i + 1}</td>
                                                            {Object.keys(row).filter(k => !k.startsWith('_')).map((key, j) => (
-                                                               <td key={j} className="border border-slate-200 dark:border-slate-700 p-0">
-                                                                   <input 
-                                                                      className="w-full h-full bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 text-slate-600 dark:text-slate-300 transition-all"
-                                                                      value={row[key]}
-                                                                      onChange={(e) => updateCell(activeId, i, key, e.target.value)}
-                                                                  />
-                                                               </td>
+                                                               <td key={j} className="border border-slate-200 dark:border-slate-700 p-0"><input className="w-full h-full bg-transparent px-3 py-2 outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 text-slate-600 dark:text-slate-300 transition-all" value={row[key]} onChange={(e) => updateCell(activeId, i, key, e.target.value)} /></td>
                                                            ))}
-                                                           <td className="border border-slate-200 dark:border-slate-700 text-center">
-                                                               <button 
-                                                                  onClick={() => deleteRow(activeId, i)}
-                                                                  className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors opacity-0 group-hover:opacity-100"
-                                                                  title="Delete Row"
-                                                               >
-                                                                   <Trash2 size={12} />
-                                                               </button>
-                                                           </td>
+                                                           <td className="border border-slate-200 dark:border-slate-700 text-center"><button onClick={() => deleteRow(activeId, i)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors opacity-0 group-hover:opacity-100" title="Delete Row"><Trash2 size={12} /></button></td>
                                                        </tr>
                                                    ))}
                                                </tbody>
                                            </table>
-                                       ) : (
-                                           <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                                               <p>No tabular data found.</p>
-                                               <button onClick={() => addRow(activeId)} className="mt-2 text-blue-500 hover:underline text-sm">Create empty row</button>
-                                           </div>
-                                       )}
+                                       ) : <div className="flex flex-col items-center justify-center h-full text-slate-400"><p>No tabular data found.</p><button onClick={() => addRow(activeId)} className="mt-2 text-blue-500 hover:underline text-sm">Create empty row</button></div>}
                                    </div>
                                </>
                            )}
 
-                           {/* CODE VIEW TAB */}
-                           {resultTab === 'code' && (
-                               <div className="flex flex-col h-full">
-                                   <div className="p-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex gap-2">
-                                       <button 
-                                          onClick={() => setCodeLang('Python')} 
-                                          className={`px-4 py-2 rounded text-xs font-bold transition-colors ${codeLang === 'Python' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'}`}
-                                       >
-                                           Python (Matplotlib)
-                                       </button>
-                                       <button 
-                                          onClick={() => setCodeLang('R')} 
-                                          className={`px-4 py-2 rounded text-xs font-bold transition-colors ${codeLang === 'R' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'}`}
-                                       >
-                                           R (ggplot2)
-                                       </button>
-                                       <div className="flex-grow"></div>
-                                       <button 
-                                          onClick={() => {
-                                              navigator.clipboard.writeText(generateCode(codeLang));
-                                              alert(language === 'ZH' ? '代码已复制' : 'Code copied to clipboard');
-                                          }}
-                                          className="px-4 py-2 bg-slate-900 text-white rounded font-bold text-xs flex items-center gap-2 transition-colors hover:bg-slate-700"
-                                       >
-                                           <Copy size={14} /> {language === 'ZH' ? '复制代码' : 'Copy Code'}
-                                       </button>
-                                   </div>
-                                   <div className="flex-grow p-0 overflow-auto bg-[#1e1e1e]">
-                                       <pre className="p-4 text-xs font-mono text-green-400 leading-relaxed">
-                                           <code>{generateCode(codeLang)}</code>
-                                       </pre>
+                           {resultTab === 'full' && (
+                               <div className="flex-grow overflow-auto p-6 space-y-6">
+                                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
+                                       <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 mb-4"><FileSearch size={16} /> Visual Description & OCR</h4>
+                                       <div className="space-y-6">
+                                           <div>
+                                               <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Detailed Visual Breakdown</h5>
+                                               <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 text-xs"><ReactMarkdown>{result.fullDescription || "No detailed description available."}</ReactMarkdown></div>
+                                           </div>
+                                           <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                                               <div className="flex justify-between items-center mb-2">
+                                                   <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Raw Text (OCR)</h5>
+                                                   <button onClick={() => { navigator.clipboard.writeText(result.ocrText || ""); alert("OCR Text Copied"); }} className="text-[10px] text-blue-600 hover:underline">Copy Text</button>
+                                               </div>
+                                               <pre className="bg-white dark:bg-slate-900 p-4 rounded border border-slate-200 dark:border-slate-700 text-xs font-mono whitespace-pre-wrap text-slate-600 dark:text-slate-400 max-h-60 overflow-y-auto">{result.ocrText || "No text detected."}</pre>
+                                           </div>
+                                       </div>
                                    </div>
                                </div>
                            )}
 
-                           {/* ANALYSIS TAB */}
+                           {resultTab === 'code' && (
+                               <div className="flex flex-col h-full">
+                                   <div className="p-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex gap-2">
+                                       <button onClick={() => setCodeLang('Python')} className={`px-4 py-2 rounded text-xs font-bold transition-colors ${codeLang === 'Python' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'}`}>Python (Matplotlib)</button>
+                                       <button onClick={() => setCodeLang('R')} className={`px-4 py-2 rounded text-xs font-bold transition-colors ${codeLang === 'R' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'}`}>R (ggplot2)</button>
+                                       <div className="flex-grow"></div>
+                                       <button onClick={() => { navigator.clipboard.writeText(generateCode(codeLang)); alert(language === 'ZH' ? '代码已复制' : 'Code copied to clipboard'); }} className="px-4 py-2 bg-slate-900 text-white rounded font-bold text-xs flex items-center gap-2 transition-colors hover:bg-slate-700"><Copy size={14} /> {language === 'ZH' ? '复制代码' : 'Copy Code'}</button>
+                                   </div>
+                                   <div className="flex-grow p-0 overflow-auto bg-[#1e1e1e]"><pre className="p-4 text-xs font-mono text-green-400 leading-relaxed"><code>{generateCode(codeLang)}</code></pre></div>
+                               </div>
+                           )}
+
                            {resultTab === 'analysis' && (
                                <div className="flex-grow overflow-auto p-6 space-y-6">
-                                   {/* Trend Analysis */}
                                    <div className="bg-white dark:bg-slate-800 rounded-lg p-6 border border-blue-100 dark:border-blue-900 shadow-sm">
                                        <div className="flex justify-between items-center mb-4">
-                                           <h4 className="text-sm font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2">
-                                               <Sparkles size={16} className="text-blue-500" /> Trend Analysis (Discussion)
-                                           </h4>
+                                           <h4 className="text-sm font-bold text-blue-800 dark:text-blue-300 flex items-center gap-2"><Sparkles size={16} className="text-blue-500" /> Trend Analysis (Discussion)</h4>
                                            <div className="flex gap-2">
-                                                <button 
-                                                  onClick={handleGenerateTrend}
-                                                  disabled={analyzingTrend}
-                                                  className="text-xs font-bold text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded flex items-center gap-1 transition-colors"
-                                               >
-                                                   {analyzingTrend ? <Loader2 size={12} className="animate-spin" /> : <MessageSquare size={12} />}
-                                                   Generate Analysis
-                                               </button>
-                                               {activeFile.trendAnalysis && (
-                                                   <button 
-                                                      onClick={() => navigator.clipboard.writeText(activeFile.trendAnalysis || '')}
-                                                      className="text-xs text-slate-400 hover:text-blue-600 flex items-center gap-1 bg-slate-50 px-2 py-1 rounded"
-                                                   >
-                                                       <Copy size={12} /> Copy
-                                                   </button>
-                                               )}
+                                                <button onClick={handleGenerateTrend} disabled={analyzingTrend} className="text-xs font-bold text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded flex items-center gap-1 transition-colors">{analyzingTrend ? <Loader2 size={12} className="animate-spin" /> : <MessageSquare size={12} />} Generate Analysis</button>
+                                               {activeFile.trendAnalysis && <button onClick={() => navigator.clipboard.writeText(activeFile.trendAnalysis || '')} className="text-xs text-slate-400 hover:text-blue-600 flex items-center gap-1 bg-slate-50 px-2 py-1 rounded"><Copy size={12} /> Copy</button>}
                                            </div>
                                        </div>
-                                       {activeFile.trendAnalysis ? (
-                                           <div className="prose prose-sm prose-slate dark:prose-invert max-w-none text-xs leading-relaxed">
-                                               <ReactMarkdown>{activeFile.trendAnalysis}</ReactMarkdown>
-                                           </div>
-                                       ) : (
-                                           <p className="text-xs text-slate-400 italic">Click generate to analyze trends based on data...</p>
-                                       )}
-                                   </div>
-
-                                   {/* Visual Description */}
-                                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
-                                       <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2 mb-4">
-                                           <FileSearch size={16} /> Visual Description & OCR
-                                       </h4>
-                                       
-                                       <div className="space-y-6">
-                                           <div>
-                                               <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Detailed Visual Breakdown</h5>
-                                               <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 text-xs">
-                                                   <ReactMarkdown>{result.fullDescription || "No detailed description available."}</ReactMarkdown>
-                                               </div>
-                                           </div>
-                                           
-                                           <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-                                               <div className="flex justify-between items-center mb-2">
-                                                   <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Raw Text (OCR)</h5>
-                                                   <button 
-                                                      onClick={() => {
-                                                          navigator.clipboard.writeText(result.ocrText || "");
-                                                          alert("OCR Text Copied");
-                                                      }}
-                                                      className="text-[10px] text-blue-600 hover:underline"
-                                                   >
-                                                       Copy Text
-                                                   </button>
-                                               </div>
-                                               <pre className="bg-white dark:bg-slate-900 p-4 rounded border border-slate-200 dark:border-slate-700 text-xs font-mono whitespace-pre-wrap text-slate-600 dark:text-slate-400 max-h-60 overflow-y-auto">
-                                                   {result.ocrText || "No text detected."}
-                                               </pre>
-                                           </div>
-                                       </div>
+                                       {activeFile.trendAnalysis ? <div className="prose prose-sm prose-slate dark:prose-invert max-w-none text-xs leading-relaxed"><ReactMarkdown>{activeFile.trendAnalysis}</ReactMarkdown></div> : <p className="text-xs text-slate-400 italic">Click generate to analyze trends based on data...</p>}
                                    </div>
                                </div>
                            )}
                        </div>
                        
-                       {/* Bottom Action Bar */}
                        <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
                            <div className="flex gap-2">
-                               <button onClick={handleExportFullReport} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 shadow-sm text-purple-600 dark:text-purple-400">
-                                   <FileOutput size={14} /> Full Report (PDF)
-                               </button>
-                               <button onClick={handleCopyLatex} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
-                                   <span className="font-mono text-[10px]">TeX</span> LaTeX
-                               </button>
-                               <button onClick={handleDownloadCSV} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
-                                   <Download size={14} /> Excel/CSV
-                               </button>
+                               <button onClick={handleExportFullReport} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 shadow-sm text-purple-600 dark:text-purple-400"><FileOutput size={14} /> Full Report (PDF)</button>
+                               <button onClick={handleCopyLatex} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"><span className="font-mono text-[10px]">TeX</span> LaTeX</button>
+                               <button onClick={handleDownloadCSV} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"><Download size={14} /> Excel/CSV</button>
                            </div>
                            <div className="flex gap-2">
-                               <button onClick={() => setResultTab('code')} className="text-xs font-bold bg-slate-800 dark:bg-slate-700 text-white px-3 py-2 rounded hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors flex items-center gap-2">
-                                   <Terminal size={14} /> Generate Python
-                               </button>
-                               {onSendDataToAnalysis && (
-                                   <button 
-                                      onClick={handleSendToAnalysis}
-                                      className="text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2 rounded flex items-center gap-2 transition-colors"
-                                   >
-                                       <Database size={14} /> Send to Analysis
-                                   </button>
-                               )}
+                               <button onClick={() => setResultTab('code')} className="text-xs font-bold bg-slate-800 dark:bg-slate-700 text-white px-3 py-2 rounded hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"><Terminal size={14} /> Generate Python</button>
+                               {onSendDataToAnalysis && <button onClick={handleSendToAnalysis} className="text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-2 rounded flex items-center gap-2 transition-colors"><Database size={14} /> Send to Analysis</button>}
                            </div>
                        </div>
                    </div>
-               ) : (
-                   <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-60 p-8 text-center">
-                       <Table2 size={64} className="mb-4" />
-                       <p className="text-lg font-bold">No Data Extracted Yet</p>
-                       <p className="text-sm max-w-xs mt-2">Upload images, select the chart area, and click "Deep Scan" to extract data and full content.</p>
-                   </div>
-               )}
+               ) : <div className="flex flex-col items-center justify-center h-full text-slate-400 opacity-60 p-8 text-center"><Table2 size={64} className="mb-4" /><p className="text-lg font-bold">No Data Extracted Yet</p><p className="text-sm max-w-xs mt-2">Upload images, select the chart area, and click "Deep Scan" to extract data and full content.</p></div>}
            </div>
        </div>
     </div>
