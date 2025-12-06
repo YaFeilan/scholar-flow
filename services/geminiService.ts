@@ -24,7 +24,8 @@ import {
   ChartExtractionResult,
   CodeMessage,
   GrantCheckResult,
-  LogicNode
+  LogicNode,
+  ConferenceFinderResult
 } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -828,4 +829,40 @@ export const checkGrantFormat = async (content: string | File, language: Languag
     }
 
     return getJson(prompt, undefined, 'gemini-3-pro-preview'); // Using stronger model for logic checks
+};
+
+// --- Conference Finder ---
+
+export const findConferences = async (topic: string, language: Language): Promise<ConferenceFinderResult | null> => {
+  const currentDate = new Date().toISOString().split('T')[0];
+  const prompt = `Find upcoming academic conferences (especially CCF recommended or Top Tier) and journal special issues related to the research topic: "${topic}".
+  Assume the current date is ${currentDate}.
+  Provide realistic upcoming deadlines (even if estimated based on previous years).
+  
+  Language: ${language}.
+  
+  Return JSON:
+  {
+    "conferences": [
+      { 
+        "name": "Conference Name (e.g. CVPR 2025)", 
+        "rank": "CCF-A" | "CCF-B" | "CCF-C" | "Unranked", 
+        "deadline": "YYYY-MM-DD", 
+        "location": "City, Country", 
+        "description": "Brief description.", 
+        "tags": ["Tag1", "Tag2"],
+        "website": "URL" 
+      }
+    ],
+    "journals": [
+      { 
+        "name": "Journal Name (e.g. IEEE TPAMI)", 
+        "title": "Special Issue Title", 
+        "deadline": "YYYY-MM-DD", 
+        "impactFactor": "IF Value" 
+      }
+    ]
+  }`;
+  
+  return getJson(prompt, undefined, 'gemini-3-pro-preview');
 };

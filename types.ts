@@ -44,7 +44,8 @@ export enum ViewState {
   KNOWLEDGE_GRAPH = 'KNOWLEDGE_GRAPH',
   FIGURE_GEN = 'FIGURE_GEN',
   CHART_EXTRACTION = 'CHART_EXTRACTION',
-  GRANT_APPLICATION = 'GRANT_APPLICATION', // New
+  GRANT_APPLICATION = 'GRANT_APPLICATION',
+  CONFERENCE_FINDER = 'CONFERENCE_FINDER', // New
 }
 
 // Trend Types
@@ -419,4 +420,27 @@ export interface LogicNode {
   id: string;
   label: string;
   children?: LogicNode[];
+}
+
+// Conference Types (New)
+export interface ConferenceItem {
+  name: string;
+  rank: 'CCF-A' | 'CCF-B' | 'CCF-C' | 'Unranked';
+  deadline: string; // YYYY-MM-DD
+  location: string;
+  description: string;
+  tags: string[];
+  website?: string;
+}
+
+export interface JournalIssueItem {
+  name: string;
+  title: string; // Special Issue Title
+  deadline: string;
+  impactFactor: string;
+}
+
+export interface ConferenceFinderResult {
+  conferences: ConferenceItem[];
+  journals: JournalIssueItem[];
 }

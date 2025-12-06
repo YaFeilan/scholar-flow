@@ -1,4 +1,5 @@
 
+
 export const TRANSLATIONS = {
   EN: {
     appName: 'Research Assistant',
@@ -26,7 +27,8 @@ export const TRANSLATIONS = {
       knowledge: 'Knowledge Graph',
       figure: 'Sci-Figure Gen',
       chart: 'Chart Extractor',
-      grant: 'Grant Helper' // New
+      grant: 'Grant Helper',
+      conference: 'Conf. Finder' // New
     },
     search: { 
       title: 'Research Assistant', 
@@ -474,7 +476,7 @@ export const TRANSLATIONS = {
       columns: 'Columns',
       rows: 'Rows'
     },
-    grant: { // New
+    grant: {
       title: 'Grant Application Assistant',
       subtitle: 'Specialized tools for grant writing (NSFC, etc.): Rationale Generation, Proposal Polishing, and Format Review.',
       tabs: {
@@ -493,8 +495,8 @@ export const TRANSLATIONS = {
         refDoi: 'Enter DOIs (One per line)',
         refHint: 'AI will generate the rationale based on these specific documents and cite them as [1], [2].',
         fileLimit: 'Max 10 PDFs',
-        modeLabel: 'Generation Mode', // New
-        modes: { // New
+        modeLabel: 'Generation Mode',
+        modes: {
           full: 'Full Outline',
           status: 'Research Status',
           significance: 'Scientific Significance'
@@ -528,6 +530,20 @@ export const TRANSLATIONS = {
             anon: 'Anonymity Check'
         }
       }
+    },
+    conference: { // New Section
+      title: 'Conference Finder',
+      subtitle: 'Discover upcoming academic conferences and journal special issues tailored to your research.',
+      topicLabel: 'Research Direction / Keywords',
+      rankLabel: 'Rank (CCF/Core)',
+      searchBtn: 'Find Conferences',
+      searching: 'Searching...',
+      conferences: 'Upcoming Conferences',
+      journals: 'Special Issues',
+      deadline: 'Deadline',
+      location: 'Location',
+      website: 'Website',
+      daysLeft: 'Days Left'
     }
   }
   ,
@@ -557,7 +573,8 @@ export const TRANSLATIONS = {
       knowledge: '个人知识库',
       figure: '科研绘图',
       chart: '图表提取',
-      grant: '基金申报' // New
+      grant: '基金申报',
+      conference: '会议日历' // New
     },
     search: { 
       title: '科研助手', 
@@ -1005,7 +1022,7 @@ export const TRANSLATIONS = {
       columns: '列数',
       rows: '行数'
     },
-    grant: { // New
+    grant: {
       title: '基金项目申报助手',
       subtitle: '专为 NSFC 等基金申请打造：立项依据生成、标书润色与形式审查。',
       tabs: {
@@ -1024,8 +1041,8 @@ export const TRANSLATIONS = {
         refDoi: '输入 DOI (每行一个)',
         refHint: 'AI 将基于这些文献生成综述并自动标注引用 [1]。',
         fileLimit: '最多 10 篇 PDF',
-        modeLabel: '生成模式', // New
-        modes: { // New
+        modeLabel: '生成模式',
+        modes: {
           full: '全篇大纲',
           status: '研究现状综述',
           significance: '科学意义'
@@ -1059,6 +1076,20 @@ export const TRANSLATIONS = {
             anon: '匿名检查'
         }
       }
+    },
+    conference: { // New Section
+      title: '学术会议日历',
+      subtitle: '根据您的研究方向，自动发现即将截稿的重要会议和期刊特刊。',
+      topicLabel: '研究方向 / 关键词',
+      rankLabel: '等级 (CCF/Core)',
+      searchBtn: '查找会议',
+      searching: '正在搜索...',
+      conferences: '即将截稿会议',
+      journals: '期刊特刊 (Special Issues)',
+      deadline: '截稿日期',
+      location: '地点',
+      website: '官网',
+      daysLeft: '天后截稿'
     }
   }
 };
