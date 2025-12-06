@@ -1,6 +1,8 @@
 
 
 
+
+
 import React, { useState } from 'react';
 import { Calendar, Search, MapPin, ExternalLink, Filter, Loader2, BookOpen, Clock, AlertTriangle, Globe, BarChart2, CheckCircle2, ListFilter, ArrowDownUp } from 'lucide-react';
 import { Language, ConferenceFinderResult } from '../types';
@@ -16,6 +18,7 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
   const [topic, setTopic] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ConferenceFinderResult | null>(null);
+  const [searchAttempted, setSearchAttempted] = useState(false);
   
   // Filters
   const [filterType, setFilterType] = useState<'all' | 'conf' | 'journal'>('all');
@@ -37,13 +40,18 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
     
     setLoading(true);
     setResult(null);
-    const data = await findConferences(query, language);
-    setResult(data);
+    setSearchAttempted(true);
+    try {
+        const data = await findConferences(query, language);
+        setResult(data);
+    } catch (e) {
+        console.error("Search failed", e);
+    }
     setLoading(false);
   };
 
   const getDaysLeft = (deadline: string) => {
-    if (deadline.toLowerCase().includes('tba')) return 999; // Treat TBA as far future
+    if (!deadline || deadline.toLowerCase().includes('tba')) return 999; // Treat TBA as far future
     const today = new Date();
     const target = new Date(deadline);
     if (isNaN(target.getTime())) return 999;
@@ -68,7 +76,7 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
       if (filterRank !== 'All' && c.rank !== filterRank) return false;
       
       // Status Filter
-      const isTBA = c.deadline.toLowerCase().includes('tba');
+      const isTBA = c.deadline && c.deadline.toLowerCase().includes('tba');
       const days = getDaysLeft(c.deadline);
       
       if (filterStatus === 'tba') {
@@ -124,7 +132,7 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
       if (filterPartition !== 'All' && j.partition !== filterPartition) return false;
       
       // Status Filter
-      const isTBA = j.deadline.toLowerCase().includes('tba');
+      const isTBA = j.deadline && j.deadline.toLowerCase().includes('tba');
       const days = getDaysLeft(j.deadline);
       
       if (filterStatus === 'tba') {
@@ -137,6 +145,8 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
 
       return true;
   });
+
+  const hasResults = (filteredConferences && filteredConferences.length > 0) || (filteredJournals && filteredJournals.length > 0);
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-8 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
@@ -263,7 +273,15 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
         </div>
       </div>
 
-      {result && (
+      {searchAttempted && !loading && !hasResults && (
+          <div className="flex-grow flex flex-col items-center justify-center text-slate-400 opacity-60">
+              <Search size={48} className="mb-4" />
+              <p className="text-lg font-bold">No conferences found.</p>
+              <p className="text-sm mt-2">Try adjusting your filters or search keywords.</p>
+          </div>
+      )}
+
+      {hasResults && (
         <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 overflow-hidden">
           {/* Conferences List */}
           {(filterType === 'all' || filterType === 'conf') && (
@@ -292,7 +310,7 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
                         <div className="text-center text-slate-400 py-10">No conferences found matching criteria.</div>
                     )}
                     {filteredConferences?.map((conf, idx) => {
-                        const isTBA = conf.deadline.toLowerCase().includes('tba');
+                        const isTBA = conf.deadline && conf.deadline.toLowerCase().includes('tba');
                         const daysLeft = getDaysLeft(conf.deadline);
                         const isUrgent = !isTBA && daysLeft > 0 && daysLeft <= 30;
                         const isPassed = !isTBA && daysLeft < 0;
@@ -336,7 +354,7 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
                               
                               <div className="flex justify-between items-center">
                                   <div className="flex gap-2">
-                                      {conf.tags.map((tag, i) => (
+                                      {conf.tags && conf.tags.map((tag, i) => (
                                           <span key={i} className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded border border-slate-200 dark:border-slate-600">{tag}</span>
                                       ))}
                                   </div>
@@ -364,7 +382,7 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
                         <div className="text-center text-slate-400 py-10">No special issues found.</div>
                     )}
                     {filteredJournals?.map((journal, idx) => {
-                        const isTBA = journal.deadline.toLowerCase().includes('tba');
+                        const isTBA = journal.deadline && journal.deadline.toLowerCase().includes('tba');
                         const daysLeft = getDaysLeft(journal.deadline);
                         return (
                             <div key={idx} className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-purple-100 dark:border-slate-700 shadow-sm hover:border-purple-300 transition-colors">

@@ -711,10 +711,39 @@ export const getGrantInspiration = async (topic: string, code: string, language:
 
 export const findConferences = async (topic: string, language: Language): Promise<ConferenceFinderResult | null> => {
   const currentDate = new Date().toISOString().split('T')[0];
-  const prompt = `Find upcoming academic conferences and journals for "${topic}".
+  const prompt = `Act as an academic research assistant. Find upcoming academic conferences and journal special issues related to: "${topic}".
   Current Date: ${currentDate}.
   Language: ${language}.
-  Return JSON matching ConferenceFinderResult (conferences[], journals[]).`;
+
+  You must return a valid JSON object with the following structure:
+  {
+    "conferences": [
+      {
+        "name": "Conference Name (e.g. CVPR 2024)",
+        "rank": "CCF-A" | "CCF-B" | "CCF-C" | "Unranked",
+        "deadline": "YYYY-MM-DD",
+        "conferenceDate": "YYYY-MM-DD or Month Year",
+        "location": "City, Country",
+        "region": "North America" | "Europe" | "Asia" | "Online" | "Other",
+        "h5Index": 100,
+        "description": "Brief description of focus",
+        "tags": ["AI", "Vision"],
+        "website": "http://..."
+      }
+    ],
+    "journals": [
+      {
+        "name": "Journal Name",
+        "title": "Special Issue Title",
+        "deadline": "YYYY-MM-DD",
+        "impactFactor": "10.5",
+        "partition": "Q1" | "Q2" | "Q3" | "Q4"
+      }
+    ]
+  }
+
+  Find at least 5 conferences and 5 journal issues if possible. Ensure dates are in the future relative to ${currentDate} where possible, or mark as 'TBA' if not announced.`;
+  
   return getJson(prompt);
 };
 
