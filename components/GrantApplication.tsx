@@ -1,5 +1,4 @@
 
-
 import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Feather, ShieldCheck, Send, Loader2, Sparkles, AlertTriangle, CheckCircle, Download, BookOpen, Key, Briefcase, Upload, Link, Trash2, List, Lightbulb, Eye, Edit3, Wand2, Layers, Zap, Scale, LayoutDashboard, AlertOctagon, GitMerge, CheckSquare, VenetianMask, File, Settings, History, MessageSquare, Plus, Minus, ArrowRight, FileOutput, Network } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -289,34 +288,34 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                <div className="bg-indigo-900 text-white rounded-xl p-5 shadow-lg flex-shrink-0">
                    <div className="flex items-center gap-2 mb-4">
                        <Settings size={18} className="text-indigo-300" />
-                       <h3 className="font-bold text-sm uppercase tracking-wider">Project Configuration</h3>
+                       <h3 className="font-bold text-sm uppercase tracking-wider">{language === 'ZH' ? '项目配置' : 'Project Configuration'}</h3>
                    </div>
                    <div className="space-y-3">
                        <div>
-                           <label className="text-[10px] uppercase text-indigo-300 font-bold block mb-1">Project Name (Topic)</label>
+                           <label className="text-[10px] uppercase text-indigo-300 font-bold block mb-1">{language === 'ZH' ? '项目名称 (课题)' : 'Project Name (Topic)'}</label>
                            <input 
                               value={projectConfig.name}
                               onChange={(e) => setProjectConfig({...projectConfig, name: e.target.value})}
-                              placeholder="e.g. Mechanism of Drug Resistance..."
+                              placeholder={language === 'ZH' ? '例如：肺癌耐药机制研究...' : 'e.g. Mechanism of Drug Resistance...'}
                               className="w-full bg-indigo-800/50 border border-indigo-700 rounded-lg px-3 py-2 text-sm text-white placeholder-indigo-400 focus:ring-1 focus:ring-indigo-400 outline-none"
                            />
                        </div>
                        <div className="grid grid-cols-2 gap-3">
                            <div>
-                               <label className="text-[10px] uppercase text-indigo-300 font-bold block mb-1">Domain Code</label>
+                               <label className="text-[10px] uppercase text-indigo-300 font-bold block mb-1">{language === 'ZH' ? '申请代码' : 'Domain Code'}</label>
                                <input 
                                   value={projectConfig.code}
                                   onChange={(e) => setProjectConfig({...projectConfig, code: e.target.value})}
-                                  placeholder="e.g. H01"
+                                  placeholder={language === 'ZH' ? '例如：H1602' : 'e.g. H01'}
                                   className="w-full bg-indigo-800/50 border border-indigo-700 rounded-lg px-3 py-2 text-sm text-white placeholder-indigo-400 focus:ring-1 focus:ring-indigo-400 outline-none"
                                />
                            </div>
                            <div>
-                               <label className="text-[10px] uppercase text-indigo-300 font-bold block mb-1">Core Keywords</label>
+                               <label className="text-[10px] uppercase text-indigo-300 font-bold block mb-1">{language === 'ZH' ? '核心关键词' : 'Core Keywords'}</label>
                                <input 
                                   value={projectConfig.keywords}
                                   onChange={(e) => setProjectConfig({...projectConfig, keywords: e.target.value})}
-                                  placeholder="e.g. Target, Pathway"
+                                  placeholder={language === 'ZH' ? '例如：靶点, 通路' : 'e.g. Target, Pathway'}
                                   className="w-full bg-indigo-800/50 border border-indigo-700 rounded-lg px-3 py-2 text-sm text-white placeholder-indigo-400 focus:ring-1 focus:ring-indigo-400 outline-none"
                                />
                            </div>
