@@ -29,6 +29,7 @@ import {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+// ... existing helper functions (fileToBase64, getJson, getText) ...
 export const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -76,6 +77,7 @@ const getText = async (prompt: string, modelName = "gemini-2.5-flash") => {
   }
 };
 
+// ... existing code for searchAcademicPapers ...
 export const searchAcademicPapers = async (query: string, language: Language, limit: number): Promise<Paper[]> => {
   const prompt = `Search for academic papers related to "${query}". Return ${limit} results.
   For each paper, provide title, authors, journal, year, citations (approx), and abstract.
@@ -121,13 +123,11 @@ export const searchAcademicPapers = async (query: string, language: Language, li
       });
       
       const papers = response.text ? JSON.parse(response.text) : [];
-      // Assign random past dates for "Date Added" simulation to demonstrate sorting
       return papers.map((p: any) => {
          const randomDays = Math.floor(Math.random() * 30);
          const date = new Date();
          date.setDate(date.getDate() - randomDays);
          
-         // Mock Badges for Demo (Ensure diverse filters work)
          if (!p.badges || p.badges.length === 0) {
              const types = ['SCI', 'SSCI', 'CJR', 'EI', 'PubMed'];
              const partitions = ['Q1', 'Q2', 'Q3', 'Q4'];
@@ -153,8 +153,8 @@ export const searchAcademicPapers = async (query: string, language: Language, li
   }
 };
 
+// ... other existing exports (generatePaperInterpretation, etc.) ...
 export const generatePaperInterpretation = async (paper: Paper, language: Language): Promise<string> => {
-    // Check if it's a local file with image content
     if (paper.source === 'local' && paper.file && paper.file.type.startsWith('image/')) {
         const base64Data = await fileToBase64(paper.file);
         const prompt = `Analyze this image of a research paper page/abstract. Language: ${language}.
@@ -337,8 +337,7 @@ export const generateOpeningReview = async (file: File, target: string, language
     
     Provide a comprehensive review. Return JSON matching OpeningReviewResponse.`;
 
-    // (Truncated full schema for brevity, assuming type compatibility)
-    return getJson(prompt); // In real app, re-include full schema
+    return getJson(prompt);
 };
 
 export const optimizeOpeningSection = async (section: string, context: string, language: Language): Promise<string> => {
@@ -504,8 +503,6 @@ export const performPDFChat = async (
   }
 };
 
-// --- NEW: Knowledge Graph Services ---
-
 export const analyzeImageNote = async (file: File, language: Language): Promise<string> => {
     try {
         const base64Data = await fileToBase64(file);
@@ -515,7 +512,7 @@ export const analyzeImageNote = async (file: File, language: Language): Promise<
         Format as: **Title**: [Title]\n**Summary**: [Key Insights]`;
         
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash', // Use flash for speed
+            model: 'gemini-2.5-flash', 
             contents: {
                 parts: [
                     { inlineData: { mimeType: file.type, data: base64Data } },
@@ -534,7 +531,6 @@ export const generateKnowledgeGraph = async (
     nodes: GraphNode[], 
     language: Language
 ): Promise<GraphLink[]> => {
-    // We only send minimal info to save tokens
     const nodeSummaries = nodes.map(n => `ID:${n.id} Type:${n.type} Label:${n.label} Content:${n.content?.substring(0, 100)}...`).join('\n');
     
     const prompt = `Analyze these knowledge nodes. Identify relationships between them (e.g., Supporting, Contrasting, Extension, SameMethod, SameAuthor).
@@ -548,13 +544,11 @@ export const generateKnowledgeGraph = async (
     return links || [];
 };
 
-// Find relevant nodes via Semantic Search (using LLM as embedding simulator)
 export const findRelevantNodes = async (
     query: string,
     nodes: GraphNode[],
     language: Language
 ): Promise<string[]> => {
-    // We send node headers to the LLM and ask it to pick relevant IDs
     const nodeHeaders = nodes.map(n => `ID: ${n.id} | Label: ${n.label} | Snippet: ${n.content?.substring(0, 50)}...`).join('\n');
     
     const prompt = `Task: Semantic Search.
@@ -570,7 +564,6 @@ export const findRelevantNodes = async (
     return Array.isArray(result) ? result : [];
 };
 
-// New: RAG Chat with Knowledge Graph
 export const chatWithKnowledgeGraph = async (
     query: string,
     nodes: GraphNode[],
@@ -578,9 +571,7 @@ export const chatWithKnowledgeGraph = async (
     onUpdate?: (partial: string) => void
 ): Promise<string> => {
     try {
-        const model = 'gemini-3-pro-preview'; // Strong model for RAG reasoning
-        
-        // Prepare Context (Truncate to avoid token limits for demo purposes)
+        const model = 'gemini-3-pro-preview'; 
         const context = nodes.slice(0, 50).map(n => 
             `Node ID: ${n.id} (${n.type})\nLabel: ${n.label}\nSummary/Content: ${n.content || 'N/A'}\nGroup: ${n.group || 'N/A'}\n---`
         ).join('\n');
@@ -614,7 +605,6 @@ export const chatWithKnowledgeGraph = async (
     }
 };
 
-// New: Generate Graph Suggestions (Links & Ghost Nodes)
 export const generateGraphSuggestions = async (
     nodes: GraphNode[],
     language: Language
@@ -635,7 +625,6 @@ export const generateGraphSuggestions = async (
     return getJson(prompt);
 };
 
-// NEW: Deep Parse PDF
 export const deepParsePDF = async (file: File, language: Language): Promise<{ summary: string, elements: { type: string, label: string, content: string }[] } | null> => {
   try {
     const base64Data = await fileToBase64(file);
@@ -669,7 +658,6 @@ export const deepParsePDF = async (file: File, language: Language): Promise<{ su
   }
 };
 
-// NEW: Run Code Simulation
 export const runCodeSimulation = async (code: string, language: Language): Promise<string> => {
     const prompt = `Act as a Python/Data Science interpreter.
     Execute this code conceptually and return the expected textual output (stdout) or a description of the plot it would generate.
@@ -682,28 +670,25 @@ export const runCodeSimulation = async (code: string, language: Language): Promi
     return getText(prompt, 'gemini-2.5-flash');
 };
 
-// --- NEW: Scientific Figure Generation & Inpainting ---
 export const generateScientificFigure = async (
     prompt: string, 
     style: string, 
     mode: 'generate' | 'polish',
     imageFile?: File,
     backgroundOnly: boolean = false,
-    maskImageFile?: File, // New: Optional mask for inpainting
-    imageSize: '1K' | '2K' | '4K' = '1K' // New param
+    maskImageFile?: File, 
+    imageSize: '1K' | '2K' | '4K' = '1K'
 ): Promise<string | null> => {
     try {
         const bgInstruction = backgroundOnly 
             ? " IMPORTANT: Create a clean background structure ONLY. Do NOT include any text, labels, numbers, or letters in the generated image. Focus on lines, shapes, and structural composition. The user will add labels manually later." 
             : "";
 
-        // Mode 1: Polish / Local Edit (Inpainting)
         if (mode === 'polish' && imageFile) {
             const parts: any[] = [];
             const base64Image = await fileToBase64(imageFile);
             parts.push({ inlineData: { mimeType: imageFile.type, data: base64Image } });
             
-            // If mask is provided, include it and update instructions
             let instruction = `Turn this rough sketch/image into a high-quality scientific figure. Style: ${style}. Details: ${prompt}. Maintain the structural logic but make it publication-ready.${bgInstruction}`;
             
             if (maskImageFile) {
@@ -729,11 +714,9 @@ export const generateScientificFigure = async (
             return null;
         } 
         
-        // Mode 2: Generate (Text to Figure)
         else {
             const parts: any[] = [];
             
-            // Handle Reference Image for Generate Mode
             if (imageFile) {
                 const base64Image = await fileToBase64(imageFile);
                 parts.push({ inlineData: { mimeType: imageFile.type, data: base64Image } });
@@ -768,7 +751,6 @@ export const generateScientificFigure = async (
     }
 };
 
-// --- NEW: Chart Extraction ---
 export const extractChartData = async (file: File, language: Language): Promise<ChartExtractionResult | null> => {
   try {
     const base64Data = await fileToBase64(file);
@@ -817,4 +799,106 @@ export const generateChartTrendAnalysis = async (data: any[], language: Language
   Language: ${language}. Return only the text description formatted in Markdown.`;
 
   return getText(prompt, 'gemini-2.5-flash');
+};
+
+// --- NEW: Grant Application Services ---
+
+export const generateGrantJustification = async (
+  topic: string, 
+  keywords: string[], 
+  language: Language,
+  references: { type: 'pdf' | 'doi', content: string | File }[] = [],
+  mode: 'full' | 'status' | 'significance' = 'full'
+): Promise<string> => {
+    const parts: any[] = [];
+    
+    // Process References
+    let refContext = "";
+    if (references.length > 0) {
+        refContext = "You must base your 'Current Status' and 'Gaps' analysis specifically on the following provided reference materials. Cite them in the text as [1], [2], etc., corresponding to their order here.\n\n";
+        
+        // Handle DOIs (Text)
+        const dois = references.filter(r => r.type === 'doi').map(r => r.content as string);
+        if (dois.length > 0) {
+            refContext += "Reference DOIs:\n" + dois.map((d, i) => `[DOI-${i+1}] ${d}`).join('\n') + "\n\n";
+        }
+    }
+
+    let specificInstruction = "";
+    if (mode === 'full') {
+        specificInstruction = `Structure the response as follows:
+        1. **Research Significance**: Scientific value and application potential.
+        2. **Current Status (Domestic & International)**: State of the art analysis based on the provided references.
+        3. **Existing Problems/Gaps**: What needs to be solved.
+        4. **References**: List the cited references at the end.`;
+    } else if (mode === 'status') {
+        specificInstruction = `Focus ONLY on the **Current Research Status (Domestic & International)**.
+        Provide a comprehensive literature review and state of the art analysis based strictly on the provided references.
+        Identify gaps in the current research landscape.
+        End with a list of References.`;
+    } else if (mode === 'significance') {
+        specificInstruction = `Focus ONLY on the **Research Significance**.
+        Elaborate on the scientific value, innovation, and application potential of the proposed project.
+        Do not include a full literature review.`;
+    }
+
+    const prompt = `Write a specific section for a "Basis of the Project" (立项依据) in a major research grant application (e.g., NSFC) on the topic: "${topic}".
+    Keywords: ${keywords.join(', ')}.
+    Language: ${language}.
+    
+    ${refContext}
+    
+    ${specificInstruction}
+    
+    Tone: Authoritative, Logical, Persuasive.`;
+
+    parts.push({ text: prompt });
+
+    // Attach PDFs
+    for (const ref of references) {
+        if (ref.type === 'pdf' && ref.content instanceof File) {
+             const base64 = await fileToBase64(ref.content);
+             parts.push({ inlineData: { mimeType: 'application/pdf', data: base64 } });
+        }
+    }
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview', // Stronger model for synthesis
+            contents: { parts }
+        });
+        return response.text || "";
+    } catch (e) {
+        console.error(e);
+        return "Error generating rationale with references.";
+    }
+};
+
+export const polishGrantProposal = async (content: string, sectionType: string, language: Language): Promise<string> => {
+    const prompt = `Polish the following text for a Grant Proposal. Section: "${sectionType}".
+    Text: "${content}"
+    
+    Goal: Make it more persuasive, authoritative, and concise. Ensure logical flow and academic rigor suitable for funding review.
+    Language: ${language}.
+    
+    Return the polished text directly.`;
+    
+    return getText(prompt, 'gemini-3-pro-preview');
+};
+
+export const checkGrantFormat = async (content: string, language: Language): Promise<any> => {
+    const prompt = `Perform a formal review/check on this grant proposal text.
+    Content: "${content.substring(0, 5000)}..."
+    
+    Language: ${language}.
+    Return a JSON object with:
+    {
+      "score": number (0-100),
+      "issues": string[] (List of specific problems e.g., "Unclear aims", "Weak innovation statement"),
+      "suggestions": string[] (Actionable advice),
+      "innovationRating": "High" | "Medium" | "Low",
+      "feasibilityRating": "High" | "Medium" | "Low"
+    }`;
+    
+    return getJson(prompt);
 };

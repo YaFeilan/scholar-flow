@@ -1,11 +1,12 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle, Crop, Check, RotateCcw, MousePointer2, Plus, Trash2, LayoutGrid, Edit2, GripVertical, ScanEye, TrendingUp, BarChart as BarChartIcon, Code, ArrowRight, Sparkles, MessageSquare, Filter, Calendar, Tag, FileSearch, Terminal, Database } from 'lucide-react';
+import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle, Crop, Check, RotateCcw, MousePointer2, Plus, Trash2, LayoutGrid, Edit2, GripVertical, ScanEye, TrendingUp, BarChart as BarChartIcon, Code, ArrowRight, Sparkles, MessageSquare, Filter, Calendar, Tag, FileSearch, Terminal, Database, FileOutput } from 'lucide-react';
 import { Language, ChartExtractionResult } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { extractChartData, generateChartTrendAnalysis } from '../services/geminiService';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import ReactMarkdown from 'react-markdown';
+import { jsPDF } from 'jspdf';
 
 interface ChartExtractionProps {
   language: Language;
@@ -77,7 +78,8 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
   const filteredFiles = useMemo(() => {
       return chartFiles.filter(f => {
           const matchPart = filterPartition === 'All' || f.metadata.partition === filterPartition;
-          const matchDate = !filterDate || f.metadata.addedDate === filterDate;
+          // Filter by "Added After" (>=)
+          const matchDate = !filterDate || f.metadata.addedDate >= filterDate;
           return matchPart && matchDate;
       });
   }, [chartFiles, filterPartition, filterDate]);
@@ -182,7 +184,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
           if (item.type.indexOf('image') !== -1) {
             const blob = item.getAsFile();
             if (blob) {
-                const file = new File([blob], "pasted_image.png", { type: item.type });
+                const file = new File([blob], "pasted_image.png", { type: item.type }) as any;
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
                     file: file,
@@ -324,6 +326,119 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
       
       navigator.clipboard.writeText(text);
       alert(language === 'ZH' ? '表格已复制到剪贴板' : 'Table copied to clipboard');
+  };
+
+  // --- Export Full Report ---
+  const handleExportFullReport = () => {
+    if (!activeFile || !result) return;
+    const doc = new jsPDF();
+    const margin = 20;
+    let y = margin;
+    const width = doc.internal.pageSize.getWidth();
+    const contentWidth = width - margin * 2;
+
+    // Header
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.text("Chart Analysis Report", margin, y);
+    y += 12;
+
+    // Metadata Section
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100);
+    doc.text(`Filename: ${activeFile.file.name}`, margin, y);
+    y += 6;
+    doc.text(`Date Added: ${activeFile.metadata.addedDate}`, margin, y);
+    y += 6;
+    doc.text(`Source/Partition: ${activeFile.metadata.partition}`, margin, y);
+    y += 10;
+    doc.setTextColor(0);
+
+    // 1. Visual Description
+    if (result && result.fullDescription) {
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("1. Visual Description", margin, y);
+        y += 8;
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const lines = doc.splitTextToSize(result.fullDescription, contentWidth);
+        doc.text(lines, margin, y);
+        y += lines.length * 5 + 10;
+    }
+
+    // 2. Trend Analysis
+    if (activeFile.trendAnalysis) {
+        if (y > 250) { doc.addPage(); y = margin; }
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("2. Trend Analysis", margin, y);
+        y += 8;
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const cleanText = activeFile.trendAnalysis.replace(/[#*`]/g, '');
+        const lines = doc.splitTextToSize(cleanText, contentWidth);
+        doc.text(lines, margin, y);
+        y += lines.length * 5 + 10;
+    }
+
+    // 3. Extracted Data Table
+    if (result && result.data && result.data.length > 0) {
+        if (y > 240) { doc.addPage(); y = margin; }
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("3. Extracted Data (Top 50 Rows)", margin, y);
+        y += 10;
+        
+        doc.setFontSize(8);
+        doc.setFont("courier", "normal");
+        const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
+        
+        // Simple fixed-width table simulation
+        const colWidth = contentWidth / Math.min(headers.length, 5);
+        
+        // Header Row
+        let x = margin;
+        headers.slice(0, 5).forEach(h => {
+            doc.text(h.substring(0, 15), x, y);
+            x += colWidth;
+        });
+        y += 4;
+        doc.line(margin, y, margin + contentWidth, y); // header line
+        y += 6;
+
+        // Rows
+        result.data.slice(0, 50).forEach(row => {
+            if (y > 280) { doc.addPage(); y = margin; }
+            let x = margin;
+            headers.slice(0, 5).forEach(h => {
+                const val = row[h] ? String(row[h]) : '-';
+                doc.text(val.substring(0, 15), x, y);
+                x += colWidth;
+            });
+            y += 5;
+        });
+    }
+
+    // 4. OCR Raw Text
+    if (result && result.ocrText) {
+        doc.addPage();
+        y = margin;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("4. Raw OCR Text", margin, y);
+        y += 10;
+        
+        doc.setFont("courier", "normal");
+        doc.setFontSize(8);
+        const lines = doc.splitTextToSize(result.ocrText, contentWidth);
+        doc.text(lines, margin, y);
+    }
+
+    doc.save(`${activeFile.file.name.replace(/\.[^/.]+$/, "")}_FullReport.pdf`);
   };
 
   // --- New Export Functions ---
@@ -619,6 +734,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                    </div>
                    <div className="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1">
                        <Calendar size={12} className="text-slate-400" />
+                       <span className="text-[10px] text-slate-400 font-bold">&gt;</span>
                        <input 
                           type="date" 
                           className="text-xs bg-transparent border-none outline-none text-slate-600 dark:text-slate-300 w-24"
@@ -1081,6 +1197,9 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
                        {/* Bottom Action Bar */}
                        <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
                            <div className="flex gap-2">
+                               <button onClick={handleExportFullReport} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 shadow-sm text-purple-600 dark:text-purple-400">
+                                   <FileOutput size={14} /> Full Report (PDF)
+                               </button>
                                <button onClick={handleCopyLatex} className="text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
                                    <span className="font-mono text-[10px]">TeX</span> LaTeX
                                </button>

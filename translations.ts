@@ -25,7 +25,8 @@ export const TRANSLATIONS = {
       pdfChat: 'AI Paper Guide',
       knowledge: 'Knowledge Graph',
       figure: 'Sci-Figure Gen',
-      chart: 'Chart Extractor'
+      chart: 'Chart Extractor',
+      grant: 'Grant Helper' // New
     },
     search: { 
       title: 'Research Assistant', 
@@ -472,6 +473,55 @@ export const TRANSLATIONS = {
       chartType: 'Detected Chart Type',
       columns: 'Columns',
       rows: 'Rows'
+    },
+    grant: { // New
+      title: 'Grant Application Assistant',
+      subtitle: 'Specialized tools for grant writing (NSFC, etc.): Rationale Generation, Proposal Polishing, and Format Review.',
+      tabs: {
+        rationale: 'Rationale Gen',
+        polish: 'Proposal Polish',
+        check: 'Format Check'
+      },
+      rationale: {
+        title: 'Project Rationale Generator',
+        topic: 'Project Topic',
+        keywords: 'Key Keywords',
+        btn: 'Generate Rationale',
+        placeholder: 'e.g. Mechanisms of drug resistance in lung cancer...',
+        references: 'References / Library',
+        refUpload: 'Upload Core References (PDF)',
+        refDoi: 'Enter DOIs (One per line)',
+        refHint: 'AI will generate the rationale based on these specific documents and cite them as [1], [2].',
+        fileLimit: 'Max 10 PDFs',
+        modeLabel: 'Generation Mode', // New
+        modes: { // New
+          full: 'Full Outline',
+          status: 'Research Status',
+          significance: 'Scientific Significance'
+        }
+      },
+      polish: {
+        title: 'Grant Proposal Polishing',
+        section: 'Section Type',
+        content: 'Content',
+        btn: 'Polish Tone',
+        sections: {
+          abstract: 'Abstract',
+          significance: 'Scientific Significance',
+          innovation: 'Innovation Points',
+          plan: 'Research Plan',
+          feasibility: 'Feasibility Analysis'
+        },
+        placeholder: 'Paste your draft text here...'
+      },
+      check: {
+        title: 'Format & Logic Review',
+        upload: 'Upload Proposal (PDF/Text)',
+        btn: 'Start Review',
+        issues: 'Detected Issues',
+        suggestions: 'Suggestions',
+        score: 'Compliance Score'
+      }
     }
   }
   ,
@@ -500,7 +550,8 @@ export const TRANSLATIONS = {
       pdfChat: 'AI论文导读',
       knowledge: '个人知识库',
       figure: '科研绘图',
-      chart: '图表提取'
+      chart: '图表提取',
+      grant: '基金申报' // New
     },
     search: { 
       title: '科研助手', 
@@ -947,6 +998,55 @@ export const TRANSLATIONS = {
       chartType: '检测图表类型',
       columns: '列数',
       rows: '行数'
+    },
+    grant: { // New
+      title: '基金项目申报助手',
+      subtitle: '专为 NSFC 等基金申请打造：立项依据生成、标书润色与形式审查。',
+      tabs: {
+        rationale: '立项依据生成',
+        polish: '标书润色',
+        check: '形式审查'
+      },
+      rationale: {
+        title: '立项依据生成器',
+        topic: '项目主题',
+        keywords: '核心关键词',
+        btn: '生成立项依据',
+        placeholder: '例如：肺癌靶向药物耐药的分子机制...',
+        references: '参考文献/文献库',
+        refUpload: '上传核心文献 (PDF)',
+        refDoi: '输入 DOI (每行一个)',
+        refHint: 'AI 将基于这些文献生成综述并自动标注引用 [1]。',
+        fileLimit: '最多 10 篇 PDF',
+        modeLabel: '生成模式', // New
+        modes: { // New
+          full: '全篇大纲',
+          status: '研究现状综述',
+          significance: '科学意义'
+        }
+      },
+      polish: {
+        title: '标书语言润色',
+        section: '所属部分',
+        content: '文本内容',
+        btn: '优化语气与逻辑',
+        sections: {
+          abstract: '摘要',
+          significance: '科学意义',
+          innovation: '创新点',
+          plan: '研究方案',
+          feasibility: '可行性分析'
+        },
+        placeholder: '在此粘贴您的草稿文本...'
+      },
+      check: {
+        title: '形式与逻辑审查',
+        upload: '上传标书 (PDF/文本)',
+        btn: '开始审查',
+        issues: '检测到的问题',
+        suggestions: '修改建议',
+        score: '合规评分'
+      }
     }
   }
 };

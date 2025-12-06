@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import SearchPanel from './components/SearchPanel';
@@ -16,7 +17,8 @@ import ExperimentDesign from './components/ExperimentDesign';
 import PDFChat from './components/PDFChat';
 import KnowledgeGraph from './components/KnowledgeGraph';
 import FigureGenerator from './components/FigureGenerator';
-import ChartExtraction from './components/ChartExtraction'; // New Import
+import ChartExtraction from './components/ChartExtraction';
+import GrantApplication from './components/GrantApplication'; // New Import
 import { ViewState, Paper, Language } from './types';
 import { generateLiteratureReview } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -168,6 +170,9 @@ const App: React.FC = () => {
             )}
             {currentView === ViewState.EXPERIMENT_DESIGN && (
             <ExperimentDesign language={language} />
+            )}
+            {currentView === ViewState.GRANT_APPLICATION && (
+            <GrantApplication language={language} />
             )}
         </div>
       </main>

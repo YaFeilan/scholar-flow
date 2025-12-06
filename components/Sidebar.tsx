@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2 } from 'lucide-react';
+import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -41,6 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
              { label: navT.pdfChat, icon: <MessageSquare size={20} />, id: ViewState.PDF_CHAT }, 
              { label: navT.knowledge, icon: <Network size={20} />, id: ViewState.KNOWLEDGE_GRAPH },
              { label: navT.opening, icon: <ClipboardCheck size={20} />, id: ViewState.OPENING_REVIEW },
+             { label: navT.grant, icon: <Briefcase size={20} />, id: ViewState.GRANT_APPLICATION }, // New
           ]
       },
       {
@@ -49,7 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
           items: [
              { label: navT.experimentDesign, icon: <Beaker size={20} />, id: ViewState.EXPERIMENT_DESIGN },
              { label: navT.data, icon: <BarChart2 size={20} />, id: ViewState.DATA_ANALYSIS },
-             { label: navT.chart, icon: <Table2 size={20} />, id: ViewState.CHART_EXTRACTION }, // New
+             { label: navT.chart, icon: <Table2 size={20} />, id: ViewState.CHART_EXTRACTION },
              { label: navT.code, icon: <Terminal size={20} />, id: ViewState.CODE_ASSISTANT },
              { label: navT.track, icon: <BookOpen size={20} />, id: ViewState.TRACK },
           ]
