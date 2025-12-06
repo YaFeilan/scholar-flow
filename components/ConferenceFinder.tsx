@@ -1,4 +1,6 @@
 
+
+
 import React, { useState } from 'react';
 import { Calendar, Search, MapPin, ExternalLink, Filter, Loader2, BookOpen, Clock, AlertTriangle, Globe, BarChart2, CheckCircle2, ListFilter, ArrowDownUp } from 'lucide-react';
 import { Language, ConferenceFinderResult } from '../types';
@@ -58,7 +60,7 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
   };
 
   // Filter Logic for Conferences
-  const filteredConferences = result?.conferences.filter(c => {
+  const filteredConferences = result?.conferences?.filter(c => {
       // Type Filter (Component Level View Logic handled in Render, but filter list here too for safety)
       if (filterType === 'journal') return false;
 
@@ -115,7 +117,7 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
   });
 
   // Filter Logic for Journals
-  const filteredJournals = result?.journals.filter(j => {
+  const filteredJournals = result?.journals?.filter(j => {
       if (filterType === 'conf') return false;
 
       // Partition Filter

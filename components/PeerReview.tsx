@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef } from 'react';
 import { performPeerReview, generateRebuttalLetter, generateCoverLetter } from '../services/geminiService';
 import { Upload, CheckCircle, FileText, Loader2, ShieldCheck, User, Building, BookOpen, AlertTriangle, PenTool, Gavel, Award, Feather, Send, Copy, Mail } from 'lucide-react';
@@ -68,7 +69,7 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
   const handleGenerateRebuttal = async () => {
     if (!reviewResult) return;
     setGeneratingAction('rebuttal');
-    const allCritiques = reviewResult.reviewers.map(r => r.critiques.map(c => c.point).join('\n')).join('\n');
+    const allCritiques = reviewResult.reviewers?.map(r => r.critiques?.map(c => c.point).join('\n')).join('\n') || '';
     const result = await generateRebuttalLetter(allCritiques, language);
     setRebuttalLetter(result);
     setGeneratingAction(null);
@@ -325,7 +326,7 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
                               </div>
                               
                               <div className="space-y-4">
-                                  {reviewer.critiques.map((critique, cIdx) => (
+                                  {reviewer.critiques?.map((critique, cIdx) => (
                                       <div key={cIdx} className="bg-white border border-slate-200 p-4 rounded-lg hover:border-amber-200 transition-colors">
                                           <div className="flex items-start gap-3">
                                               <div className="bg-red-50 text-red-600 p-1.5 rounded-md mt-0.5 font-bold text-xs">#{cIdx+1}</div>

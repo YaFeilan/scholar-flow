@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useRef } from 'react';
 import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
@@ -104,7 +105,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
     
     const foundPapers = await searchAcademicPapers(query, language, resultLimit);
     
-    if (foundPapers.length > 0) {
+    if (foundPapers && foundPapers.length > 0) {
       setResults(foundPapers);
     } else {
        const q = query.toLowerCase();
@@ -173,7 +174,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       // Partition Filter (Q1-Q4)
       if (filters.partition && filters.partition.length > 0) {
         papers = papers.filter(p => {
-            return p.badges.some(b => b.partition && filters.partition.includes(b.partition));
+            return p.badges?.some(b => b.partition && filters.partition.includes(b.partition));
         });
       }
     }
@@ -468,7 +469,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                    </p>
                    
                    <div className="flex gap-2 flex-wrap mb-3">
-                      {paper.badges.map((b, i) => (
+                      {paper.badges?.map((b, i) => (
                          <span key={i} className={`text-[10px] px-2 py-0.5 rounded font-bold border ${
                             b.type === 'SCI' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' :
                             b.type === 'SSCI' ? 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-900/20 dark:text-teal-400 dark:border-teal-800' :

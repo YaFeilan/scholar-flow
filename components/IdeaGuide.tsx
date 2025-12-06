@@ -2,6 +2,8 @@
 
 
 
+
+
 import React, { useState, useEffect } from 'react';
 import { Lightbulb, Send, Loader2, BookOpen, Target, ArrowRight, MessageCircle, ChevronDown, Key, Database, Cpu, FileText, ExternalLink, Download, Layout, RefreshCw } from 'lucide-react';
 import { generateResearchIdeas, generateIdeaFollowUp } from '../services/geminiService';
@@ -241,7 +243,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                  </div>
                  
                  <div className="grid grid-cols-1 gap-6">
-                    {result.directions.map((dir, idx) => {
+                    {result.directions?.map((dir, idx) => {
                        const isSelected = selectedDirectionIndex === idx;
                        const isDimmed = selectedDirectionIndex !== null && !isSelected;
 
@@ -296,7 +298,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                                         <BookOpen size={12} /> {t.titles}
                                     </h5>
                                     <ul className="space-y-2">
-                                        {dir.recommendedTitles.map((title, tIdx) => (
+                                        {dir.recommendedTitles?.map((title, tIdx) => (
                                         <li key={tIdx} className="flex items-start gap-2 text-sm text-slate-700 font-medium leading-snug">
                                             <ArrowRight size={14} className="mt-0.5 text-amber-500 flex-shrink-0" />
                                             {title}
@@ -380,7 +382,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                                         </div>
                                         
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                           {followUpResult.suggestions.map((sug, sIdx) => (
+                                           {followUpResult.suggestions?.map((sug, sIdx) => (
                                               <div key={sIdx} className="bg-slate-50 p-3 rounded border border-slate-100">
                                                  <div className="font-bold text-slate-800 text-sm mb-1">{sug.title}</div>
                                                  <div className="text-xs text-slate-500">{sug.detail}</div>
@@ -393,7 +395,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                                               <Key size={12} /> {t.keywords}
                                            </h6>
                                            <div className="flex flex-wrap gap-2">
-                                              {followUpResult.recommendedTerms.map((term, kIdx) => (
+                                              {followUpResult.recommendedTerms?.map((term, kIdx) => (
                                                  <span key={kIdx} className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-full border border-slate-200 font-medium">
                                                     {term}
                                                  </span>
@@ -417,7 +419,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                  </h3>
                  
                  <div className="space-y-4">
-                    {result.journals.map((journal, idx) => (
+                    {result.journals?.map((journal, idx) => (
                        <div key={idx} className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm animate-fadeIn" style={{animationDelay: `${idx * 150}ms`}}>
                           <div className="flex justify-between items-start mb-2">
                              <h4 className="font-bold text-slate-800 leading-tight">{journal.name}</h4>

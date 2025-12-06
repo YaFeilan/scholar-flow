@@ -1,7 +1,5 @@
 
 
-
-
 import { GoogleGenAI, Type } from "@google/genai";
 import {
   Language,
@@ -141,19 +139,27 @@ export const searchAcademicPapers = async (query: string, language: Language, li
   Return as a JSON array of objects matching the Paper interface.
   Include badges for SCI/Q1 if applicable.`;
 
-  const results = await getJson<any[]>(prompt);
+  let results = await getJson<any[]>(prompt);
   if (!results) return [];
+  if (!Array.isArray(results)) {
+      // Handle potential wrapped response e.g. { papers: [...] }
+      if ((results as any).papers && Array.isArray((results as any).papers)) {
+          results = (results as any).papers;
+      } else {
+          return [];
+      }
+  }
   
   // Transform to match Paper interface if needed, assuming generic return
   return results.map((p: any, i: number) => ({
       id: `gen-${i}-${Date.now()}`,
-      title: p.title,
-      authors: p.authors || [],
-      journal: p.journal,
-      year: p.year,
+      title: p.title || "Untitled",
+      authors: Array.isArray(p.authors) ? p.authors : [],
+      journal: p.journal || "Unknown Journal",
+      year: p.year || new Date().getFullYear(),
       citations: p.citations || 0,
-      abstract: p.abstract,
-      badges: p.badges || [],
+      abstract: p.abstract || "",
+      badges: Array.isArray(p.badges) ? p.badges : [],
       source: 'online',
       addedDate: new Date().toISOString().split('T')[0]
   }));
@@ -227,16 +233,14 @@ export const generateStructuredReview = async (topic: string, papers: string[], 
 };
 
 export const trackCitationNetwork = async (query: string, isFile: boolean, language: Language): Promise<any> => {
-  // Simplified mock return or logic
-  // In a real app, this would query a graph database.
-  // Here we ask Gemini to hallucinate a network based on the topic/paper.
   const prompt = `Generate a simulated citation network for the paper/topic: "${query}".
   Include 3 categories (e.g. Foundational, Supporting, Conflicting).
   For each category, list 3-5 relevant papers with title, author, year, citation count, sentiment.
   Language: ${language}.
   Return JSON array of { category, papers: [] }.`;
   
-  return getJson(prompt);
+  const result = await getJson<any[]>(prompt);
+  return Array.isArray(result) ? result : [];
 };
 
 export const analyzeNetworkGaps = async (papers: any[], language: Language): Promise<any> => {
@@ -295,7 +299,8 @@ export const generatePPTStyleSuggestions = async (file: File, language: Language
   const prompt = `Analyze this paper and suggest 3 PPT visual styles (themes).
   For each style: name, description, colorPalette (array of hex codes).
   Language: ${language}. Return JSON array.`;
-  return getJson(prompt, file) || [];
+  const result = await getJson<any[]>(prompt, file);
+  return Array.isArray(result) ? result : [];
 };
 
 export const generatePPTContent = async (file: File, config: any, language: Language): Promise<any> => {
@@ -311,12 +316,6 @@ export const generateSlideImage = async (description: string, style: string): Pr
   Description: ${description}.
   Style: ${style}.
   Type: Scientific Illustration.`;
-  
-  // Use generateImages for Imagen models if needed, but here using gemini-flash-image for simplicity
-  // Actually generateContent with image model returns text, for image gen we need specific handling or Imagen.
-  // Assuming we use a text-to-image capability or return a placeholder URL if not supported.
-  // For the sake of this fix, we will simulate or use a text description if image gen isn't fully set up in this context.
-  // NOTE: The guidelines say "Call generateImages to generate images with Imagen models".
   
   try {
       const response = await ai.models.generateImages({
@@ -390,13 +389,9 @@ export const performCodeAssistance = async (
     onStream?: (text: string) => void,
     signal?: AbortSignal
 ): Promise<string> => {
-    // Note: Streaming not fully implemented in this helper, returning full text for simplicity
-    // To support streaming, we would use generateContentStream.
     let prompt = `Act as a ${lang} coding assistant. Mode: ${mode}.
     User Input: ${input}.
     Language: ${language}.`;
-    
-    // For simplicity using getText. In real app, loop over stream.
     return getText(prompt, file); 
 };
 
@@ -417,8 +412,6 @@ export const optimizeHypothesis = async (hypothesis: string, language: Language)
 };
 
 export const performPDFChat = async (query: string, language: Language, file: File, history: any[], onStream: (text: string) => void, signal?: AbortSignal): Promise<string> => {
-  // Mock streaming by just getting text.
-  // Updated prompt to encourage linking to source text
   const prompt = `Context: PDF Document.
   Chat History: ${JSON.stringify(history)}
   User Query: ${query}
@@ -445,7 +438,8 @@ export const generateKnowledgeGraph = async (nodes: GraphNode[], language: Langu
   const prompt = `Generate connections (links) between these nodes: ${JSON.stringify(nodes.map(n => ({id: n.id, label: n.label})))}.
   Language: ${language}.
   Return JSON array of GraphLink { source, target, label }.`;
-  return getJson(prompt) || [];
+  const result = await getJson<GraphLink[]>(prompt);
+  return Array.isArray(result) ? result : [];
 };
 
 export const analyzeImageNote = async (file: File, language: Language): Promise<string> => {
@@ -484,13 +478,11 @@ export const runCodeSimulation = async (code: string, language: Language): Promi
 export const findRelevantNodes = async (query: string, nodes: GraphNode[], language: Language): Promise<string[]> => {
   const prompt = `Find node IDs relevant to "${query}" from this list: ${JSON.stringify(nodes.map(n => ({id: n.id, label: n.label, content: n.content})))}.
   Return JSON array of strings (ids).`;
-  return getJson(prompt) || [];
+  const result = await getJson<string[]>(prompt);
+  return Array.isArray(result) ? result : [];
 };
 
 export const generateScientificFigure = async (prompt: string, style: string, mode: string, file?: File, bgOnly?: boolean, mask?: File, size?: string): Promise<string> => {
-  // If mode is generate, we might use imagen.
-  // If polish, we use image-to-image or inpainting.
-  // Simplified for this file:
   return generateSlideImage(prompt, style); 
 };
 
@@ -544,7 +536,8 @@ export const getGrantInspiration = async (topic: string, code: string, language:
   const prompt = `Provide 3 "golden sentences" or inspiration for a grant on "${topic}" (Code: ${code}).
   Language: ${language}.
   Return JSON array of strings.`;
-  return getJson(prompt) || [];
+  const result = await getJson<string[]>(prompt);
+  return Array.isArray(result) ? result : [];
 };
 
 export const findConferences = async (topic: string, language: Language): Promise<ConferenceFinderResult | null> => {
