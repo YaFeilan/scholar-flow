@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI, Type } from "@google/genai";
 import {
   Language,
@@ -62,7 +60,7 @@ const getText = async (prompt: string, image?: File, modelName: string = 'gemini
           { text: prompt }
         ]
       };
-      modelName = 'gemini-2.5-flash-image'; // Force image model
+      // Do not force gemini-2.5-flash-image here; gemini-2.5-flash supports multimodal input.
     } else {
         contents = { parts: [{ text: prompt }] };
     }
@@ -89,7 +87,7 @@ const getJson = async <T>(prompt: string, image?: File, modelName: string = 'gem
           { text: prompt }
         ]
       };
-      modelName = 'gemini-2.5-flash-image';
+      // Do not force gemini-2.5-flash-image here; gemini-2.5-flash supports multimodal input.
     } else {
         contents = { parts: [{ text: prompt }] };
     }

@@ -329,10 +329,10 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
   const highlightSource = (snippet: string) => {
       if (!textLayerRef.current) return;
       
-      const existing = textLayerRef.current.querySelectorAll('.ai-highlight');
+      const existing = Array.from(textLayerRef.current.querySelectorAll('.ai-highlight')) as HTMLElement[];
       existing.forEach(el => el.classList.remove('ai-highlight'));
 
-      const spans = Array.from(textLayerRef.current.querySelectorAll('span'));
+      const spans = Array.from(textLayerRef.current.querySelectorAll('span')) as HTMLSpanElement[];
       for (const span of spans) {
           if (span.textContent && span.textContent.includes(snippet.trim())) {
               span.classList.add('ai-highlight');
