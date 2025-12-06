@@ -68,6 +68,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
       setOptimizing(false);
   };
 
+  // ... (handleTemplateClick, handleExport logic same as before) ...
   const handleTemplateClick = (template: 'rct' | 'ab' | 'memory') => {
       if (template === 'rct') {
           setField('Medicine');
@@ -331,6 +332,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
           <div className="lg:col-span-8 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden flex flex-col">
               {result ? (
                   <div className="flex-grow overflow-y-auto p-8 space-y-8 animate-fadeIn custom-scrollbar">
+                      {/* ... Header & Cards ... */}
                       <div className="flex justify-between items-start">
                           <h3 className="text-2xl font-bold text-slate-800">{result.title}</h3>
                           <button onClick={handleExport} className="text-slate-500 hover:text-purple-600">
@@ -365,6 +367,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
                           </div>
                       </div>
 
+                      {/* ... Variables, Analysis, Flow Sections ... */}
                       {/* Variables */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
@@ -433,6 +436,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
                   </div>
               ) : (
                   <div className="flex-grow flex flex-col items-center justify-center text-center p-8">
+                      {/* ... Loading or Templates ... */}
                       {loading ? (
                           <>
                              <Loader2 className="h-12 w-12 text-purple-600 animate-spin mb-4" />

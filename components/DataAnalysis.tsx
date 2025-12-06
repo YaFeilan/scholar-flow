@@ -1,3 +1,4 @@
+
 // ... imports ...
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Upload, FileText, BarChart2, Zap, Table, Code, Loader2, ArrowRight, PieChart, Activity, LayoutGrid, Download, Eye, CheckCircle, RefreshCcw, Target, Filter, Settings, Type, ListFilter, MessageCircle, Send, Check, X, AlertTriangle, Info } from 'lucide-react';
@@ -22,7 +23,7 @@ interface ColumnConfig {
   type: ColumnType;
 }
 
-// Helper: Clean Data based on strategy
+// ... (cleanData and calculateLocalStats helper functions remain the same) ...
 const cleanData = (data: any[], configs: ColumnConfig[], strategy: CleaningStrategy) => {
     if (strategy === 'auto') return data; // Default pass-through, simplistic for auto
     
@@ -79,7 +80,6 @@ const cleanData = (data: any[], configs: ColumnConfig[], strategy: CleaningStrat
     return cleaned;
 };
 
-// Helper: Calculate Basic Stats based on User Config
 const calculateLocalStats = (data: any[], configs: ColumnConfig[]) => {
   if (!data || data.length === 0) return { rowCount: 0, columns: [], correlations: [], visualData: {} };
 
@@ -239,6 +239,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ... (handleDownloadTemplate, parseFileRaw, detectColumnTypes, useEffects, handleFileChange, handleConfirmAnalysis, resetUpload, toggleColumnInclude, updateColumnType remain the same) ...
   const handleDownloadTemplate = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
         + "ID,Group,Score_Pre,Score_Post,Gender,Age\n"
@@ -304,7 +305,6 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
       });
   };
 
-  // Load Initial Data
   useEffect(() => {
       if (initialData && initialData.length > 0) {
           setRawFileContent(initialData);
@@ -352,14 +352,12 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
       if (!rawFileContent || rawFileContent.length === 0) return;
       
       setStep('analyzing');
-      setLoadingStep(0); // Loading
+      setLoadingStep(0); 
       setActiveTab('overview');
 
-      // 1. Loading Step Simulation
       setTimeout(async () => {
-          setLoadingStep(1); // Cleaning
+          setLoadingStep(1); 
 
-          // Process Data based on Configs
           const startRow = useFirstRowAsHeader ? 1 : 0;
           const processedData = rawFileContent.slice(startRow).map(row => {
               const obj: any = {};
@@ -369,21 +367,18 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
               return obj;
           });
 
-          // Slice Data (Limit to 50 rows sample)
           const SAMPLE_SIZE = 50;
           const sampleData = processedData.slice(0, SAMPLE_SIZE);
           const fullCount = processedData.length;
 
-          // Perform Cleaning (Async simulation)
           await new Promise(r => setTimeout(r, 800));
           const cleanedSample = cleanData(sampleData, columnConfigs, cleaningStrategy);
-          setLoadingStep(2); // Stats
+          setLoadingStep(2); 
 
           await new Promise(r => setTimeout(r, 800));
           const statsSummary = calculateLocalStats(cleanedSample, columnConfigs);
           setLocalStats(statsSummary);
           
-          // Inject Metadata
           (statsSummary as any).meta = {
               totalRows: fullCount,
               sampleSize: cleanedSample.length,
@@ -391,7 +386,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
               cleaningStrategy
           };
           
-          setLoadingStep(3); // AI Modeling
+          setLoadingStep(3); 
           
           try {
             const analysis = await performDataAnalysis(statsSummary, language, targetVariable);
@@ -492,6 +487,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-8 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
+       {/* ... (Previous code for Header, Upload, Config) ... */}
        <div className="flex-shrink-0 mb-6">
           <h2 className="text-2xl font-serif font-bold text-slate-800 flex items-center gap-2">
               <BarChart2 className="text-blue-600" /> {t.title}
@@ -499,7 +495,6 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
           <p className="text-slate-500 text-sm">{t.subtitle}</p>
        </div>
 
-       {/* Step 1: Upload */}
        {step === 'upload' && (
           <div className="flex-grow flex flex-col items-center justify-center">
               <div 
@@ -520,11 +515,9 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
           </div>
        )}
        
-       {/* Step 2: Config */}
        {step === 'preview' && (
            <div className="flex-grow flex flex-col overflow-hidden max-w-6xl mx-auto w-full animate-fadeIn">
                 <div className="bg-white rounded-xl shadow-lg border border-slate-200 flex flex-col h-full overflow-hidden">
-                    {/* Header */}
                     <div className="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
                         <div className="flex items-center gap-2">
                             <Settings className="text-blue-500" size={20} />
@@ -540,7 +533,6 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
                     </div>
 
                     <div className="flex-grow flex flex-col md:flex-row overflow-hidden">
-                        {/* Config Panel */}
                         <div className="w-full md:w-1/3 border-r border-slate-200 bg-slate-50 flex flex-col overflow-hidden">
                              <div className="p-4 border-b border-slate-200 bg-white space-y-4">
                                  <div>
@@ -583,7 +575,6 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
                              </div>
                         </div>
 
-                        {/* Preview Table */}
                         <div className="w-full md:w-2/3 flex flex-col bg-white overflow-hidden">
                              <div className="p-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 flex justify-between">
                                  <span className="flex items-center gap-1"><ListFilter size={14} /> Raw Data Preview</span>
@@ -638,7 +629,6 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
            </div>
        )}
 
-       {/* Step 3: Analyzing Progress */}
        {step === 'analyzing' && (
           <div className="flex-grow flex flex-col items-center justify-center animate-fadeIn gap-8">
              <div className="flex gap-4">
@@ -654,7 +644,6 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
           </div>
        )}
 
-       {/* Step 4: Results */}
        {step === 'result' && result && (
           <div className="flex-grow flex flex-col overflow-hidden animate-fadeIn relative">
              <div className="flex gap-4 mb-4 border-b border-slate-200 pb-1 justify-between items-center">
@@ -756,7 +745,6 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ language, initialData }) =>
                         </div>
                     </div>
                 )}
-                {/* (Charts and Data tabs remain similar, just ensuring layout consistency) */}
                 {activeTab === 'charts' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
                         {localStats?.columns.map((col: any) => {

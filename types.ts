@@ -427,7 +427,10 @@ export interface ConferenceItem {
   name: string;
   rank: 'CCF-A' | 'CCF-B' | 'CCF-C' | 'Unranked';
   deadline: string; // YYYY-MM-DD
+  conferenceDate: string; // YYYY-MM-DD or Month Year
   location: string;
+  region: string; // e.g. "North America", "Europe", "Asia", "Online"
+  h5Index?: number;
   description: string;
   tags: string[];
   website?: string;
@@ -438,6 +441,7 @@ export interface JournalIssueItem {
   title: string; // Special Issue Title
   deadline: string;
   impactFactor: string;
+  partition?: string; // "Q1", "Q2", "Q3", "Q4"
 }
 
 export interface ConferenceFinderResult {

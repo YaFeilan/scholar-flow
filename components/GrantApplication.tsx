@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Feather, ShieldCheck, Send, Loader2, Sparkles, AlertTriangle, CheckCircle, Download, BookOpen, Key, Briefcase, Upload, Link, Trash2, List, Lightbulb, Eye, Edit3, Wand2, Layers, Zap, Scale, LayoutDashboard, AlertOctagon, GitMerge, CheckSquare, VenetianMask, File, Settings, History, MessageSquare, Plus, Minus, ArrowRight, FileOutput, Network } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -5,6 +6,7 @@ import { generateGrantLogicFramework, expandGrantRationale, polishGrantProposal,
 import { Language, GrantCheckResult, LogicNode } from '../types';
 import { TRANSLATIONS } from '../translations';
 
+// ... (Interface definitions and LogicNodeEditor component remain same) ...
 interface GrantApplicationProps {
   language: Language;
 }
@@ -30,7 +32,6 @@ interface HistoryItem {
     data: any;
 }
 
-// Recursive Tree Node Component
 const LogicNodeEditor: React.FC<{ node: LogicNode, onChange: (node: LogicNode) => void, onDelete?: () => void, depth?: number }> = ({ node, onChange, onDelete, depth = 0 }) => {
     const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         onChange({ ...node, label: e.target.value });
@@ -174,6 +175,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       setLoading(false);
   };
 
+  // ... (handleExpandToText, handleRefFileChange, removeRefFile, handlePolish, handleCheckFileChange, handleCheck, copyToClipboard, handleExportWord, handleExportLatex logic same as before) ...
   const handleExpandToText = async () => {
       if (!logicTree) return;
       setLoading(true);
@@ -201,13 +203,11 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       setPolishVersions([]);
       setActiveVersionIdx(0);
       
-      // Append project context to instruction
       const contextInstruction = `${customInstruction}. Context: Project "${projectConfig.name}" (Code: ${projectConfig.code}).`;
 
       const res = await polishGrantProposal(polishText, sectionType, language, contextInstruction);
       if (res && res.versions) {
           setPolishVersions(res.versions);
-          // Auto-select Professional as default
           const profIdx = res.versions.findIndex((v: any) => v.type === 'Professional');
           if (profIdx !== -1) setActiveVersionIdx(profIdx);
           
@@ -219,7 +219,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
   const handleCheckFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
           setCheckFile(e.target.files[0]);
-          setCheckText(''); // Clear text input if file selected
+          setCheckText(''); 
       }
   };
 
@@ -252,7 +252,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
 
   const handleExportLatex = () => {
       if (!rationaleResult) return;
-      // Simple mapping of markdown headers to latex
       let latex = rationaleResult
           .replace(/^# (.*$)/gim, '\\section{$1}')
           .replace(/^## (.*$)/gim, '\\subsection{$1}')
@@ -282,6 +281,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-8 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
+       {/* ... (Header and Left Panel logic same as before) ... */}
        <div className="flex-shrink-0 mb-6">
           <h2 className="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Briefcase className="text-indigo-600" /> {t.title}
@@ -290,7 +290,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
        </div>
 
        <div className="flex-grow flex flex-col lg:flex-row gap-8 overflow-hidden">
-           {/* Left Panel: Configuration & Tools */}
            <div className="lg:w-1/3 flex flex-col gap-4 overflow-hidden">
                {/* Global Project Config */}
                <div className="bg-indigo-900 text-white rounded-xl p-5 shadow-lg flex-shrink-0">
@@ -499,7 +498,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                    />
                                </div>
                                
-                               {/* Instructions */}
                                <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase block flex items-center gap-1">
                                         <Wand2 size={12} /> {language === 'ZH' ? '自定义指令' : 'Custom Instructions'}
@@ -538,7 +536,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                            <div className="space-y-4 animate-fadeIn">
                                <h3 className="font-bold text-slate-800 dark:text-slate-100">{t.check.title}</h3>
                                
-                               {/* File Upload for Check */}
                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
                                    <input 
                                       type="file" 
@@ -565,7 +562,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                    )}
                                </div>
 
-                               {/* Text Fallback */}
                                <div>
                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Or Paste Text</label>
                                    <textarea 
@@ -625,7 +621,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                </div>
                            </div>
 
-                           {/* Golden Sentences (Auto-Generated based on config) */}
+                           {/* Golden Sentences */}
                            {inspiration.length > 0 && (
                                <div>
                                    <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
@@ -668,7 +664,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                        </div>
                    )}
 
-                   {/* Mind Map View (Step 1) */}
                    {rationaleStep === 1 && logicTree && (
                        <div className="h-full flex flex-col animate-fadeIn">
                            <h3 className="text-lg font-bold text-indigo-600 mb-4 flex items-center gap-2">
@@ -715,7 +710,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                    <button onClick={() => copyToClipboard(polishVersions[activeVersionIdx].clean)} className="text-slate-400 hover:text-indigo-600"><Download size={18}/></button>
                                </div>
                                
-                               {/* Version Selector Tabs */}
                                <div className="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
                                    {polishVersions.map((v, idx) => (
                                        <button
@@ -790,12 +784,10 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                </span>
                            </div>
                            
-                           {/* Summary Box */}
                            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 italic leading-relaxed">
                                "{checkResult.summary}"
                            </div>
 
-                           {/* 4-Grid Dashboard */}
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                {/* Hard Errors */}
                                <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-white dark:bg-slate-800">
