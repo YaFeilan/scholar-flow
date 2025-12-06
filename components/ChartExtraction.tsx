@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle, Crop, Check, RotateCcw, MousePointer2, Plus, Trash2, LayoutGrid, Edit2, GripVertical, ScanEye, TrendingUp, BarChart as BarChartIcon, Code, ArrowRight, Sparkles, MessageSquare, Filter, Calendar, Tag, FileSearch, Terminal, Database, FileOutput } from 'lucide-react';
 import { Language, ChartExtractionResult } from '../types';
@@ -491,11 +493,11 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
   const generateCode = (lang: 'Python' | 'R') => {
       if (!result || !result.data || result.data.length === 0) return "";
 
-      const keys = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
-      if (keys.length < 2) return "# Not enough data to generate plot code.";
+      const headers = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
+      if (headers.length < 2) return "# Not enough data to generate plot code.";
 
-      const xKey = keys[0];
-      const yKeys = keys.slice(1);
+      const xKey = headers[0];
+      const yKeys = headers.slice(1);
       const title = result.title || "Extracted Chart";
       const type = (result.type || '').toLowerCase();
       const isBar = type.includes('bar') || type.includes('column');
@@ -649,7 +651,11 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
   const renderReplot = () => {
       if (!result || !result.data || result.data.length === 0) return null;
 
-      const keys = Object.keys(result.data[0]).filter(k => !k.startsWith('_'));
+      // Safe access: Ensure result.data[0] exists
+      const firstRow = result.data[0];
+      if (!firstRow) return null;
+
+      const keys = Object.keys(firstRow).filter(k => !k.startsWith('_'));
       if (keys.length < 2) return null;
 
       const xKey = keys[0]; // Assume first column is Label/X

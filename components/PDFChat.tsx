@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, FileText, Send, Loader2, X, MessageSquare, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Sun, Moon, Eye, GripVertical, Minus, Maximize2, Sparkles, Languages, BookOpen, Image as ImageIcon, Link as LinkIcon, Quote, LayoutList, Crop, MousePointer2, ChevronDown, ChevronRight as ChevronRightIcon, List, Lightbulb, Rocket, Search } from 'lucide-react';
 import { Language } from '../types';
@@ -8,11 +9,11 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Fix for PDF.js import (handle default export if present)
-const pdfjs = (pdfjsLib as any).default || pdfjsLib;
-
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+// Robust PDF.js Initialization
+const pdfjs: any = (pdfjsLib as any).default || pdfjsLib;
+if (pdfjs && typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+}
 
 interface PDFChatProps {
   language: Language;
@@ -96,6 +97,8 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
               setPdfLoading(true);
               setLoadProgress(10);
               
+              if (!pdfjs) throw new Error("PDF.js library not loaded");
+
               const loadingTask = pdfjs.getDocument(fileUrl);
               loadingTask.onProgress = (progress: any) => {
                  if (progress.total > 0) {
@@ -185,12 +188,16 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
             await renderTask.promise;
 
             const textContent = await page.getTextContent();
-            pdfjs.renderTextLayer({
-                textContentSource: textContent,
-                container: textLayerDiv,
-                viewport: viewport,
-                textDivs: []
-            });
+            
+            // Check if renderTextLayer exists (it might be in pdfjsLib depending on build)
+            if (pdfjs.renderTextLayer) {
+                pdfjs.renderTextLayer({
+                    textContentSource: textContent,
+                    container: textLayerDiv,
+                    viewport: viewport,
+                    textDivs: []
+                });
+            }
             
             setTimeout(() => {
                 const spans = textLayerDiv.querySelectorAll('span');
