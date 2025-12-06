@@ -344,7 +344,8 @@ export const TRANSLATIONS = {
       tabs: {
         rationale: 'Rationale Gen',
         polish: 'Proposal Polish',
-        check: 'Format Check'
+        check: 'Format Check',
+        review: 'Expert Review'
       },
       rationale: {
         title: 'Project Rationale Generator',
@@ -391,6 +392,17 @@ export const TRANSLATIONS = {
             format: 'Format Check',
             anon: 'Anonymity Check'
         }
+      },
+      review: {
+        title: 'Grant AI Expert Review',
+        roleLabel: 'Reviewer Role',
+        frameworkLabel: 'Analysis Framework / Focus',
+        frameworkPlaceholder: 'e.g. Focus on innovation and feasibility...',
+        upload: 'Upload Proposal',
+        startBtn: 'Start AI Review',
+        reportTitle: 'Review Report',
+        downloadPdf: 'Download PDF',
+        verdict: 'Verdict'
       }
     },
     conference: { 
@@ -780,7 +792,8 @@ export const TRANSLATIONS = {
       tabs: {
         rationale: '立项依据生成',
         polish: '标书润色',
-        check: '形式审查'
+        check: '形式审查',
+        review: '专家评审'
       },
       rationale: {
         title: '立项依据生成器',
@@ -827,6 +840,17 @@ export const TRANSLATIONS = {
             format: '格式检查',
             anon: '匿名检查'
         }
+      },
+      review: {
+        title: '基金 AI 专家评审',
+        roleLabel: '评审人角色',
+        frameworkLabel: '评审框架 / 侧重点',
+        frameworkPlaceholder: '例如：重点关注创新性和研究方案可行性...',
+        upload: '上传申请书',
+        startBtn: '开始 AI 评审',
+        reportTitle: '评审报告',
+        downloadPdf: '下载 PDF',
+        verdict: '最终结论'
       }
     },
     conference: { 

@@ -403,6 +403,21 @@ export interface GrantCheckResult {
   };
 }
 
+// New Grant Review Result Type
+export interface GrantReviewResult {
+  overallScore: number;
+  verdict: 'Strongly Recommended' | 'Recommended' | 'Consider' | 'Not Recommended';
+  summary: string;
+  dimensions: {
+    name: string; // e.g., Innovation, Methodology
+    score: number;
+    comment: string;
+  }[];
+  strengths: string[];
+  weaknesses: string[];
+  improvementSuggestions: string[];
+}
+
 // Grant Logic Types
 export interface LogicNode {
   id: string;

@@ -187,7 +187,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
             const blob = item.getAsFile();
             if (blob) {
                 // Ensure it is treated as a File object compatible with ChartFile interface
-                const file = blob as globalThis.File;
+                const file = blob as globalThis.File; // Explicit cast to global File
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
                     file: file,

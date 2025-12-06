@@ -28,7 +28,8 @@ import {
   GraphSuggestionsResult,
   AIDetectionResult,
   AIHumanizeResult,
-  ModelProvider
+  ModelProvider,
+  GrantReviewResult
 } from "../types";
 
 // --- Configuration ---
@@ -344,8 +345,6 @@ export const extractChartData = async (file: File, language: Language, mode: 'ch
   return result || { title: 'Extraction Failed', type: 'Unknown', summary: 'Could not parse', data: [] };
 };
 
-// ... other existing functions (analyzeResearchTrends, etc) ...
-
 export const analyzeResearchTrends = async (topic: string, language: Language, timeRange: TrendTimeRange, persona: TrendPersona): Promise<TrendAnalysisResult | null> => {
     const prompt = `Analyze research trends for "${topic}".
     Time Range: ${timeRange}. Persona: ${persona}.
@@ -494,8 +493,6 @@ export const performCodeAssistance = async (input: string, mode: string, lang: s
     Input: ${input}
     ${file ? `File context provided.` : ''}`;
     
-    // For simplicity in this demo structure, using non-streaming getText. 
-    // In real app, would use generateContentStream
     const text = await getText(prompt);
     if (onStream) onStream(text); // Simulate stream end
     return text;
@@ -584,7 +581,33 @@ export const generateChartTrendAnalysis = async (data: any[], language: Language
 };
 
 export const generateGrantLogicFramework = async (config: any, language: Language, mode: string, references: any[]): Promise<LogicNode | null> => {
-    const prompt = `Generate a logic framework tree for grant "${config.name}". Mode: ${mode}. Language: ${language}. Return JSON LogicNode structure.`;
+    // Simplified reference passing using names if they are files, to avoid circular JSON error or huge payload
+    const refContext = references.map(r => {
+        if (r.content instanceof File) return `Paper: ${r.content.name}`;
+        return `Reference: ${r.content}`;
+    }).join('; ');
+
+    const prompt = `Generate a logic framework tree for grant "${config.name}" (Keywords: ${config.keywords}, Code: ${config.domainCode}).
+    Mode: ${mode}.
+    Language: ${language}.
+    
+    References Context: ${refContext}.
+    
+    Return a valid JSON object matching this structure exactly:
+    {
+      "id": "root",
+      "label": "Project Title",
+      "children": [
+        {
+          "id": "unique_id_1",
+          "label": "Main Point 1",
+          "children": [
+             { "id": "unique_id_1_1", "label": "Sub Point 1", "children": [] }
+          ]
+        }
+      ]
+    }
+    Ensure the tree is at least 3 levels deep to provide a comprehensive framework.`;
     return getJson<LogicNode>(prompt);
 };
 
@@ -593,14 +616,90 @@ export const expandGrantRationale = async (node: LogicNode, language: Language):
 };
 
 export const polishGrantProposal = async (text: string, section: string, language: Language, context: string): Promise<any> => {
-    const prompt = `Polish grant proposal section "${section}". Context: ${context}. Text: "${text.substring(0, 1000)}...".
-    Return JSON: { versions: [{ type: "Conservative", clean: "...", revisions: "...", comment: "..." }, ...] }`;
+    const prompt = `Polish the following grant proposal section.
+    Section Type: "${section}".
+    Context: ${context}.
+    Input Text: "${text.substring(0, 2000)}..."
+    Language: ${language}.
+    
+    Return a valid JSON object with this structure:
+    {
+        "versions": [
+            {
+                "type": "Conservative",
+                "clean": "Full polished text...",
+                "revisions": "Text with **markdown** highlights of changes...",
+                "comment": "Brief explanation of changes"
+            },
+            {
+                "type": "Aggressive",
+                "clean": "Full polished text...",
+                "revisions": "Text with **markdown** highlights...",
+                "comment": "Brief explanation"
+            },
+            {
+                "type": "Professional",
+                "clean": "Full polished text...",
+                "revisions": "Text with **markdown** highlights...",
+                "comment": "Brief explanation"
+            }
+        ]
+    }`;
     return getJson(prompt);
 };
 
 export const checkGrantFormat = async (content: string | File, language: Language): Promise<GrantCheckResult | null> => {
-    const prompt = `Check grant proposal format. Language: ${language}. Return JSON matching GrantCheckResult.`;
+    const contentStr = content instanceof File ? `File: ${content.name}` : content;
+    const prompt = `Act as a strict grant reviewer. Check the following grant proposal content for format compliance, logic consistency, and anonymity (if blinded review required).
+    Content Snippet: "${contentStr.substring(0, 2000)}..."
+    Language: ${language}.
+    
+    Return a valid JSON object with this structure:
+    {
+      "score": number (0-100),
+      "summary": "Brief executive summary of findings",
+      "hardErrors": {
+        "status": "Pass" | "Fail",
+        "issues": ["List of critical formatting or eligibility errors"]
+      },
+      "logicCheck": {
+        "status": "Pass" | "Warning",
+        "issues": ["List of logical gaps or flow issues"]
+      },
+      "formatCheck": {
+        "status": "Pass" | "Fail",
+        "issues": ["Font size, margins, section numbering issues"]
+      },
+      "anonymityCheck": {
+        "status": "Pass" | "Fail",
+        "issues": ["Any names or identifiers found if applicable"]
+      }
+    }`;
     return getJson<GrantCheckResult>(prompt);
+};
+
+export const generateGrantReview = async (content: string | File, language: Language, role: string, framework: string): Promise<GrantReviewResult | null> => {
+    const contentStr = content instanceof File ? `File: ${content.name}` : content;
+    const prompt = `Act as a ${role} reviewing a grant proposal.
+    Review Framework/Focus: ${framework}.
+    Proposal Content Snippet: "${contentStr.substring(0, 3000)}...".
+    Language: ${language}.
+    
+    Evaluate thoroughly based on the framework.
+    Return a valid JSON object matching this structure:
+    {
+      "overallScore": number (0-100),
+      "verdict": "Strongly Recommended" | "Recommended" | "Consider" | "Not Recommended",
+      "summary": "Executive summary of the review",
+      "dimensions": [
+        { "name": "Dimension Name (e.g. Innovation)", "score": number (0-10), "comment": "Specific feedback" }
+      ],
+      "strengths": ["List of key strengths"],
+      "weaknesses": ["List of key weaknesses"],
+      "improvementSuggestions": ["Actionable advice"]
+    }`;
+    
+    return getJson<GrantReviewResult>(prompt);
 };
 
 export const getGrantInspiration = async (title: string, code: string, language: Language): Promise<string[]> => {
