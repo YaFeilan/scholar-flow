@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
-import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, ShieldAlert } from 'lucide-react';
-import { ViewState, Language } from '../types';
+import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, ShieldAlert, Bot } from 'lucide-react';
+import { ViewState, Language, ModelProvider } from '../types';
 import { TRANSLATIONS } from '../translations';
 
 interface SidebarProps {
@@ -12,9 +13,11 @@ interface SidebarProps {
   toggleDarkMode: () => void;
   collapsed: boolean;
   toggleCollapse: () => void;
+  modelProvider: ModelProvider;
+  setModelProvider: (provider: ModelProvider) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLanguage, darkMode, toggleDarkMode, collapsed, toggleCollapse }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLanguage, darkMode, toggleDarkMode, collapsed, toggleCollapse, modelProvider, setModelProvider }) => {
   const t = TRANSLATIONS[language];
   const navT = t.nav;
   
@@ -78,6 +81,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
 
   const toggleLanguage = () => {
     setLanguage(language === 'EN' ? 'ZH' : 'EN');
+  };
+
+  const toggleProvider = () => {
+      setModelProvider(modelProvider === 'Gemini' ? 'DeepSeek' : 'Gemini');
   };
 
   return (
@@ -147,7 +154,21 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
        </div>
 
        {/* Footer Controls */}
-       <div className={`p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 ${collapsed ? 'flex-col gap-4 items-center' : ''}`}>
+       <div className={`p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 flex flex-col gap-3`}>
+           {/* Model Provider Toggle */}
+           <button 
+              onClick={toggleProvider}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
+                  modelProvider === 'DeepSeek' 
+                  ? 'bg-blue-900 text-white border-blue-900 hover:bg-blue-800' 
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+              } ${collapsed ? 'justify-center' : ''}`}
+              title={collapsed ? `Provider: ${modelProvider}` : undefined}
+           >
+               <Bot size={16} className={modelProvider === 'DeepSeek' ? 'text-cyan-400' : 'text-blue-500'} />
+               {!collapsed && <span>Model: {modelProvider}</span>}
+           </button>
+
            <div className={`flex items-center ${collapsed ? 'flex-col gap-3' : 'justify-between'}`}>
               <button 
                 onClick={toggleDarkMode}

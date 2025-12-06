@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import SearchPanel from './components/SearchPanel';
@@ -20,14 +21,15 @@ import ChartExtraction from './components/ChartExtraction';
 import GrantApplication from './components/GrantApplication';
 import ConferenceFinder from './components/ConferenceFinder'; 
 import AIDetector from './components/AIDetector'; // New Import
-import { ViewState, Paper, Language } from './types';
-import { generateLiteratureReview } from './services/geminiService';
+import { ViewState, Paper, Language, ModelProvider } from './types';
+import { generateLiteratureReview, setModelProvider } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { X } from 'lucide-react';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.IDEA_GUIDE); // Start with Idea Guide in new flow
   const [language, setLanguage] = useState<Language>('EN');
+  const [modelProvider, setModelProviderState] = useState<ModelProvider>('Gemini');
   const [generatedReview, setGeneratedReview] = useState<string | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [ideaTopic, setIdeaTopic] = useState<string>('');
@@ -59,6 +61,11 @@ const App: React.FC = () => {
       localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
+
+  const handleSetModelProvider = (provider: ModelProvider) => {
+      setModelProviderState(provider);
+      setModelProvider(provider);
+  };
 
   const toggleDarkMode = () => {
     setDarkMode(prev => !prev);
@@ -105,6 +112,8 @@ const App: React.FC = () => {
         toggleDarkMode={toggleDarkMode}
         collapsed={sidebarCollapsed}
         toggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        modelProvider={modelProvider}
+        setModelProvider={handleSetModelProvider}
       />
       
       {/* Main Content Area */}

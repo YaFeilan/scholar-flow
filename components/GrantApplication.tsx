@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Feather, ShieldCheck, Send, Loader2, Sparkles, AlertTriangle, CheckCircle, Download, BookOpen, Key, Briefcase, Upload, Link, Trash2, List, Lightbulb, Eye, Edit3, Wand2, Layers, Zap, Scale, LayoutDashboard, AlertOctagon, GitMerge, CheckSquare, VenetianMask, File, Settings, History, MessageSquare, Plus, Minus, ArrowRight, FileOutput, Network } from 'lucide-react';
+import { FileText, Feather, ShieldCheck, Send, Loader2, Sparkles, AlertTriangle, CheckCircle, Download, BookOpen, Key, Briefcase, Upload, Link, Trash2, List, Lightbulb, Eye, Edit3, Wand2, Layers, Zap, Scale, LayoutDashboard, AlertOctagon, GitMerge, CheckSquare, VenetianMask, File as FileIcon, Settings, History, MessageSquare, Plus, Minus, ArrowRight, FileOutput, Network } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { generateGrantLogicFramework, expandGrantRationale, polishGrantProposal, checkGrantFormat, getGrantInspiration } from '../services/geminiService';
 import { Language, GrantCheckResult, LogicNode, GrantPolishVersion } from '../types';
@@ -94,7 +94,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
   const [rationaleStep, setRationaleStep] = useState<0 | 1 | 2>(0); // 0: Input, 1: MindMap, 2: Text
   const [logicTree, setLogicTree] = useState<LogicNode | null>(null);
   const [rationaleResult, setRationaleResult] = useState('');
-  const [refFiles, setRefFiles] = useState<File[]>([]);
+  const [refFiles, setRefFiles] = useState<globalThis.File[]>([]);
   const [doiInput, setDoiInput] = useState('');
   const [genMode, setGenMode] = useState<'full' | 'status' | 'significance'>('full');
   const refFileInputRef = useRef<HTMLInputElement>(null);
@@ -109,7 +109,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
   
   // Check State
   const [checkText, setCheckText] = useState('');
-  const [checkFile, setCheckFile] = useState<File | null>(null);
+  const [checkFile, setCheckFile] = useState<globalThis.File | null>(null);
   const [checkResult, setCheckResult] = useState<GrantCheckResult | null>(null);
   const checkFileInputRef = useRef<HTMLInputElement>(null);
   
@@ -150,7 +150,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       setLoading(true);
       const kws = projectConfig.keywords.split(/[,，]/).map(k => k.trim()).filter(k => k);
       
-      const references: { type: 'pdf' | 'doi', content: string | File }[] = [];
+      const references: { type: 'pdf' | 'doi', content: string | globalThis.File }[] = [];
       doiInput.split('\n').forEach(doi => { if (doi.trim()) references.push({ type: 'doi', content: doi.trim() }); });
       refFiles.forEach(file => { references.push({ type: 'pdf', content: file }); });
 
@@ -181,7 +181,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
 
   const handleRefFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-          const newFiles = (Array.from(e.target.files) as File[]).filter(f => f.type === 'application/pdf');
+          const newFiles = (Array.from(e.target.files) as globalThis.File[]).filter(f => f.type === 'application/pdf');
           setRefFiles(prev => [...prev, ...newFiles].slice(0, 10)); // Limit to 10
       }
   };
@@ -539,7 +539,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                    />
                                    {checkFile ? (
                                        <div className="flex flex-col items-center">
-                                           <File size={32} className="text-indigo-500 mb-2" />
+                                           <FileIcon size={32} className="text-indigo-500 mb-2" />
                                            <p className="font-bold text-sm text-slate-700 dark:text-slate-200">{checkFile.name}</p>
                                            <button onClick={() => setCheckFile(null)} className="text-xs text-red-500 mt-2 hover:underline">Remove</button>
                                        </div>

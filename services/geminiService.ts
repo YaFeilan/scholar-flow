@@ -1,6 +1,6 @@
+
 import { GoogleGenAI } from "@google/genai";
 
-// ... existing imports
 import {
   Language,
   Paper,
@@ -27,14 +27,47 @@ import {
   GrantPolishVersion,
   GraphSuggestionsResult,
   AIDetectionResult,
-  AIHumanizeResult
+  AIHumanizeResult,
+  ModelProvider
 } from "../types";
 
-// ... existing setup and helper functions ...
+// --- Configuration ---
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+let currentProvider: ModelProvider = 'Gemini';
 
-const getModel = (modelName: string = 'gemini-2.5-flash') => {
-  return modelName;
+// Helper to set provider dynamically
+export const setModelProvider = (provider: ModelProvider) => {
+  currentProvider = provider;
+};
+
+// DeepSeek/OpenAI Compatible API Logic
+const callDeepSeek = async (messages: any[], jsonMode: boolean = false): Promise<string> => {
+  try {
+    const apiKey = process.env.DEEPSEEK_API_KEY || process.env.API_KEY; // Fallback for demo
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: messages,
+        response_format: jsonMode ? { type: "json_object" } : { type: "text" },
+        stream: false
+      })
+    });
+
+    if (!response.ok) {
+        throw new Error(`DeepSeek API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error("DeepSeek API Call Failed:", error);
+    return "";
+  }
 };
 
 const fileToBase64 = (file: File): Promise<string> => {
@@ -51,6 +84,11 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 const getText = async (prompt: string, image?: File, modelName: string = 'gemini-2.5-flash'): Promise<string> => {
+  // If provider is DeepSeek and NO image is present (DeepSeek V3 is text-only usually)
+  if (currentProvider === 'DeepSeek' && !image) {
+      return callDeepSeek([{ role: "user", content: prompt }]);
+  }
+
   try {
     let contents: any = prompt;
     if (image) {
@@ -77,6 +115,21 @@ const getText = async (prompt: string, image?: File, modelName: string = 'gemini
 };
 
 const getJson = async <T>(prompt: string, image?: File, modelName: string = 'gemini-2.5-flash'): Promise<T | null> => {
+  // DeepSeek JSON Mode
+  if (currentProvider === 'DeepSeek' && !image) {
+      const systemMsg = { role: "system", content: "You are a helpful assistant. Output must be valid JSON." };
+      const userMsg = { role: "user", content: prompt };
+      const resultText = await callDeepSeek([systemMsg, userMsg], true);
+      try {
+          // Clean markdown code blocks if present
+          const cleanText = resultText.replace(/```json\n?|```/g, '');
+          return JSON.parse(cleanText) as T;
+      } catch (e) {
+          console.error("DeepSeek JSON Parse Error", e);
+          return null;
+      }
+  }
+
   try {
     let contents: any = prompt;
     if (image) {
@@ -108,7 +161,7 @@ const getJson = async <T>(prompt: string, image?: File, modelName: string = 'gem
   }
 };
 
-// ... existing exported functions up to generateOpeningReview ...
+// ... existing exported functions ...
 
 export const generateOpeningReview = async (file: File, target: string, language: Language, persona: ReviewPersona): Promise<OpeningReviewResponse | null> => {
   const prompt = `Act as an academic reviewer for an Opening Proposal / Review for "${target}". Persona: ${persona}.
@@ -172,9 +225,6 @@ export const optimizeOpeningSection = async (section: string, context: string, l
   Return the rewritten text only.`;
   return getText(prompt);
 };
-
-// ... rest of the existing functions (performDataAnalysis, etc.) ...
-// Ensure all other functions are preserved exactly as they were.
 
 export const generatePaperInterpretation = async (paper: Paper, language: Language): Promise<string> => {
   const prompt = `Interpret the following academic paper for a researcher.
@@ -382,6 +432,10 @@ export const generatePPTContent = async (file: File, config: any, language: Lang
 };
 
 export const generateSlideImage = async (description: string, style: string): Promise<string> => {
+  // If using DeepSeek, we fallback to no image or mock, as it's text only. 
+  // However, for strict adherence to user request "Use Gemini for Image", we force Gemini here.
+  // The global 'getText' and 'getJson' handle the switch, but direct calls to ai.models.generateImages
+  // are inherently Google GenAI calls. So this remains safe.
   const prompt = `Create a presentation slide background/visual.
   Description: ${description}.
   Style: ${style}.
@@ -447,6 +501,15 @@ export const performCodeAssistance = async (
     let prompt = `Act as a ${lang} coding assistant. Mode: ${mode}.
     User Input: ${input}.
     Language: ${language}.`;
+    
+    // Fallback logic for DeepSeek if streaming isn't fully implemented in this demo
+    if (currentProvider === 'DeepSeek') {
+        const fullHistory = [...history, {role: 'user', content: prompt}];
+        const response = await callDeepSeek(fullHistory.map(h => ({role: h.role === 'model' ? 'assistant' : 'user', content: h.text || h.content})));
+        if (onStream) onStream(response);
+        return response;
+    }
+
     return getText(prompt, file); 
 };
 
