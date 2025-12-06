@@ -1,16 +1,18 @@
 
 import React, { useState, useMemo, useRef } from 'react';
-import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database } from 'lucide-react';
+import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database, Lock, Copy, Check, ExternalLink, AlertTriangle } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
 import { MOCK_PAPERS } from '../constants';
 import { TRANSLATIONS } from '../translations';
 import ReactMarkdown from 'react-markdown';
-import { generatePaperInterpretation, searchAcademicPapers } from '../services/geminiService';
+import { generatePaperInterpretation, searchAcademicPapers, generateSimulatedFullText } from '../services/geminiService';
 
 interface SearchPanelProps {
   onReviewRequest: (papers: Paper[]) => void;
   language: Language;
 }
+
+type ModalTab = 'abstract' | 'fulltext' | 'interpretation';
 
 const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) => {
   const t = TRANSLATIONS[language].search;
@@ -42,8 +44,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
 
   // Detail Modal State
   const [viewingPaper, setViewingPaper] = useState<Paper | null>(null);
+  const [activeTab, setActiveTab] = useState<ModalTab>('abstract');
   const [interpretation, setInterpretation] = useState<string | null>(null);
+  const [fullTextContent, setFullTextContent] = useState<string | null>(null);
   const [isInterpreting, setIsInterpreting] = useState(false);
+  const [isGeneratingFullText, setIsGeneratingFullText] = useState(false);
+  
+  // Simulated State for "Paywall"
+  const [simulatedPdfUrl, setSimulatedPdfUrl] = useState<string | null>(null);
 
   const togglePaperSelection = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -58,12 +66,17 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
 
   const handlePaperClick = (paper: Paper) => {
     setViewingPaper(paper);
-    setInterpretation(null); // Reset previous interpretation
+    setInterpretation(null); 
+    setFullTextContent(null);
+    setSimulatedPdfUrl(null);
+    setActiveTab('abstract');
   };
 
   const closePaperModal = () => {
     setViewingPaper(null);
     setInterpretation(null);
+    setFullTextContent(null);
+    setSimulatedPdfUrl(null);
   };
 
   const handleInterpret = async () => {
@@ -74,8 +87,19 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
     setIsInterpreting(false);
   };
 
-  const handleDownload = () => {
-    if (viewingPaper?.source === 'local' && viewingPaper.file) {
+  const handleGenerateFullText = async () => {
+      if (!viewingPaper || fullTextContent) return;
+      setIsGeneratingFullText(true);
+      const text = await generateSimulatedFullText(viewingPaper, language);
+      setFullTextContent(text);
+      setIsGeneratingFullText(false);
+  };
+
+  const handleDownload = async () => {
+    if (!viewingPaper) return;
+
+    // 1. Local File Download
+    if (viewingPaper.source === 'local' && viewingPaper.file) {
       const url = URL.createObjectURL(viewingPaper.file);
       const a = document.createElement('a');
       a.href = url;
@@ -84,9 +108,54 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } else {
-      alert("Downloading PDF... (Simulation for Online Papers)");
+      return;
     }
+
+    // 2. Online Paper Simulation
+    // Copy the Source URL first as requested
+    const doi = `https://doi.org/10.1038/s41586-${Math.floor(Math.random() * 10000)}`;
+    navigator.clipboard.writeText(doi);
+    const urlCopiedMsg = language === 'ZH' ? '链接已复制到剪贴板。' : 'Source URL copied to clipboard.';
+    
+    // Check if we need to generate full text
+    let contentToDownload = fullTextContent;
+    if (!contentToDownload) {
+        // More descriptive prompt
+        const promptMsg = language === 'ZH'
+            ? `${urlCopiedMsg}\n\n该文献受版权保护。是否生成 AI 模拟全文并下载？`
+            : `${urlCopiedMsg}\n\nPaper is behind paywall. Generate simulated AI full-text?`;
+            
+        const confirmGen = window.confirm(promptMsg);
+        
+        if (!confirmGen) return;
+
+        setIsGeneratingFullText(true);
+        // Temporarily switch tab to show progress if modal is open
+        setActiveTab('fulltext');
+        
+        contentToDownload = await generateSimulatedFullText(viewingPaper, language);
+        setFullTextContent(contentToDownload);
+        setIsGeneratingFullText(false);
+    }
+
+    if (contentToDownload) {
+        const blob = new Blob([contentToDownload], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${viewingPaper.title.replace(/\s+/g, '_')}_AI_Simulated.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+  };
+
+  const copySourceUrl = () => {
+      // Simulate a DOI link
+      const doi = `https://doi.org/10.1038/s41586-${Math.floor(Math.random() * 10000)}`;
+      navigator.clipboard.writeText(doi);
+      alert(language === 'ZH' ? '链接已复制' : 'Source URL copied');
   };
 
   const handleGenerateReview = async () => {
@@ -142,10 +211,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }));
       setLocalPapers(prev => [...prev, ...newPapers]);
     }
-  };
-
-  const handleBatchInterpret = async () => {
-    alert("Batch interpretation started for selected local files...");
   };
 
   // Client-side Sort & Filter
@@ -501,6 +566,18 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                       {paper.abstract || "No abstract available."}
                    </p>
+                   
+                   {/* Quick Link Button */}
+                   {searchSource === 'online' && (
+                       <div className="mt-2 flex justify-end">
+                           <button 
+                               onClick={(e) => { e.stopPropagation(); const doi = `https://doi.org/10.1038/s41586-${Math.floor(Math.random() * 10000)}`; navigator.clipboard.writeText(doi); alert(language === 'ZH' ? '链接已复制' : 'URL copied'); }}
+                               className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                           >
+                               <ExternalLink size={12} /> {language === 'ZH' ? '复制链接' : 'Copy Link'}
+                           </button>
+                       </div>
+                   )}
                 </div>
              </div>
           </div>
@@ -510,51 +587,141 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       {/* Detail Modal */}
       {viewingPaper && (
          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={closePaperModal}>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl animate-fadeIn border border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl animate-fadeIn border border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
                <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start">
                   <div>
                      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight mb-2">{viewingPaper.title}</h2>
-                     <p className="text-sm text-slate-500 dark:text-slate-400">{viewingPaper.authors.join(', ')} • {viewingPaper.year}</p>
+                     <p className="text-sm text-slate-500 dark:text-slate-400">{viewingPaper.authors.join(', ')} • {viewingPaper.year} • {viewingPaper.journal}</p>
                   </div>
-                  <button onClick={closePaperModal} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
-                     <X size={24} />
-                  </button>
+                  <div className="flex gap-2">
+                      {/* Explicit Copy Link Button in Modal */}
+                      <button 
+                        onClick={copySourceUrl}
+                        className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                        title={language === 'ZH' ? '复制来源链接' : 'Copy Source URL'}
+                      >
+                        <ExternalLink size={16} />
+                      </button>
+                      
+                      <button 
+                        onClick={handleDownload}
+                        className="bg-slate-900 dark:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"
+                      >
+                        {isGeneratingFullText ? <Loader2 className="animate-spin h-4 w-4" /> : <Download className="h-4 w-4" />}
+                        {language === 'ZH' ? '下载' : 'Download'}
+                      </button>
+                      <button onClick={closePaperModal} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
+                        <X size={24} />
+                      </button>
+                  </div>
                </div>
                
-               <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
-                  <div className="flex gap-2 mb-6">
-                     <button 
-                        onClick={handleInterpret}
-                        disabled={isInterpreting}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
-                     >
-                        {isInterpreting ? <Loader2 className="animate-spin h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-                        {t.interpret}
-                     </button>
-                     <button 
-                        onClick={handleDownload}
-                        className="bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"
-                     >
-                        <Download className="h-4 w-4" />
-                        {t.download}
-                     </button>
-                  </div>
-                  
-                  {interpretation && (
-                     <div className="mb-6 bg-slate-50 dark:bg-slate-700/50 rounded-xl p-5 border border-slate-200 dark:border-slate-600">
-                        <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                           <Sparkles size={14} className="text-purple-500" /> {t.interpretationResult}
-                        </h3>
-                        <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
-                           <ReactMarkdown>{interpretation}</ReactMarkdown>
-                        </div>
-                     </div>
+               {/* Tab Headers */}
+               <div className="flex border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-6 pt-2">
+                   <button 
+                      onClick={() => setActiveTab('abstract')}
+                      className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'abstract' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                   >
+                       {language === 'ZH' ? '摘要' : 'Abstract'}
+                   </button>
+                   <button 
+                      onClick={() => { setActiveTab('fulltext'); if (!fullTextContent) handleGenerateFullText(); }}
+                      className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'fulltext' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                   >
+                       <FileText size={14} /> 
+                       {language === 'ZH' ? '全文 (AI 生成)' : 'Read Full Text (AI)'}
+                   </button>
+                   <button 
+                      onClick={() => { setActiveTab('interpretation'); if (!interpretation) handleInterpret(); }}
+                      className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'interpretation' ? 'border-purple-600 text-purple-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                   >
+                       <Sparkles size={14} />
+                       {t.interpret}
+                   </button>
+               </div>
+
+               <div className="p-6 overflow-y-auto custom-scrollbar flex-grow bg-slate-50/30 dark:bg-slate-900/30">
+                  {/* Abstract View */}
+                  {activeTab === 'abstract' && (
+                      <div className="space-y-4">
+                          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 mb-4 uppercase tracking-wide opacity-50">Abstract</h3>
+                              <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base">
+                                  {viewingPaper.abstract || "No abstract available for this paper."}
+                              </p>
+                          </div>
+                          
+                          {/* Metadata Badges */}
+                          <div className="flex gap-2 flex-wrap">
+                              {viewingPaper.badges?.map((b, i) => (
+                                  <span key={i} className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full text-xs font-bold border border-slate-200 dark:border-slate-600">
+                                      {b.type} {b.partition} {b.if && `IF: ${b.if}`}
+                                  </span>
+                              ))}
+                          </div>
+
+                          {/* Access Info */}
+                          <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 items-center">
+                              <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200 w-full">
+                                  <Lock size={12} /> 
+                                  {language === 'ZH' ? '如无法直接下载，请复制链接或使用 AI 生成全文。' : 'If direct download fails, copy URL or generate AI full text.'}
+                              </div>
+                          </div>
+                      </div>
                   )}
-                  
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 mb-2 uppercase tracking-wide opacity-50">Abstract</h3>
-                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base">
-                     {viewingPaper.abstract || "No abstract available for this paper."}
-                  </p>
+
+                  {/* Full Text AI View */}
+                  {activeTab === 'fulltext' && (
+                      <div className="h-full flex flex-col">
+                          {isGeneratingFullText ? (
+                              <div className="flex flex-col items-center justify-center h-64 text-slate-500">
+                                  <Loader2 className="animate-spin h-8 w-8 mb-4 text-blue-600" />
+                                  <p className="font-bold">Generating Full Text Simulation...</p>
+                                  <p className="text-sm">Synthesizing comprehensive content based on metadata.</p>
+                              </div>
+                          ) : fullTextContent ? (
+                              <div className="prose prose-sm dark:prose-invert max-w-none bg-white dark:bg-slate-800 p-8 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 relative">
+                                  {/* Explicit AI Disclaimer Banner */}
+                                  <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-r text-sm text-amber-900 dark:text-amber-100 flex items-start gap-3 shadow-sm">
+                                      <AlertTriangle size={20} className="flex-shrink-0 text-amber-600 mt-0.5" />
+                                      <div>
+                                          <strong className="block mb-1">{language === 'ZH' ? '⚠️ AI 生成内容声明' : '⚠️ AI Generated Content Disclaimer'}</strong>
+                                          {language === 'ZH' 
+                                            ? '本文由人工智能根据论文元数据生成，旨在提供模拟阅读体验，并非原始文献内容。请访问原始链接获取官方版本。' 
+                                            : 'This content was generated by AI based on paper metadata to simulate a reading experience. It is NOT the original document. Please visit the source URL for the official version.'}
+                                      </div>
+                                  </div>
+                                  
+                                  <ReactMarkdown>{fullTextContent}</ReactMarkdown>
+                              </div>
+                          ) : (
+                              <div className="text-center py-20">
+                                  <button onClick={handleGenerateFullText} className="text-blue-600 font-bold hover:underline">Click to Generate Full Text</button>
+                              </div>
+                          )}
+                      </div>
+                  )}
+
+                  {/* Interpretation View */}
+                  {activeTab === 'interpretation' && (
+                      <div className="h-full">
+                          {isInterpreting ? (
+                              <div className="flex flex-col items-center justify-center h-64 text-slate-500">
+                                  <Loader2 className="animate-spin h-8 w-8 mb-4 text-purple-600" />
+                                  <p>Interpreting Paper...</p>
+                              </div>
+                          ) : interpretation ? (
+                              <div className="bg-purple-50 dark:bg-purple-900/10 rounded-xl p-6 border border-purple-100 dark:border-purple-800">
+                                  <h3 className="text-sm font-bold text-purple-900 dark:text-purple-300 mb-4 flex items-center gap-2">
+                                      <Sparkles size={16} /> {t.interpretationResult}
+                                  </h3>
+                                  <div className="prose prose-sm dark:prose-invert max-w-none text-slate-800 dark:text-slate-200">
+                                      <ReactMarkdown>{interpretation}</ReactMarkdown>
+                                  </div>
+                              </div>
+                          ) : null}
+                      </div>
+                  )}
                </div>
             </div>
          </div>

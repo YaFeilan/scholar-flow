@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, ShieldAlert, Bot } from 'lucide-react';
+import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, ShieldAlert, Bot, Sparkles } from 'lucide-react';
 import { ViewState, Language, ModelProvider } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -84,7 +84,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
   };
 
   const toggleProvider = () => {
-      setModelProvider(modelProvider === 'Gemini' ? 'DeepSeek' : 'Gemini');
+      if (modelProvider === 'Gemini') setModelProvider('DeepSeek');
+      else if (modelProvider === 'DeepSeek') setModelProvider('ChatGPT');
+      else setModelProvider('Gemini');
   };
 
   return (
@@ -161,11 +163,17 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
                   modelProvider === 'DeepSeek' 
                   ? 'bg-blue-900 text-white border-blue-900 hover:bg-blue-800' 
+                  : modelProvider === 'ChatGPT'
+                  ? 'bg-emerald-900 text-white border-emerald-900 hover:bg-emerald-800'
                   : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
               } ${collapsed ? 'justify-center' : ''}`}
               title={collapsed ? `Provider: ${modelProvider}` : undefined}
            >
-               <Bot size={16} className={modelProvider === 'DeepSeek' ? 'text-cyan-400' : 'text-blue-500'} />
+               {modelProvider === 'ChatGPT' ? (
+                   <Sparkles size={16} className="text-emerald-400" />
+               ) : (
+                   <Bot size={16} className={modelProvider === 'DeepSeek' ? 'text-cyan-400' : 'text-blue-500'} />
+               )}
                {!collapsed && <span>Model: {modelProvider}</span>}
            </button>
 
