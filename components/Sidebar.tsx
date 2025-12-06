@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar } from 'lucide-react';
+import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, ShieldAlert } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -70,7 +70,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
           items: [
              { label: navT.advisor, icon: <User size={20} />, id: ViewState.ADVISOR },
              { label: navT.peer, icon: <CheckSquare size={20} />, id: ViewState.PEER_REVIEW },
-             { label: navT.conference, icon: <Calendar size={20} />, id: ViewState.CONFERENCE_FINDER }, // New
+             { label: navT.conference, icon: <Calendar size={20} />, id: ViewState.CONFERENCE_FINDER }, 
+             { label: navT.aiDetector, icon: <ShieldAlert size={20} />, id: ViewState.AI_DETECTOR }, // New
           ]
       }
   ];

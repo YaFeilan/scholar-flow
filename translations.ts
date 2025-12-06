@@ -1,4 +1,5 @@
 
+
 export const TRANSLATIONS = {
   EN: {
     appName: 'ResearchAssistant',
@@ -21,7 +22,8 @@ export const TRANSLATIONS = {
       knowledge: 'Knowledge Graph',
       figure: 'Figure Gen',
       grant: 'Grant App',
-      conference: 'Call for Papers'
+      conference: 'Call for Papers',
+      aiDetector: 'AI Detector'
     },
     groups: {
       planning: 'Planning',
@@ -409,6 +411,23 @@ export const TRANSLATIONS = {
           h5Opts: { all: 'All', gt20: '> 20', gt50: '> 50', gt100: '> 100' },
           partition: 'JCR Partition'
       }
+    },
+    aiDetector: {
+      title: 'AI Detection & Humanizer',
+      subtitle: 'Detect AI-generated text and rewrite it to lower AI probability scores.',
+      inputPlaceholder: 'Paste text here (min 100 words)...',
+      upload: 'Upload File',
+      checkBtn: 'Check AI Score',
+      humanizeBtn: 'Humanize / Reduce AI',
+      score: 'AI Probability Score',
+      analysis: 'Analysis Report',
+      highlights: 'High Risk Sentences',
+      original: 'Original',
+      humanized: 'Humanized',
+      detecting: 'Analyzing...',
+      humanizing: 'Rewriting...',
+      copy: 'Copy',
+      files: 'Supported: PDF, DOCX, TXT'
     }
   },
   ZH: {
@@ -432,7 +451,8 @@ export const TRANSLATIONS = {
       knowledge: '知识图谱',
       figure: '科研绘图',
       grant: '基金申请',
-      conference: '学术征稿'
+      conference: '学术征稿',
+      aiDetector: 'AI率检测'
     },
     groups: {
       planning: '科研规划',
@@ -820,6 +840,23 @@ export const TRANSLATIONS = {
           h5Opts: { all: '全部', gt20: '> 20', gt50: '> 50', gt100: '> 100' },
           partition: 'JCR 分区'
       }
+    },
+    aiDetector: {
+      title: 'AI率检测与降重',
+      subtitle: '检测文本AI生成概率，并提供去AI化润色服务。',
+      inputPlaceholder: '粘贴文本 (最少100字)...',
+      upload: '上传文件',
+      checkBtn: '检测 AI 率',
+      humanizeBtn: '去 AI 化 / 降重',
+      score: 'AI 生成概率',
+      analysis: '分析报告',
+      highlights: '高风险句子',
+      original: '原文',
+      humanized: '降重后',
+      detecting: '正在检测...',
+      humanizing: '正在降重...',
+      copy: '复制',
+      files: '支持格式: PDF, DOCX, TXT'
     }
   }
 };

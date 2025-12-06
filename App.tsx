@@ -18,7 +18,8 @@ import KnowledgeGraph from './components/KnowledgeGraph';
 import FigureGenerator from './components/FigureGenerator';
 import ChartExtraction from './components/ChartExtraction';
 import GrantApplication from './components/GrantApplication';
-import ConferenceFinder from './components/ConferenceFinder'; // New Import
+import ConferenceFinder from './components/ConferenceFinder'; 
+import AIDetector from './components/AIDetector'; // New Import
 import { ViewState, Paper, Language } from './types';
 import { generateLiteratureReview } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -176,6 +177,9 @@ const App: React.FC = () => {
             )}
             {currentView === ViewState.CONFERENCE_FINDER && (
             <ConferenceFinder language={language} />
+            )}
+            {currentView === ViewState.AI_DETECTOR && (
+            <AIDetector language={language} />
             )}
         </div>
       </main>

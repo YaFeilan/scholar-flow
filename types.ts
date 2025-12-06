@@ -45,7 +45,8 @@ export enum ViewState {
   FIGURE_GEN = 'FIGURE_GEN',
   CHART_EXTRACTION = 'CHART_EXTRACTION',
   GRANT_APPLICATION = 'GRANT_APPLICATION',
-  CONFERENCE_FINDER = 'CONFERENCE_FINDER', // New
+  CONFERENCE_FINDER = 'CONFERENCE_FINDER',
+  AI_DETECTOR = 'AI_DETECTOR', // New
 }
 
 // Trend Types
@@ -454,4 +455,22 @@ export interface JournalIssueItem {
 export interface ConferenceFinderResult {
   conferences: ConferenceItem[];
   journals: JournalIssueItem[];
+}
+
+// AI Detection Types (New)
+export interface AIDetectionResult {
+  score: number; // 0-100 (Probability of being AI)
+  analysis: string;
+  highlightedSentences: {
+    text: string;
+    reason: string;
+    score: number; // Specific sentence AI score
+  }[];
+}
+
+export interface AIHumanizeResult {
+  originalScore: number;
+  newScore: number;
+  text: string;
+  changesSummary: string;
 }

@@ -1,4 +1,6 @@
 
+
+
 import { GoogleGenAI, Type } from "@google/genai";
 import {
   Language,
@@ -24,7 +26,9 @@ import {
   LogicNode,
   ConferenceFinderResult,
   GrantPolishVersion,
-  GraphSuggestionsResult
+  GraphSuggestionsResult,
+  AIDetectionResult,
+  AIHumanizeResult
 } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -534,4 +538,33 @@ export const findConferences = async (topic: string, language: Language): Promis
   Language: ${language}.
   Return JSON matching ConferenceFinderResult (conferences[], journals[]).`;
   return getJson(prompt);
+};
+
+// --- AI Detection Functions ---
+
+export const detectAIContent = async (content: string | File, language: Language): Promise<AIDetectionResult | null> => {
+  const prompt = `Analyze the following text for signs of AI generation (predictability, low perplexity, repetitive structures, lack of nuance).
+  Language: ${language}.
+  
+  Provide:
+  1. An estimated AI Probability Score (0-100).
+  2. A brief analysis of why (e.g. "Sentences are too uniform").
+  3. Identify specific sentences that look most AI-generated.
+  
+  Return JSON matching AIDetectionResult (score, analysis, highlightedSentences[{text, reason, score}]).`;
+  
+  if (content instanceof File) {
+      return getJson(prompt, content);
+  }
+  return getJson(prompt + `\n\nText: ${content}`);
+};
+
+export const humanizeText = async (text: string, language: Language): Promise<AIHumanizeResult | null> => {
+  const prompt = `Rewrite the following text to reduce its AI probability score.
+  Goal: Increase burstiness and perplexity. Use more varied sentence structures, idiomatic expressions, and human-like flow.
+  Language: ${language}.
+  
+  Return JSON matching AIHumanizeResult (originalScore, newScore, text, changesSummary).`;
+  
+  return getJson(prompt + `\n\nText: ${text}`);
 };
