@@ -21,7 +21,7 @@ export const TRANSLATIONS = {
       knowledge: 'Knowledge Graph',
       figure: 'Figure Gen',
       grant: 'Grant App',
-      conference: 'Conferences'
+      conference: 'Call for Papers'
     },
     groups: {
       planning: 'Planning',
@@ -385,25 +385,28 @@ export const TRANSLATIONS = {
       }
     },
     conference: { 
-      title: 'Conference Finder',
-      subtitle: 'Discover upcoming academic conferences and journal special issues tailored to your research.',
-      topicLabel: 'Research Direction / Keywords',
-      rankLabel: 'Rank (CCF)',
-      searchBtn: 'Find Conferences',
+      title: 'Call for Papers Calendar',
+      subtitle: 'Track upcoming academic deadlines for conferences (e.g. CVPR, AAAI) and journal special issues.',
+      topicLabel: 'Research Area / Acronym',
+      rankLabel: 'Rank',
+      searchBtn: 'Find Deadlines',
       searching: 'Searching...',
-      conferences: 'Upcoming Conferences',
+      conferences: 'Conferences',
       journals: 'Special Issues',
       deadline: 'Deadline',
       location: 'Location',
       website: 'Website',
-      daysLeft: 'Days Left',
+      daysLeft: 'days left',
+      sort: { label: 'Sort', deadline: 'Urgency', rank: 'Rank', h5: 'Impact (H5)' },
       filters: {
+          type: 'Type',
+          typeOpts: { all: 'All', conf: 'Conference', journal: 'Journal' },
           status: 'Status',
-          statusOpts: { all: 'All', upcoming: 'Upcoming', passed: 'Passed' },
+          statusOpts: { all: 'All', upcoming: 'Upcoming', passed: 'Passed', tba: 'TBA' },
           location: 'Region',
           locationOpts: { all: 'All Regions', asia: 'Asia', europe: 'Europe', na: 'N. America', online: 'Online' },
-          metrics: 'Metrics',
-          h5: 'Min H5 Index',
+          metrics: 'H5 Index',
+          h5Opts: { all: 'All', gt20: '> 20', gt50: '> 50', gt100: '> 100' },
           partition: 'JCR Partition'
       }
     }
@@ -429,7 +432,7 @@ export const TRANSLATIONS = {
       knowledge: '知识图谱',
       figure: '科研绘图',
       grant: '基金申请',
-      conference: '会议日历'
+      conference: '学术征稿'
     },
     groups: {
       planning: '科研规划',
@@ -793,25 +796,28 @@ export const TRANSLATIONS = {
       }
     },
     conference: { 
-      title: '学术会议日历',
-      subtitle: '根据您的研究方向，自动发现即将截稿的重要会议和期刊特刊。',
-      topicLabel: '研究方向 / 关键词',
-      rankLabel: '等级 (CCF)',
-      searchBtn: '查找会议',
-      searching: '正在搜索...',
-      conferences: '即将截稿会议',
+      title: '学术征稿日历',
+      subtitle: '追踪各类学术会议（如 CVPR, AAAI）和期刊特刊的截稿日期。',
+      topicLabel: '研究方向 / 缩写 (如 ICLR)',
+      rankLabel: '等级',
+      searchBtn: '查找截稿',
+      searching: '搜索中...',
+      conferences: '会议征稿',
       journals: '期刊特刊 (Special Issues)',
       deadline: '截稿日期',
       location: '地点',
       website: '官网',
       daysLeft: '天后截稿',
+      sort: { label: '排序', deadline: '紧急程度', rank: '等级高低', h5: '影响力(H5)' },
       filters: {
+          type: '类型',
+          typeOpts: { all: '全部', conf: '会议', journal: '期刊特刊' },
           status: '截稿状态',
-          statusOpts: { all: '全部', upcoming: '未截稿 (Upcoming)', passed: '已截稿 (Passed)' },
+          statusOpts: { all: '全部', upcoming: '未截稿', passed: '已截稿', tba: '待定/预计' },
           location: '举办地区',
           locationOpts: { all: '全球', asia: '亚洲', europe: '欧洲', na: '北美', online: '线上' },
-          metrics: '学术指标',
-          h5: '最低 H5 指数',
+          metrics: 'H5 指数',
+          h5Opts: { all: '全部', gt20: '> 20', gt50: '> 50', gt100: '> 100' },
           partition: 'JCR 分区'
       }
     }

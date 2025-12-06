@@ -1,21 +1,15 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Feather, ShieldCheck, Send, Loader2, Sparkles, AlertTriangle, CheckCircle, Download, BookOpen, Key, Briefcase, Upload, Link, Trash2, List, Lightbulb, Eye, Edit3, Wand2, Layers, Zap, Scale, LayoutDashboard, AlertOctagon, GitMerge, CheckSquare, VenetianMask, File, Settings, History, MessageSquare, Plus, Minus, ArrowRight, FileOutput, Network } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { generateGrantLogicFramework, expandGrantRationale, polishGrantProposal, checkGrantFormat, getGrantInspiration } from '../services/geminiService';
-import { Language, GrantCheckResult, LogicNode } from '../types';
+import { Language, GrantCheckResult, LogicNode, GrantPolishVersion } from '../types';
 import { TRANSLATIONS } from '../translations';
 
 // ... (Interface definitions and LogicNodeEditor component remain same) ...
 interface GrantApplicationProps {
   language: Language;
-}
-
-interface GrantPolishVersion {
-    type: string;
-    clean: string;
-    revisions: string;
-    comment: string;
 }
 
 interface ProjectConfig {
@@ -708,7 +702,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                <div className="flex justify-between items-center mb-4">
                                    <h3 className="text-lg font-bold text-indigo-600 m-0">Polished Proposal</h3>
                                    <button onClick={() => copyToClipboard(polishVersions[activeVersionIdx].clean)} className="text-slate-400 hover:text-indigo-600"><Download size={18}/></button>
-                               </div>
+                                </div>
                                
                                <div className="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-700/50 p-1 rounded-lg">
                                    {polishVersions.map((v, idx) => (

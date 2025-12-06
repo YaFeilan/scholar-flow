@@ -422,6 +422,13 @@ export interface LogicNode {
   children?: LogicNode[];
 }
 
+export interface GrantPolishVersion {
+  type: string;
+  clean: string;
+  revisions: string;
+  comment: string;
+}
+
 // Conference Types (New)
 export interface ConferenceItem {
   name: string;
