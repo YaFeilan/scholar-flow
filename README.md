@@ -1,96 +1,20 @@
-# AI Research Assistant (AI研究助理)
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-Research Assistant 是一款基于人工智能的学术研究辅助工具，旨在帮助研究人员、学生和专业人士快速阅读、理解复杂的学术论文。
+# Run and deploy your AI Studio app
 
-## ✨ 主要功能 (Features)
+This contains everything you need to run your app locally.
 
-# 📘 Research Assistant 功能清单
+View your app in AI Studio: https://ai.studio/apps/drive/1uH5xa4O3qDAof128318xlsbR1vee9QB7
 
-### 1. 选题与策划阶段
-* 💡 **思路引导**: 激发研究灵感，梳理研究逻辑
-* 📈 **趋势分析**: 洞察领域热点与发展趋势
-* 🔍 **文献检索**: 快速查找高质量学术资源
-* 💬 **AI论文导读**: 智能总结与解读核心文献
-* 🗂️ **个人知识库**: 构建个性化知识管理系统
-* 📋 **开题审查**: 辅助评估选题可行性
-* 💼 **基金申报**: 协助准备申报材料
+## Run Locally
 
-### 2. 实验与数据阶段
-* 🧪 **实验设计**: 规划科学严谨的实验方案
-* 📊 **数据分析**: 智能化处理与统计实验数据
-* 📑 **图表提取**: 快速提取文献中的关键图表
-* 💻 **代码助手**: 辅助编写与调试科研代码
-* 📖 **引用追踪**: 追踪关键文献的引用脉络
+**Prerequisites:**  Node.js
 
-### 3. 写作与润色阶段
-* 📄 **综述生成**: 快速生成相关领域的文献综述
-* ✒️ **论文润色**: 提升语言表达与学术规范性
-* 🛡️ **AI率检测/去AI化**: 自测AI生成率并进行人本化改写 
-* ⚠️ **查重预警**: 集成基础查重功能，规避无意识抄袭 
-* 🖼️ **科研绘图**: 制作高质量的学术展示图表
-* 🖥️ **PPT制作**: 自动生成学术汇报演示文稿
 
-### 4. 投稿与发表阶段
-* 📅 **学术会议日历**: 推荐近期截稿的CCF会议及特刊
-* 👤 **投稿顾问**: 推荐合适的投稿期刊与会议
-* ✅ **智能审稿**: 模拟同行评审进行预先评估
-## 🛠️ 技术栈 (Tech Stack)
-
-本项目采用现代化的前端开发技术栈，结合 Google Gemini AI 能力构建。
-
-### 💻 前端核心 (Frontend Core)
-* **React**: 用于构建用户界面的 JavaScript 库 
-* **TypeScript**: 提供静态类型检查，增强代码的可维护性与智能提示。
-* **Vite** 高效的前端构建工具 
-### 🎨 样式与 UI (Styling & UI)
-* **Tailwind CSS**: 实用优先的 CSS 框架。
-* **Dark Mode Support**: 支持深色模式 
-### 🤖 AI 与后端集成 (AI & Services)
-* **Google Gemini API**: 核心大语言模型服务。
-* **Node.js**: 运行环境与包管理。
-### 📦 关键依赖库 (Key Libraries)
-* **react-markdown**: 用于渲染 Markdown 格式的文本。
-* **Lucide React / React Icons**: 用于 UI 图标展示。
-## 🚀 快速开始 (Getting Started)
-
-如果您希望在本地运行此项目，请按照以下步骤操作。
-
-### 先决条件
-* Node.js
-* Google Gemini API Key
-
-### 安装步骤
-
-1. **下载全部文件**
-   将下载的文件放在文件夹中。
-
-2. **安装 Node.js**
-
-3. **配置环境变量**
-   * 用记事本打开 `.env.local`
-   * 设置 API 密钥：
-     ```properties
-     GEMINI_API_KEY=输入Google Gemini秘钥
-     ```
-
- 4.运行应用
-
-* 在项目文件夹空白处按住 **Shift** 键 + **鼠标右键**
-* 选择 **打开 Powershell 窗口**
-* 输入以下命令：
-```bash
-npm run dev
-```
-* 对生成的网址按 **Ctrl** + **鼠标左键**即可访问
-
-## 🤝 贡献 (Contribution)
-
-欢迎任何形式的贡献！
-* 请随时提交 **Pull Request**。
-* 创建 **Issue** 来讨论新功能或报告 Bug。
-
----
-
-## ⚠️ 免责声明
-
-本工具生成的摘要和解释仅作为辅助参考，学术研究中请务必查证原文内容。开发者不对 AI 生成内容的准确性承担最终责任。
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

@@ -46,7 +46,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
   const [paperTLDRs, setPaperTLDRs] = useState<Record<string, string>>({});
 
   // Refs
-  const cloudRef = useRef<HTMLDivElement>(null);
+  const d3ContainerRef = useRef<HTMLDivElement>(null);
 
   // -- Handlers --
   const handleAnalyze = async () => {
@@ -93,11 +93,11 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
 
   // -- D3 Visualization Effect --
   useEffect(() => {
-    if (!cloudRef.current) return;
-    const container = d3.select(cloudRef.current);
+    if (!d3ContainerRef.current) return;
+    const container = d3.select(d3ContainerRef.current);
     container.selectAll("*").remove(); // Clear previous
 
-    const width = cloudRef.current.clientWidth;
+    const width = d3ContainerRef.current.clientWidth;
     const height = 500;
     const rawData = trendData.hotspots || [];
     if (rawData.length === 0) return;
@@ -348,12 +348,11 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                </button>
             </div>
             
-            <div 
-               className="flex-grow bg-slate-50/30 rounded-lg border border-slate-100 overflow-hidden relative cursor-crosshair" 
-               ref={cloudRef}
-               onClick={() => setSelectedKeyword(null)}
-            >
-               {/* D3 Canvas */}
+            <div className="flex-grow bg-slate-50/30 rounded-lg border border-slate-100 overflow-hidden relative cursor-crosshair">
+               {/* D3 dedicated container - Separated to avoid React reconciliation issues */}
+               <div ref={d3ContainerRef} className="w-full h-full absolute inset-0" onClick={() => setSelectedKeyword(null)}></div>
+               
+               {/* Overlay Legend - React Managed */}
                <div className="absolute bottom-4 left-4 pointer-events-none bg-white/80 backdrop-blur px-3 py-2 rounded text-xs text-slate-500 border border-slate-100">
                   {viewMode === 'cloud' ? 'Force-Directed Word Cloud' : 'Knowledge Graph Topology'} <br/>
                   <span className="opacity-70">Click nodes to drill down</span>

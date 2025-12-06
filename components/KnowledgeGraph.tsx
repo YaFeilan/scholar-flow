@@ -65,7 +65,8 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ language }) => {
   const [suggestionsMode, setSuggestionsMode] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-  const graphRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null); // For sizing/events
+  const d3Ref = useRef<HTMLDivElement>(null); // For D3 drawing only
   
   // UI State
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
@@ -394,15 +395,15 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ language }) => {
 
   // D3 Effect
   useEffect(() => {
-      if (!graphRef.current || filteredNodes.length === 0) {
+      if (!d3Ref.current || filteredNodes.length === 0) {
           // Clear if no nodes to prevent ghosting
-          if (graphRef.current) d3.select(graphRef.current).selectAll("*").remove();
+          if (d3Ref.current) d3.select(d3Ref.current).selectAll("*").remove();
           return;
       }
       
-      const width = graphRef.current.clientWidth;
-      const height = graphRef.current.clientHeight;
-      const container = d3.select(graphRef.current);
+      const width = d3Ref.current.clientWidth;
+      const height = d3Ref.current.clientHeight;
+      const container = d3.select(d3Ref.current);
       container.selectAll("*").remove();
 
       const svg = container.append("svg")
@@ -675,12 +676,16 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ language }) => {
 
         {/* Graph Area */}
         <div 
-            ref={graphRef} 
+            ref={containerRef} 
             className={`flex-grow h-full bg-slate-50 cursor-grab active:cursor-grabbing relative ${isDragOver ? 'bg-blue-50 border-4 border-blue-400 border-dashed m-4 rounded-xl' : ''}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
         >
+            {/* Dedicated D3 container */}
+            <div ref={d3Ref} className="w-full h-full absolute inset-0" />
+
+            {/* Overlays (Siblings to D3 container) */}
             {isDragOver && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20">
                     <FileCode size={64} className="text-blue-500 mb-4 animate-bounce" />
@@ -698,7 +703,7 @@ const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ language }) => {
             )}
 
             {filteredNodes.length === 0 && !parsingPDF && (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 pointer-events-none">
                     <Network size={48} className="mb-4 opacity-50" />
                     <p>{searchTerm ? 'No matching nodes.' : t.empty}</p>
                     {searchTerm && semanticSearchIds && <p className="text-xs text-purple-500 mt-2">AI Search found no semantic matches.</p>}
