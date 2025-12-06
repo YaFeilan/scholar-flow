@@ -1,4 +1,5 @@
 
+
 export type Language = 'ZH' | 'EN';
 
 export interface Paper {
@@ -389,4 +390,33 @@ export interface ChartExtractionResult {
   data: any[]; // Array of objects representing rows
   ocrText?: string; // New: Full raw text from image
   fullDescription?: string; // New: Comprehensive analysis
+}
+
+// Grant Check Result Type
+export interface GrantCheckResult {
+  score: number;
+  summary: string;
+  hardErrors: {
+    status: 'Pass' | 'Fail';
+    issues: string[];
+  };
+  logicCheck: {
+    status: 'Pass' | 'Warning';
+    issues: string[];
+  };
+  formatCheck: {
+    status: 'Pass' | 'Fail';
+    issues: string[];
+  };
+  anonymityCheck: {
+    status: 'Pass' | 'Fail';
+    issues: string[];
+  };
+}
+
+// Grant Logic Types
+export interface LogicNode {
+  id: string;
+  label: string;
+  children?: LogicNode[];
 }

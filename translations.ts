@@ -520,7 +520,13 @@ export const TRANSLATIONS = {
         btn: 'Start Review',
         issues: 'Detected Issues',
         suggestions: 'Suggestions',
-        score: 'Compliance Score'
+        score: 'Compliance Score',
+        dash: {
+            hard: 'Hard Errors',
+            logic: 'Logic Check',
+            format: 'Format Check',
+            anon: 'Anonymity Check'
+        }
       }
     }
   }
@@ -1045,7 +1051,13 @@ export const TRANSLATIONS = {
         btn: '开始审查',
         issues: '检测到的问题',
         suggestions: '修改建议',
-        score: '合规评分'
+        score: '合规评分',
+        dash: {
+            hard: '硬伤检查',
+            logic: '逻辑检查',
+            format: '格式检查',
+            anon: '匿名检查'
+        }
       }
     }
   }
