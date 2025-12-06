@@ -168,7 +168,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       setLoading(false);
   };
 
-  // ... (handleExpandToText, handleRefFileChange, removeRefFile, handlePolish, handleCheckFileChange, handleCheck, copyToClipboard, handleExportWord, handleExportLatex logic same as before) ...
   const handleExpandToText = async () => {
       if (!logicTree) return;
       setLoading(true);
@@ -788,13 +787,13 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                        <h4 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                            <AlertOctagon size={16} className="text-red-500" /> {t.check.dash.hard}
                                        </h4>
-                                       {checkResult.hardErrors.status === 'Pass' 
+                                       {checkResult.hardErrors?.status === 'Pass' 
                                            ? <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded">PASS</span>
                                            : <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded">FAIL</span>
                                        }
                                    </div>
                                    <ul className="text-xs space-y-1 text-slate-600 dark:text-slate-400">
-                                       {checkResult.hardErrors.issues.length > 0 ? (
+                                       {checkResult.hardErrors?.issues?.length > 0 ? (
                                            checkResult.hardErrors.issues.map((issue, i) => <li key={i} className="flex items-start gap-1"><span className="text-red-500">•</span> {issue}</li>)
                                        ) : (
                                            <li className="text-green-600 flex items-center gap-1"><CheckCircle size={10} /> No critical issues found.</li>
@@ -808,13 +807,13 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                        <h4 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                            <GitMerge size={16} className="text-amber-500" /> {t.check.dash.logic}
                                        </h4>
-                                       {checkResult.logicCheck.status === 'Pass' 
+                                       {checkResult.logicCheck?.status === 'Pass' 
                                            ? <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded">PASS</span>
                                            : <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded">WARNING</span>
                                        }
                                    </div>
                                    <ul className="text-xs space-y-1 text-slate-600 dark:text-slate-400">
-                                       {checkResult.logicCheck.issues.length > 0 ? (
+                                       {checkResult.logicCheck?.issues?.length > 0 ? (
                                            checkResult.logicCheck.issues.map((issue, i) => <li key={i} className="flex items-start gap-1"><span className="text-amber-500">•</span> {issue}</li>)
                                        ) : (
                                            <li className="text-green-600 flex items-center gap-1"><CheckCircle size={10} /> Logic flow appears consistent.</li>
@@ -828,13 +827,13 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                        <h4 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                            <CheckSquare size={16} className="text-blue-500" /> {t.check.dash.format}
                                        </h4>
-                                       {checkResult.formatCheck.status === 'Pass' 
+                                       {checkResult.formatCheck?.status === 'Pass' 
                                            ? <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded">PASS</span>
                                            : <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded">REVIEW</span>
                                        }
                                    </div>
                                    <ul className="text-xs space-y-1 text-slate-600 dark:text-slate-400">
-                                       {checkResult.formatCheck.issues.length > 0 ? (
+                                       {checkResult.formatCheck?.issues?.length > 0 ? (
                                            checkResult.formatCheck.issues.map((issue, i) => <li key={i} className="flex items-start gap-1"><span className="text-blue-500">•</span> {issue}</li>)
                                        ) : (
                                            <li className="text-green-600 flex items-center gap-1"><CheckCircle size={10} /> Formatting looks good.</li>
@@ -848,13 +847,13 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                        <h4 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                            <VenetianMask size={16} className="text-purple-500" /> {t.check.dash.anon}
                                        </h4>
-                                       {checkResult.anonymityCheck.status === 'Pass' 
+                                       {checkResult.anonymityCheck?.status === 'Pass' 
                                            ? <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded">PASS</span>
                                            : <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded">RISK</span>
                                        }
                                    </div>
                                    <ul className="text-xs space-y-1 text-slate-600 dark:text-slate-400">
-                                       {checkResult.anonymityCheck.issues.length > 0 ? (
+                                       {checkResult.anonymityCheck?.issues?.length > 0 ? (
                                            checkResult.anonymityCheck.issues.map((issue, i) => <li key={i} className="flex items-start gap-1"><span className="text-purple-500">•</span> {issue}</li>)
                                        ) : (
                                            <li className="text-green-600 flex items-center gap-1"><CheckCircle size={10} /> No personal identifiers detected.</li>
