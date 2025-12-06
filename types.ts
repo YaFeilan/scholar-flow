@@ -386,4 +386,6 @@ export interface ChartExtractionResult {
   type: string;
   summary: string;
   data: any[]; // Array of objects representing rows
+  ocrText?: string; // New: Full raw text from image
+  fullDescription?: string; // New: Comprehensive analysis
 }

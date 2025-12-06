@@ -1,4 +1,5 @@
-// ... existing code ...
+
+// ... existing imports ...
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import {
   Language,
@@ -771,8 +772,11 @@ export const generateScientificFigure = async (
 export const extractChartData = async (file: File, language: Language): Promise<ChartExtractionResult | null> => {
   try {
     const base64Data = await fileToBase64(file);
-    const prompt = `Analyze this chart image. Extract the underlying data into a structured JSON format.
-    Identify the chart title, type (Bar, Line, Scatter, Pie, etc.), and the data points.
+    const prompt = `Analyze this chart image deeply.
+    
+    1. Extract underlying data into a structured JSON 'data' array. Identify title, chart type, and data points.
+    2. Extract ALL visible text (OCR) into 'ocrText'. Include axis labels, legends, notes, and titles verbatim.
+    3. Provide a 'fullDescription' analyzing the visual structure, trends, and any text annotations found in the image.
     
     IMPORTANT: For each data row, try to estimate the bounding box of the visual element (bar, point, slice) in the image.
     Format the bounding box as "_box_2d": [ymin, xmin, ymax, xmax] where coordinates are normalized to 0-1000.
@@ -781,9 +785,11 @@ export const extractChartData = async (file: File, language: Language): Promise<
     {
       "title": "Chart Title",
       "type": "Chart Type",
-      "summary": "Brief description of trends",
+      "summary": "Brief summary",
+      "ocrText": "Full text content found in image...",
+      "fullDescription": "Detailed visual and semantic analysis...",
       "data": [
-        { "Label/X-Axis": "Value 1", "Series A": 10, "Series B": 20, "_box_2d": [100, 100, 200, 200] },
+        { "Label/X-Axis": "Value 1", "Series A": 10, "_box_2d": [100, 100, 200, 200] },
         ...
       ]
     }
