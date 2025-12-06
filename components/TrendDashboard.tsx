@@ -1,4 +1,6 @@
 
+
+
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import * as d3 from 'd3';
@@ -99,7 +101,9 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
 
     const width = d3ContainerRef.current.clientWidth;
     const height = 500;
-    const rawData = trendData.hotspots || [];
+    
+    // Safety check: ensure hotspots is an array and items have text
+    const rawData = (trendData.hotspots || []).filter(d => d && d.text);
     if (rawData.length === 0) return;
 
     // Create SVG
@@ -124,7 +128,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
           .force("center", d3.forceCenter(0, 0))
           .force("y", d3.forceY(0).strength(0.08))
           .force("x", d3.forceX(0).strength(0.08))
-          .force("collide", d3.forceCollide().radius((d: any) => (d.text.length * sizeScale(d.value) * 0.35) + 12).iterations(3));
+          .force("collide", d3.forceCollide().radius((d: any) => ((d.text || '').length * sizeScale(d.value) * 0.35) + 12).iterations(3));
 
         const textNodes = g.selectAll("text")
           .data(data)
@@ -137,7 +141,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
           .style("cursor", "pointer")
           .attr("text-anchor", "middle")
           .attr("dy", "0.35em")
-          .text(d => d.text.split('(')[0])
+          .text(d => (d.text || '').split('(')[0])
           .on("click", (event, d) => { event.stopPropagation(); setSelectedKeyword(d.text === selectedKeyword ? null : d.text); })
           .call(d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended) as any);
 
@@ -155,7 +159,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
            if (source.relatedTo) {
                source.relatedTo.forEach((targetName: string) => {
                    // Simple matching
-                   const target = nodes.find(n => n.text.includes(targetName) || targetName.includes(n.text));
+                   const target = nodes.find(n => (n.text || '').includes(targetName) || targetName.includes(n.text || ''));
                    if (target) links.push({ source: source.id, target: target.id });
                });
            }
@@ -200,7 +204,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
             .selectAll("text")
             .data(nodes)
             .join("text")
-            .text((d: any) => d.text.substring(0, 15))
+            .text((d: any) => (d.text || '').substring(0, 15))
             .attr("font-size", 10)
             .attr("dx", 0)
             .attr("dy", (d: any) => d.r + 12)

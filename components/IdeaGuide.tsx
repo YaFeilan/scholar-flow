@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState, useEffect } from 'react';
 import { Lightbulb, Send, Loader2, BookOpen, Target, ArrowRight, MessageCircle, ChevronDown, Key, Database, Cpu, FileText, ExternalLink, Download, Layout, RefreshCw } from 'lucide-react';
 import { generateResearchIdeas, generateIdeaFollowUp } from '../services/geminiService';
@@ -328,7 +330,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                             {isSelected && (
                                <div className="bg-amber-50/50 border-t border-amber-100 p-6 animate-fadeIn">
                                   <h5 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
-                                     <MessageCircle size={18} /> {t.followUpPlaceholder.split('...')[0]}
+                                     <MessageCircle size={18} /> {(t.followUpPlaceholder || '').split('...')[0]}
                                   </h5>
                                   <div className="flex gap-2 mb-6">
                                      <input 

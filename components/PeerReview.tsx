@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useRef } from 'react';
 import { performPeerReview, generateRebuttalLetter, generateCoverLetter } from '../services/geminiService';
 import { Upload, CheckCircle, FileText, Loader2, ShieldCheck, User, Building, BookOpen, AlertTriangle, PenTool, Gavel, Award, Feather, Send, Copy, Mail } from 'lucide-react';
@@ -245,7 +246,7 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
                         className={`flex-1 py-4 px-4 text-sm font-bold whitespace-nowrap flex items-center justify-center gap-2 border-b-2 transition-colors
                           ${activeTab === idx + 1 ? 'border-blue-600 text-blue-700 bg-blue-50' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
                       >
-                         <PersonaIcon type={reviewer.icon} size={16} /> {reviewer.roleName.split(' ')[0]}...
+                         <PersonaIcon type={reviewer.icon} size={16} /> {(reviewer.roleName || 'Reviewer').split(' ')[0]}...
                       </button>
                     ))}
                  </div>
