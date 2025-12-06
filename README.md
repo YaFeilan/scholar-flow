@@ -1,111 +1,84 @@
 # AI Research Assistant (AI研究助理)
 
-Research Assistant 是一款基于人工智能的学术研究辅助工具，旨在帮助研究人员、学生和专业人士快速阅读、理解复杂的学术论文。该应用程序部署在 Google Cloud 上运行，利用大语言模型（LLM）的能力来简化文献综述和提取信息的过程。
+Research Assistant 是一款基于人工智能的学术研究辅助工具，旨在帮助研究人员、学生和专业人士快速阅读、理解复杂的学术论文。
 
 ## ✨ 主要功能 (Features)
 
-### 📄 PDF 文档分析
-* 支持上传 PDF 格式的学术论文或研究报告。
-* 自动提取并解析文本内容。
+# 📘 Research Assistant 功能清单
 
-### 📝 智能摘要 (Smart Summarization)
-* **TL;DR**: 生成论文的简明摘要。
-* **关键要素提取**: 自动提取本文的关键发现、方法论和结论。
-* **ELI5 模式**: 用“像我五岁一样”的通俗语言解释复杂的学术概念。
+### 1. 选题与策划阶段
+* 💡 **思路引导**: 激发研究灵感，梳理研究逻辑
+* 📈 **趋势分析**: 洞察领域热点与发展趋势
+* 🔍 **文献检索**: 快速查找高质量学术资源
+* 💬 **AI论文导读**: 智能总结与解读核心文献
+* 🗂️ **个人知识库**: 构建个性化知识管理系统
+* 📋 **开题审查**: 辅助评估选题可行性
+* 💼 **基金申报**: 协助准备申报材料
 
-### 💬 互动问答 (Interactive Q&A)
-* 针对上传的文档进行提问（例如：“这篇论文的主要贡献是什么？”）。
-* 支持基于上下文的追问，深入理解细节。
+### 2. 实验与数据阶段
+* 🧪 **实验设计**: 规划科学严谨的实验方案
+* 📊 **数据分析**: 智能化处理与统计实验数据
+* 📑 **图表提取**: 快速提取文献中的关键图表
+* >_ **代码助手**: 辅助编写与调试科研代码
+* 📖 **引用追踪**: 追踪关键文献的引用脉络
 
-### 🏷️ 引用生成
-* 自动生成 APA, MLA, IEEE 等格式的文本引用，方便学术写作。
+### 3. 写作与润色阶段
+* 📄 **综述生成**: 快速生成相关领域的文献综述
+* ✒️ **论文润色**: 提升语言表达与学术规范性
+* 🛡️ **AI率检测/去AI化**: 自测AI生成率并进行人本化改写 
+* ⚠️ **查重预警**: 集成基础查重功能，规避无意识抄袭 
+* 🖼️ **科研绘图**: 制作高质量的学术展示图表
+* 🖥️ **PPT制作**: 自动生成学术汇报演示文稿
 
-### 📊 数据与图表解析 (实验性)
-* 尝试解释论文中的表格数据和图表趋势。
-
----
-
+### 4. 投稿与发表阶段
+* 📅 **学术会议日历**: 推荐近期截稿的CCF会议及特刊
+* 👤 **投稿顾问**: 推荐合适的投稿期刊与会议
+* ✅ **智能审稿**: 模拟同行评审进行预先评估
 ## 🛠️ 技术栈 (Tech Stack)
 
-该项目采用现代 AI 应用架构构建：
+本项目采用现代化的前端开发技术栈，结合 Google Gemini AI 能力构建。
 
-* **前端/全栈框架**: Streamlit 或 React
-* **Orchestration / LLM 编排**: LangChain / LlamaIndex
-* **大语言模型 (LLM)**: OpenAI GPT-4o / Google Gemini Pro / Anthropic Claude
-* **向量数据库**: FAISS / ChromaDB (用于 RAG 检索增强生成)
-* **部署环境**: Google Cloud Run (Docker 容器化)
-* **编程语言**: Python 3.10+
-
----
-
+### 💻 前端核心 (Frontend Core)
+* **React**: 用于构建用户界面的 JavaScript 库 
+* **TypeScript**: 提供静态类型检查，增强代码的可维护性与智能提示。
+* **Vite** (: 高效的前端构建工具 
+### 🎨 样式与 UI (Styling & UI)
+* **Tailwind CSS**: 实用优先的 CSS 框架。
+* **Dark Mode Support**: 支持深色模式 
+### 🤖 AI 与后端集成 (AI & Services)
+* **Google Gemini API**: 核心大语言模型服务。
+* **Node.js**: 运行环境与包管理。
+### 📦 关键依赖库 (Key Libraries)
+* **react-markdown**: 用于渲染 Markdown 格式的文本。
+* **Lucide React / React Icons**: 用于 UI 图标展示。
 ## 🚀 快速开始 (Getting Started)
 
-如果您希望在本地运行此项目（Python 后端），请按照以下步骤操作。
+如果您希望在本地运行此项目，请按照以下步骤操作。
 
 ### 先决条件
-* Python 3.9 或更高版本
-* OpenAI API Key 或 Google Gemini API Key
+* Node.js
+* Google Gemini API Key
 
 ### 安装步骤
 
-1.  **克隆仓库**
-    ```bash
-    git clone [https://github.com/your-username/ai-research-assistant.git](https://github.com/your-username/ai-research-assistant.git)
-    cd ai-research-assistant
-    ```
+1. **下载全部文件**
+   将下载的文件放在文件夹中。
 
-2.  **创建虚拟环境**
-    ```bash
-    python -m venv venv
-    # Windows:
-    .\venv\Scripts\activate
-    # Mac/Linux:
-    source venv/bin/activate
-    ```
+2. **安装 Node.js**
 
-3.  **安装依赖**
-    ```bash
-    pip install -r requirements.txt
-    ```
+3. **配置环境变量**
+   * 用记事本打开 `.env.local`
+   * 设置 API 密钥：
+     ```properties
+     GEMINI_API_KEY=输入Google Gemini秘钥
+     ```
 
-4.  **配置环境变量**
-    创建一个 `.env` 文件并填写您的 API 密钥：
-    ```env
-    OPENAI_API_KEY=sk-xxxxxxxxxxxx
-    GEMINI_API_KEY=xxxxxxxxxxxx
-    ```
-
-5.  **运行应用**
-    ```bash
-    streamlit run app.py
-    # 或者 python main.py
-    ```
-
----
-
-## 📖 使用指南 (前端/Node.js)
-
-如果您使用的是 Node.js 版本的前端，请参考以下步骤：
-
-**前提条件**：需安装 Node.js 环境。
-
-1.  **安装依赖项**
-    ```bash
-    npm install
-    ```
-
-2.  **配置环境**
-    在 `.env.local` 文件中设置您的 API 密钥：
-    ```env
-    GEMINI_API_KEY=your_gemini_key_here
-    ```
-
-3.  **运行应用程序**
-    ```bash
-    npm run dev
-    ```
-
----
+4. **运行应用**
+   * 在项目文件夹空白处按住 `Shift` 键 + **鼠标右键**
+   * 选择 **打开 Powershell 窗口**
+   * 输入以下命令：
+     npm run dev
+   * 对生成的网址按 `Ctrl` + **鼠标左键** 即可访问。
 
 ## 🤝 贡献 (Contribution)
 
