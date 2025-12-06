@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useMemo } from 'react';
 import { User, BookOpen, Send, Loader2, Award, AlertTriangle, TrendingUp, TrendingDown, Minus, Copy, CheckCircle, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -198,7 +195,7 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
                         <div>
                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Keyword Trends (3 Years)</h4>
                             <div className="flex flex-wrap gap-2">
-                                {currentReport.keywords?.map((kw, i) => (
+                                {Array.isArray(currentReport.keywords) && currentReport.keywords.map((kw, i) => (
                                     <div key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-medium">
                                         {kw.term}
                                         {kw.trend === 'Rising' && <TrendingUp size={12} className="text-green-500" />}
@@ -220,7 +217,7 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
                                 Title Optimization
                             </h4>
                             <div className="space-y-3">
-                                {currentReport.titleSuggestions?.map((sug, i) => (
+                                {Array.isArray(currentReport.titleSuggestions) && currentReport.titleSuggestions.map((sug, i) => (
                                     <div key={i} className="bg-slate-50 rounded-lg border border-slate-200 p-3 hover:border-blue-300 transition-colors group">
                                         <div className="text-xs text-red-500 mb-1 font-medium">{sug.issue}</div>
                                         <div className="font-bold text-slate-800 text-sm mb-2 leading-snug">"{sug.revised}"</div>
@@ -249,7 +246,7 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
                                 <AlertTriangle className="text-amber-500" size={18} /> {t.risks}
                             </h4>
                             <div className="space-y-2">
-                                {currentReport.riskAssessment?.map((risk, i) => (
+                                {Array.isArray(currentReport.riskAssessment) && currentReport.riskAssessment.map((risk, i) => (
                                     <div key={i} className={`p-3 rounded-lg border text-sm flex items-start gap-2 ${
                                         risk.severity === 'High' ? 'bg-red-50 border-red-100 text-red-800' : 'bg-amber-50 border-amber-100 text-amber-800'
                                     }`}>
@@ -270,7 +267,7 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
                         <div>
                              <h4 className="font-bold text-slate-800 mb-3 text-lg">Content Suggestions</h4>
                              <div className="space-y-3">
-                                {currentReport.improvementSuggestions?.map((imp, i) => (
+                                {Array.isArray(currentReport.improvementSuggestions) && currentReport.improvementSuggestions.map((imp, i) => (
                                     <div key={i} className="border border-slate-200 rounded-lg overflow-hidden">
                                         <div className="bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600 border-b border-slate-200">
                                             {imp.content}
@@ -284,7 +281,7 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
                         </div>
 
                         {/* Alternative Journals */}
-                        {currentReport.alternatives?.length > 0 && (
+                        {Array.isArray(currentReport.alternatives) && currentReport.alternatives.length > 0 && (
                             <div>
                                 <h4 className="font-bold text-slate-800 mb-3 text-lg">{t.alternatives}</h4>
                                 <div className="space-y-2">
@@ -305,7 +302,7 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
                          <div>
                              <h4 className="font-bold text-slate-800 mb-3 text-lg">Relevant References</h4>
                              <div className="bg-slate-50 rounded-lg p-3 space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
-                                {currentReport.references?.map((ref, i) => (
+                                {Array.isArray(currentReport.references) && currentReport.references.map((ref, i) => (
                                     <div key={i} className="text-xs text-slate-600 border-b border-slate-200 pb-2 last:border-0 last:pb-0">
                                         <span className="font-bold">{ref.title}</span> ({ref.year}) - {ref.author}
                                     </div>
@@ -313,7 +310,7 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
                              </div>
                              <button 
                                 onClick={() => {
-                                    const bib = currentReport.references?.map(r => `@article{ref${r.year}, title={${r.title}}, author={${r.author}}, year={${r.year}}}`).join('\n') || '';
+                                    const bib = Array.isArray(currentReport.references) ? currentReport.references.map(r => `@article{ref${r.year}, title={${r.title}}, author={${r.author}}, year={${r.year}}}`).join('\n') : '';
                                     copyToClipboard(bib);
                                 }}
                                 className="w-full mt-2 text-xs font-bold text-slate-500 hover:text-blue-600 py-1 border border-slate-200 rounded hover:bg-slate-50"

@@ -291,7 +291,20 @@ export const generateAdvisorReport = async (title: string, journal: string, abst
   Abstract: ${abstract}
   
   Language: ${language}.
-  Return JSON matching AdvisorReport interface (matchScore, radar, analysis, titleSuggestions, keywords, riskAssessment, alternatives, references, improvementSuggestions).`;
+  Return JSON matching AdvisorReport interface.
+  IMPORTANT: Ensure ALL arrays (titleSuggestions, keywords, riskAssessment, alternatives, references, improvementSuggestions) are populated with at least 3 items each. Do not return empty arrays.
+  
+  Structure:
+  - matchScore: number
+  - matchLevel: High/Medium/Low
+  - radar: { topic, method, novelty, scope, style } (0-100)
+  - analysis: string
+  - titleSuggestions: array of { issue, revised }
+  - keywords: array of { term, trend }
+  - riskAssessment: array of { risk, severity }
+  - alternatives: array of { name, impactFactor, reason }
+  - references: array of { title, author, year }
+  - improvementSuggestions: array of { content, example }`;
   return getJson(prompt);
 };
 
@@ -487,8 +500,15 @@ export const generateScientificFigure = async (prompt: string, style: string, mo
 };
 
 export const extractChartData = async (file: File, language: Language): Promise<ChartExtractionResult | null> => {
-  const prompt = `Extract data from this chart.
+  const prompt = `Extract ALL data from this chart image.
   Language: ${language}.
+  
+  Requirements:
+  1. Perform full OCR of all text labels, legends, and data points.
+  2. Provide a 'fullDescription' that comprehensively describes every element in the image.
+  3. Extract data points into a structured JSON array.
+  4. Identify the chart type.
+  
   Return JSON matching ChartExtractionResult (title, type, summary, data[], ocrText, fullDescription).`;
   return getJson(prompt, file);
 };

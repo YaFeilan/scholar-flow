@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useRef } from 'react';
 import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
@@ -29,6 +27,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   const [minCitations, setMinCitations] = useState<string>('');
   const [filterYear, setFilterYear] = useState<string>('');
   const [addedAfter, setAddedAfter] = useState<string>('');
+  const [addedBefore, setAddedBefore] = useState<string>('');
   
   // Search Mode State
   const [searchSource, setSearchSource] = useState<'online' | 'local'>('online');
@@ -200,6 +199,13 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       });
     }
 
+    if (addedBefore) {
+      papers = papers.filter(p => {
+         if (!p.addedDate) return false;
+         return p.addedDate <= addedBefore;
+      });
+    }
+
     return papers.sort((a, b) => {
       if (sortBy === 'date') return b.year - a.year;
       if (sortBy === 'added') return (b.addedDate || '').localeCompare(a.addedDate || '');
@@ -209,7 +215,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }
       return 0; // Relevance
     });
-  }, [sortBy, results, localPapers, filters, searchSource, filterYear, minCitations, addedAfter]);
+  }, [sortBy, results, localPapers, filters, searchSource, filterYear, minCitations, addedAfter, addedBefore]);
 
   const FilterButton: React.FC<{ active: boolean; label: string; onClick?: () => void }> = ({ active, label, onClick }) => (
     <button
@@ -344,14 +350,23 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                         <ChevronDown size={14} className="text-slate-400 pointer-events-none" />
                      </div>
                      
-                     {/* Added After Date Filter */}
+                     {/* Added Date Filters */}
                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium flex items-center gap-1"><Clock size={14}/> {language === 'ZH' ? '加入时间 >' : 'Added After:'}</span>
+                        <span className="font-medium flex items-center gap-1"><Clock size={14}/> {language === 'ZH' ? '加入时间:' : 'Added:'}</span>
                         <input
                            type="date"
                            value={addedAfter}
                            onChange={(e) => setAddedAfter(e.target.value)}
-                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm p-0 cursor-pointer"
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm p-0 cursor-pointer w-24"
+                           placeholder="Start"
+                        />
+                        <span className="text-slate-400">-</span>
+                        <input
+                           type="date"
+                           value={addedBefore}
+                           onChange={(e) => setAddedBefore(e.target.value)}
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm p-0 cursor-pointer w-24"
+                           placeholder="End"
                         />
                      </div>
 
