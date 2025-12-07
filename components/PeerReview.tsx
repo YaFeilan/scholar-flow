@@ -1,8 +1,6 @@
-
-
 import React, { useState, useRef } from 'react';
 import { performPeerReview, generateRebuttalLetter, generateCoverLetter } from '../services/geminiService';
-import { Upload, CheckCircle, FileText, Loader2, ShieldCheck, User, Building, BookOpen, AlertTriangle, PenTool, Gavel, Award, Feather, Send, Copy, Mail } from 'lucide-react';
+import { Upload, CheckCircle, FileText, Loader2, ShieldCheck, User, Building, BookOpen, AlertTriangle, PenTool, Gavel, Award, Feather, Send, Copy, Mail, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Language, PeerReviewResponse, TargetType } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -20,6 +18,7 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
   const [content, setContent] = useState('');
   const [targetType, setTargetType] = useState<TargetType>('SCI');
   const [journalName, setJournalName] = useState('');
+  const [customInstructions, setCustomInstructions] = useState(''); // New state for AI prompts
   
   // States
   const [reviewResult, setReviewResult] = useState<PeerReviewResponse | null>(null);
@@ -53,7 +52,7 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
   };
 
   const handleReview = async () => {
-    if (!content && !file) return;
+    if (!file && !content) return; // Strict check for file presence (content derived from file)
     setLoading(true);
     setReviewResult(null);
     setRebuttalLetter(null);
@@ -61,7 +60,8 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
     setActiveTab(0);
     
     const filename = file ? file.name : "Submitted Manuscript";
-    const result = await performPeerReview(content, filename, targetType, journalName, language);
+    // Using updated service method with customInstructions
+    const result = await performPeerReview(content, filename, targetType, journalName, language, customInstructions);
     setReviewResult(result);
     setLoading(false);
   };
@@ -172,21 +172,25 @@ const PeerReview: React.FC<PeerReviewProps> = ({ language }) => {
                 </div>
             </div>
 
+            {/* REPLACED: AI Prompt Input instead of Content Paste */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">{t.contentLabel}</label>
+                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                    <MessageSquare size={12} className="text-amber-500" />
+                    {language === 'ZH' ? '评审侧重点 / AI 指令' : 'Review Focus / AI Instructions'}
+                 </label>
               </div>
               <textarea 
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Paste content here if no file..."
-                className="w-full h-32 border border-slate-300 rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 outline-none resize-none font-mono"
+                value={customInstructions}
+                onChange={(e) => setCustomInstructions(e.target.value)}
+                placeholder={language === 'ZH' ? '例如：请重点评估方法的创新性，并忽略格式问题...' : 'e.g. Focus strictly on statistical methodology and innovation...'}
+                className="w-full h-32 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"
               />
             </div>
             
             <button 
               onClick={handleReview}
-              disabled={loading || (!content && !file)}
+              disabled={loading || !file} 
               className="w-full bg-amber-600 text-white font-bold py-3.5 rounded-xl hover:bg-amber-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-amber-200"
             >
               {loading ? (

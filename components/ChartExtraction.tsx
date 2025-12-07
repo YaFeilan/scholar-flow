@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Upload, FileText, Loader2, Download, Table2, Image as ImageIcon, X, Copy, CheckCircle, Crop, Check, RotateCcw, MousePointer2, Plus, Trash2, LayoutGrid, Edit2, GripVertical, ScanEye, TrendingUp, BarChart as BarChartIcon, Code, ArrowRight, Sparkles, MessageSquare, Filter, Calendar, Tag, FileSearch, Terminal, Database, FileOutput, Eye, Calculator, PenTool } from 'lucide-react';
 import { Language, ChartExtractionResult } from '../types';
@@ -175,9 +176,10 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
   };
 
   useEffect(() => {
-    const handlePaste = (e: any) => {
-      if (e.clipboardData && e.clipboardData.items) {
-        const items = e.clipboardData.items;
+    const handlePaste = (e: Event) => {
+      const clipboardEvent = e as ClipboardEvent;
+      if (clipboardEvent.clipboardData && clipboardEvent.clipboardData.items) {
+        const items = clipboardEvent.clipboardData.items;
         const newFiles: ChartFile[] = [];
         
         for (let i = 0; i < items.length; i++) {
@@ -186,7 +188,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
             const blob = item.getAsFile();
             if (blob) {
                 // Ensure it is treated as a File object compatible with ChartFile interface
-                const file = blob as File;
+                const file = blob;
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
                     file: file,

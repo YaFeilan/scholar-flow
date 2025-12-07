@@ -1,6 +1,3 @@
-
-
-
 import { GoogleGenAI } from "@google/genai";
 
 import {
@@ -778,13 +775,15 @@ export const humanizeText = async (content: string, language: Language): Promise
     return getJson<AIHumanizeResult>(prompt);
 };
 
-export const performPeerReview = async (content: string, filename: string, target: TargetType, journal: string, language: Language): Promise<PeerReviewResponse | null> => {
-    const prompt = `Act as a peer reviewer for "${target}" (Journal: ${journal}).
-    Review file "${filename}" with content snippet: "${content.substring(0, 1000)}...".
-    Language: ${language}.
-    
-    Return JSON matching PeerReviewResponse interface.`;
-    return getJson<PeerReviewResponse>(prompt);
+export const performPeerReview = async (content: string, filename: string, target: TargetType, journal: string, language: Language, customInstructions?: string): Promise<PeerReviewResponse | null> => {
+  const prompt = `Act as a peer reviewer for "${target}" (Journal: ${journal}).
+  ${customInstructions ? `**Review Focus/Instructions:** ${customInstructions}` : ''}
+  
+  Review file "${filename}" with content snippet: "${content.substring(0, 10000)}...". 
+  Language: ${language}.
+  
+  Return a valid JSON object matching PeerReviewResponse interface exactly.`;
+  return getJson<PeerReviewResponse>(prompt);
 };
 
 export const generateRebuttalLetter = async (critiques: string, language: Language): Promise<string> => {
