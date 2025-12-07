@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useRef } from 'react';
 import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database, Lock, Copy, Check, ExternalLink, AlertTriangle, MessageCircle, Image as ImageIcon } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
@@ -292,14 +293,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
     if (addedAfter) {
       papers = papers.filter(p => {
          if (!p.addedDate) return false;
-         return p.addedDate >= addedAfter;
+         return p.addedDate! >= addedAfter;
       });
     }
 
     if (addedBefore) {
       papers = papers.filter(p => {
          if (!p.addedDate) return false;
-         return p.addedDate <= addedBefore;
+         return p.addedDate! <= addedBefore;
       });
     }
 
