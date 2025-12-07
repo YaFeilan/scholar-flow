@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { 
   Language, 
@@ -230,7 +231,21 @@ export const refinePolish = async (originalText: string, instruction: string, la
 export const generateAdvisorReport = async (title: string, journal: string, abstract: string, language: Language, focus?: string): Promise<AdvisorReport | null> => {
     const prompt = `Evaluate paper fit. Title: ${title}. Journal: ${journal}. Abstract: ${abstract}. 
     ${focus ? `**Review Focus/Instructions:** ${focus}` : ''}
-    Language: ${language}. Return JSON matching AdvisorReport.`;
+    Language: ${language}. 
+    
+    Return a JSON object strictly matching this schema:
+    {
+      "matchScore": 85,
+      "matchLevel": "High",
+      "radar": { "topic": 80, "method": 70, "novelty": 90, "scope": 85, "style": 75 },
+      "analysis": "Detailed analysis string",
+      "titleSuggestions": [{ "issue": "Issue description", "revised": "Revised Title" }],
+      "keywords": [{ "term": "Keyword", "trend": "Rising" }],
+      "riskAssessment": [{ "risk": "Risk description", "severity": "Medium" }],
+      "alternatives": [{ "name": "Journal Name", "impactFactor": "IF", "reason": "Reason" }],
+      "references": [{ "title": "Title", "author": "Author", "year": "2023" }],
+      "improvementSuggestions": [{ "content": "Suggestion", "example": "Example" }]
+    }`;
     return getJson<AdvisorReport>(prompt);
 };
 
@@ -269,13 +284,46 @@ export const generateSlideImage = async (visualSuggestion: string, style: string
     return null;
 };
 
-export const generateResearchIdeas = async (topic: string, language: Language, focus: string): Promise<IdeaGuideResult | null> => {
-    const prompt = `Generate research ideas for topic "${topic}". Focus: ${focus}. Language: ${language}. Return JSON matching IdeaGuideResult.`;
-    return getJson<IdeaGuideResult>(prompt);
+export const generateResearchIdeas = async (topic: string, language: Language, focus: string, file?: File): Promise<IdeaGuideResult | null> => {
+    const prompt = `Generate research ideas ${topic ? `for topic "${topic}"` : 'based on the provided image content'}. Focus: ${focus}. Language: ${language}.
+    
+    Return a JSON object strictly matching this schema:
+    {
+      "directions": [
+        {
+          "angle": "Research Angle Title",
+          "description": "Detailed description of the research direction",
+          "methodology": "Recommended methodology (e.g., DID, Transformer)",
+          "dataSources": "Potential data sources",
+          "recommendedTitles": ["Title 1", "Title 2"],
+          "corePapers": [
+            { "title": "Paper Title", "author": "Author Name", "year": "Year" }
+          ]
+        }
+      ],
+      "journals": [
+        {
+          "name": "Journal Name",
+          "impactFactor": "IF Value",
+          "reviewCycle": "Time",
+          "acceptanceRate": "Rate",
+          "reason": "Why it fits"
+        }
+      ]
+    }`;
+    return getJson<IdeaGuideResult>(prompt, file);
 };
 
 export const generateIdeaFollowUp = async (topic: string, angle: string, query: string, language: Language): Promise<IdeaFollowUpResult | null> => {
-    const prompt = `Deep dive into research angle "${angle}" for topic "${topic}". Question: ${query}. Language: ${language}. Return JSON matching IdeaFollowUpResult.`;
+    const prompt = `Deep dive into research angle "${angle}" for topic "${topic}". Question: ${query}. Language: ${language}.
+    
+    Return a JSON object strictly matching this schema:
+    {
+      "analysis": "Detailed analysis text",
+      "logicPath": ["Step 1", "Step 2", "Step 3"],
+      "suggestions": [{ "title": "Suggestion Title", "detail": "Detail" }],
+      "recommendedTerms": ["Term 1", "Term 2"]
+    }`;
     return getJson<IdeaFollowUpResult>(prompt);
 };
 

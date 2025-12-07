@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Lightbulb, Send, Loader2, BookOpen, Target, ArrowRight, MessageCircle, ChevronDown, Key, Database, Cpu, FileText, ExternalLink, Download, Layout, RefreshCw } from 'lucide-react';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Lightbulb, Send, Loader2, BookOpen, Target, ArrowRight, MessageCircle, ChevronDown, Key, Database, Cpu, FileText, ExternalLink, Download, Layout, RefreshCw, Image as ImageIcon, X } from 'lucide-react';
 import { generateResearchIdeas, generateIdeaFollowUp } from '../services/geminiService';
 import { Language, IdeaGuideResult, IdeaFollowUpResult } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -17,6 +18,8 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
   const [focus, setFocus] = useState('General');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IdeaGuideResult | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Deep Dive State
   const [selectedDirectionIndex, setSelectedDirectionIndex] = useState<number | null>(null);
@@ -44,13 +47,19 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
     }
   }, [initialTopic, language]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
   const handleGenerate = async () => {
-    if (!topic.trim()) return;
+    if (!topic.trim() && !file) return;
     setLoading(true);
     setResult(null);
     setSelectedDirectionIndex(null); // Reset deep dive
     setFollowUpResult(null);
-    const data = await generateResearchIdeas(topic, language, focus);
+    const data = await generateResearchIdeas(topic, language, focus, file || undefined);
     setResult(data);
     setLoading(false);
   };
@@ -194,11 +203,34 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                        <option value="Policy-Oriented">{t.focus.policy}</option>
                        <option value="Theory-Heavy">{t.focus.theory}</option>
                     </select>
+                    
+                    {/* Image Upload Trigger */}
+                    <div className="h-6 w-px bg-slate-200 mx-1"></div>
+                    <input 
+                       type="file" 
+                       ref={fileInputRef}
+                       className="hidden" 
+                       accept="image/*"
+                       onChange={handleFileChange}
+                    />
+                    <button 
+                       onClick={() => fileInputRef.current?.click()}
+                       className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-bold transition-colors ${file ? 'bg-purple-100 text-purple-700' : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50'}`}
+                       title="Upload image for inspiration"
+                    >
+                       <ImageIcon size={14} /> 
+                       {file ? <span className="max-w-[80px] truncate">{file.name}</span> : <span>Image</span>}
+                    </button>
+                    {file && (
+                        <button onClick={(e) => {e.stopPropagation(); setFile(null);}} className="text-slate-400 hover:text-red-500">
+                            <X size={12} />
+                        </button>
+                    )}
                  </div>
               </div>
               <button
                 onClick={handleGenerate}
-                disabled={loading || !topic}
+                disabled={loading || (!topic && !file)}
                 className="w-full md:w-auto bg-amber-500 text-white px-8 rounded-lg font-bold hover:bg-amber-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 h-24 flex-shrink-0"
               >
                 {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Send size={20} />}

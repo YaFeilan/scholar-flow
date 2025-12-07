@@ -186,12 +186,10 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
           if (item.type.indexOf('image') !== -1) {
             const blob = item.getAsFile();
             if (blob) {
-                // Ensure it is treated as a File object compatible with ChartFile interface
-                const file = blob as unknown as File; // Explicit cast to fix type error
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
-                    file: file,
-                    previewUrl: URL.createObjectURL(file),
+                    file: blob,
+                    previewUrl: URL.createObjectURL(blob),
                     metadata: { addedDate: new Date().toISOString().split('T')[0], partition: 'SCI' }
                 });
             }
