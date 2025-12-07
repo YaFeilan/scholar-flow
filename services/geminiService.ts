@@ -175,18 +175,22 @@ export const extractChartData = async (file: File, language: Language, mode: str
 export const parsePaperFromImage = async (file: File, language: Language): Promise<Paper | null> => {
     const ai = getAiClient();
     const prompt = `Analyze this image of a research paper page. 
-    Task: Extract metadata and FULL textual content visible in the image.
-    If the image contains the full paper text, transcribe as much as possible.
-    If it is a snippet, extract the context.
+    TASK: PERFORM A FULL OCR EXTRACTION OF ALL VISIBLE TEXT.
+    
+    1. Extract metadata: title, authors, journal, year.
+    2. Extract ALL main body content visible. Do not summarize. Transcribe fully.
+    3. If the image is just a snippet or abstract, transcribe it exactly.
+    4. If the image covers full pages, extract as much text as possible from all columns.
+    
     Language: ${language}.
     
     Return a JSON object with this specific structure:
     {
-      "title": "Paper Title (if visible, else infer)",
+      "title": "Paper Title",
       "authors": ["Author 1", "Author 2"],
-      "journal": "Journal Name (if visible)",
+      "journal": "Journal Name",
       "year": 2024,
-      "abstract": "The full extracted text content from the image (not just abstract, include body text if available).",
+      "abstract": "THE FULL EXTRACTED CONTENT goes here (put body text here if it's not just an abstract)",
       "badges": [{"type": "SCI"}] (Infer potential journal tier if possible)
     }`;
 

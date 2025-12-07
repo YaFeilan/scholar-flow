@@ -202,7 +202,7 @@ const PPTGenerator: React.FC<PPTGeneratorProps> = ({ language }) => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="text-center mb-8">
-         <h2 className="text-3xl font-serif font-bold text-slate-900">{t.title}</h2>
+         <h2 className="text-3xl font-serif font-bold text-slate-900">{t.title} <span className="text-red-500 text-sm align-super">(Test)</span></h2>
          <p className="text-slate-500">{t.subtitle}</p>
       </div>
 

@@ -343,7 +343,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-6 transition-colors">
-        <h2 className="text-2xl font-serif font-bold text-center text-slate-800 dark:text-slate-100 mb-2">{t.title}</h2>
+        <h2 className="text-2xl font-serif font-bold text-center text-slate-800 dark:text-slate-100 mb-2">{t.title} <span className="text-red-500 text-sm align-super">(Test)</span></h2>
         <p className="text-center text-slate-500 dark:text-slate-400 mb-6 text-sm">{t.subtitle}</p>
         
         {/* Source Toggle */}
