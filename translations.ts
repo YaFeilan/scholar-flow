@@ -176,7 +176,9 @@ export const TRANSLATIONS = {
       subtitle: 'Evaluate the opening section of your paper.',
       uploadDesc: 'Upload PDF',
       targetLabel: 'Target',
-      targetPlaceholder: 'Journal or Conference Name',
+      targetPlaceholder: 'Journal / Conference / Thesis (Bachelor/Master/PhD)',
+      focusLabel: 'Review Focus (Optional)',
+      focusPlaceholder: 'e.g. Focus on innovation and methodology...',
       btn: 'Review Opening'
     },
     data: {
@@ -624,7 +626,9 @@ export const TRANSLATIONS = {
       subtitle: '对开题报告进行预评估与优化。',
       uploadDesc: '上传 PDF 文件',
       targetLabel: '目标',
-      targetPlaceholder: '期刊或会议名称',
+      targetPlaceholder: '期刊 / 会议 / 本硕博毕业论文',
+      focusLabel: '评审侧重点 (可选)',
+      focusPlaceholder: '例如：重点关注创新点与方法论...',
       btn: '开始评审'
     },
     data: {

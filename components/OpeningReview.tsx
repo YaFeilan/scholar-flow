@@ -1,6 +1,8 @@
 
+
+
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Upload, FileText, Send, Download, CheckCircle, AlertTriangle, ClipboardCheck, Loader2, BarChart2, BookOpen, Target, Shield, Zap, ChevronRight, X, PenTool, ExternalLink, RefreshCw, Layout, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, FileText, Send, Download, CheckCircle, AlertTriangle, ClipboardCheck, Loader2, BarChart2, BookOpen, Target, Shield, Zap, ChevronRight, X, PenTool, ExternalLink, RefreshCw, Layout, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { generateOpeningReview, optimizeOpeningSection } from '../services/geminiService';
 import { Language, OpeningReviewResponse, ReviewPersona } from '../types';
@@ -24,6 +26,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [target, setTarget] = useState('');
   const [persona, setPersona] = useState<ReviewPersona>('Gentle');
+  const [customFocus, setCustomFocus] = useState(''); // New state for focus
   
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<OpeningReviewResponse | null>(null);
@@ -174,7 +177,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
     if (!file || !target) return;
     setLoading(true);
     setReport(null);
-    const result = await generateOpeningReview(file, target, language, persona);
+    const result = await generateOpeningReview(file, target, language, persona, customFocus);
     setReport(result);
     setLoading(false);
   };
@@ -276,6 +279,20 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                              </button>
                           </div>
                        </div>
+                    </div>
+
+                    {/* Review Focus (New Input) */}
+                    <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                            <MessageSquare size={16} className="text-emerald-500" /> 
+                            {t.focusLabel}
+                        </label>
+                        <textarea
+                            value={customFocus}
+                            onChange={(e) => setCustomFocus(e.target.value)}
+                            placeholder={t.focusPlaceholder}
+                            className="w-full h-20 border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
+                        />
                     </div>
 
                     <button 

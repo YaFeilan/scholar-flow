@@ -188,7 +188,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
             const blob = item.getAsFile();
             if (blob) {
                 // Ensure it is treated as a File object compatible with ChartFile interface
-                const file = blob as any as File;
+                const file = blob as File;
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
                     file: file,
@@ -243,14 +243,16 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
 
     const fileToUpload = croppedBlob || activeFile.file;
     
-    let uploadFile = fileToUpload;
+    let uploadFile: File;
     if (fileToUpload instanceof Blob && !(fileToUpload instanceof File)) {
         uploadFile = new File([fileToUpload], "cropped_chart.png", { type: "image/png" });
+    } else {
+        uploadFile = fileToUpload as File;
     }
 
     try {
         // Pass the selected mode to the service
-        const data = await extractChartData(uploadFile as File, language, extractionMode);
+        const data = await extractChartData(uploadFile, language, extractionMode);
         
         clearInterval(stepInterval);
         setLoadingStep(loadingSteps.length - 1); 
