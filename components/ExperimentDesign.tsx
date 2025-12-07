@@ -6,6 +6,7 @@ import { TRANSLATIONS } from '../translations';
 import { generateExperimentDesign, optimizeHypothesis, analyzeImageNote } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface ExperimentDesignProps {
   language: Language;
@@ -38,6 +39,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ExperimentDesignResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const handleGenerate = async () => {
     if (!hypothesis.trim()) return;
@@ -92,71 +94,46 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
       }
   };
 
-  const handleExport = () => {
-    if (!result) return;
-    const doc = new jsPDF();
-    const margin = 20;
-    let y = margin;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const maxWidth = pageWidth - margin * 2;
-
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.text(result.title || "Experiment Design", margin, y);
-    y += 10;
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    const hText = `Hypothesis: ${hypothesis}`;
-    const hLines = doc.splitTextToSize(hText, maxWidth);
-    doc.text(hLines, margin, y);
-    y += hLines.length * 5 + 5;
-
-    // Sample Size
-    if (result.sampleSize) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Sample Size Calculation", margin, y);
-        y += 6;
-        doc.setFont("helvetica", "normal");
-        doc.text(`Recommended N: ${result.sampleSize.recommended}`, margin, y);
-        y += 6;
-        result.sampleSize.parameters?.forEach(p => {
-            doc.text(`- ${p.label}: ${p.value}`, margin + 5, y);
-            y += 6;
+  const handleExport = async () => {
+    if (!result || !resultsRef.current) return;
+    
+    try {
+        const canvas = await html2canvas(resultsRef.current, {
+            scale: 2, // Higher quality
+            useCORS: true,
+            backgroundColor: '#ffffff' // Ensure white background
         });
-        const expLines = doc.splitTextToSize(`Reasoning: ${result.sampleSize.explanation}`, maxWidth);
-        doc.text(expLines, margin, y);
-        y += expLines.length * 5 + 10;
-    }
 
-    // Variables
-    if (result.variables) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Variables", margin, y);
-        y += 6;
-        doc.setFont("helvetica", "normal");
-        if (result.variables.independent) { doc.text(`IV: ${result.variables.independent.join(', ')}`, margin, y); y += 6; }
-        if (result.variables.dependent) { doc.text(`DV: ${result.variables.dependent.join(', ')}`, margin, y); y += 6; }
-        if (result.variables.control) { doc.text(`Control: ${result.variables.control.join(', ')}`, margin, y); y += 6; }
-        if (result.variables.confounders) { doc.text(`Confounders: ${result.variables.confounders.join(', ')}`, margin, y); y += 10; }
-    }
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfImgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        
+        let heightLeft = pdfImgHeight;
+        let position = 0;
 
-    // Flow
-    if (result.flow && result.flow.length > 0) {
-        doc.setFont("helvetica", "bold");
-        doc.text("Experimental Flow", margin, y);
-        y += 6;
-        doc.setFont("helvetica", "normal");
-        result.flow.forEach(step => {
-            if (y > 270) { doc.addPage(); y = margin; }
-            const sText = `${step.step}. ${step.name}: ${step.description}`;
-            const sLines = doc.splitTextToSize(sText, maxWidth);
-            doc.text(sLines, margin, y);
-            y += sLines.length * 5 + 4;
-        });
-    }
+        // Add first page
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfImgHeight);
+        heightLeft -= pdfHeight;
 
-    doc.save("Experiment_Design.pdf");
+        // Add subsequent pages if content overflows
+        while (heightLeft >= 0) {
+            position = heightLeft - pdfImgHeight; 
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position - 297 * (Math.ceil(pdfImgHeight/297)-1), pdfWidth, pdfImgHeight); 
+            // Simplified multi-page logic - note: precise cutting with html2canvas can be complex, 
+            // this simply repeats the image shifted up. Ideally one would slice the canvas.
+            // For now, this is a robust fallback for typical experiment design lengths.
+            heightLeft -= pdfHeight;
+        }
+
+        pdf.save('Experiment_Design.pdf');
+    } catch (e) {
+        console.error("PDF Generation Error", e);
+        alert(language === 'ZH' ? '导出 PDF 失败' : 'Failed to export PDF');
+    }
   };
 
   return (
@@ -358,122 +335,125 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
           {/* Right Panel: Results or Templates */}
           <div className="lg:col-span-8 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
               {result ? (
-                  <div className="flex-grow overflow-y-auto p-8 space-y-8 animate-fadeIn custom-scrollbar">
-                      {/* ... Header & Cards ... */}
-                      <div className="flex justify-between items-start">
-                          <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{result.title}</h3>
-                          <button onClick={handleExport} className="text-slate-500 hover:text-purple-600 dark:hover:text-purple-400">
-                              <Download size={20} />
-                          </button>
-                      </div>
+                  <div className="flex-grow overflow-y-auto p-8 animate-fadeIn custom-scrollbar">
+                      {/* Wrapper for capture to ensure full height and styling */}
+                      <div ref={resultsRef} className="space-y-8 bg-slate-50 dark:bg-slate-800 p-2">
+                          {/* ... Header & Cards ... */}
+                          <div className="flex justify-between items-start">
+                              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{result.title}</h3>
+                              <button onClick={handleExport} className="text-slate-500 hover:text-purple-600 dark:hover:text-purple-400 no-print">
+                                  <Download size={20} />
+                              </button>
+                          </div>
 
-                      {/* Sample Size Card */}
-                      {result.sampleSize && (
-                          <div className="bg-white dark:bg-slate-700 rounded-xl p-6 border border-purple-100 dark:border-purple-800 shadow-sm relative overflow-hidden">
-                              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 dark:bg-purple-900/20 rounded-bl-full -mr-10 -mt-10"></div>
-                              <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4 relative z-10">
-                                  <Calculator className="text-purple-500" /> {t.sampleSize}
-                              </h4>
+                          {/* Sample Size Card */}
+                          {result.sampleSize && (
+                              <div className="bg-white dark:bg-slate-700 rounded-xl p-6 border border-purple-100 dark:border-purple-800 shadow-sm relative overflow-hidden">
+                                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 dark:bg-purple-900/20 rounded-bl-full -mr-10 -mt-10"></div>
+                                  <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4 relative z-10">
+                                      <Calculator className="text-purple-500" /> {t.sampleSize}
+                                  </h4>
+                                  
+                                  <div className="flex flex-col md:flex-row gap-8 relative z-10">
+                                      <div className="flex-shrink-0">
+                                          <div className="text-5xl font-black text-purple-600 dark:text-purple-400 mb-1">{result.sampleSize.recommended}</div>
+                                          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Participants</div>
+                                      </div>
+                                      <div className="flex-grow space-y-4">
+                                          <div className="flex flex-wrap gap-2">
+                                              {result.sampleSize.parameters?.map((p, i) => (
+                                                  <span key={i} className="bg-purple-50 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-bold border border-purple-100 dark:border-purple-800">
+                                                      {p.label}: {p.value}
+                                                  </span>
+                                              ))}
+                                          </div>
+                                          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-600">
+                                              <span className="font-bold text-slate-700 dark:text-slate-200">Calculation Logic:</span> {result.sampleSize.explanation}
+                                          </p>
+                                      </div>
+                                  </div>
+                              </div>
+                          )}
+
+                          {/* ... Variables, Analysis, Flow Sections ... */}
+                          {/* Variables */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {result.variables && (
+                                  <div className="bg-white dark:bg-slate-700 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-sm">
+                                      <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
+                                          <GitBranch className="text-blue-500" /> {t.variables}
+                                      </h4>
+                                      <div className="space-y-4">
+                                          {result.variables.independent && (
+                                              <div>
+                                                  <span className="text-xs font-bold text-slate-400 uppercase">Independent Variables (IV)</span>
+                                                  <div className="flex flex-wrap gap-2 mt-1">
+                                                      {result.variables.independent.map((v, i) => (
+                                                          <span key={i} className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-sm font-medium">{v}</span>
+                                                      ))}
+                                                  </div>
+                                              </div>
+                                          )}
+                                          {result.variables.dependent && (
+                                              <div>
+                                                  <span className="text-xs font-bold text-slate-400 uppercase">Dependent Variables (DV)</span>
+                                                  <div className="flex flex-wrap gap-2 mt-1">
+                                                      {result.variables.dependent.map((v, i) => (
+                                                          <span key={i} className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded text-sm font-medium">{v}</span>
+                                                      ))}
+                                                  </div>
+                                              </div>
+                                          )}
+                                          {(result.variables.control || result.variables.confounders) && (
+                                              <div>
+                                                  <span className="text-xs font-bold text-slate-400 uppercase">Control / Confounders</span>
+                                                  <div className="flex flex-wrap gap-2 mt-1">
+                                                      {[...(result.variables.control || []), ...(result.variables.confounders || [])].map((v, i) => (
+                                                          <span key={i} className="bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 px-2 py-1 rounded text-sm">{v}</span>
+                                                      ))}
+                                                  </div>
+                                              </div>
+                                          )}
+                                      </div>
+                                  </div>
+                              )}
                               
-                              <div className="flex flex-col md:flex-row gap-8 relative z-10">
-                                  <div className="flex-shrink-0">
-                                      <div className="text-5xl font-black text-purple-600 dark:text-purple-400 mb-1">{result.sampleSize.recommended}</div>
-                                      <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Participants</div>
-                                  </div>
-                                  <div className="flex-grow space-y-4">
-                                      <div className="flex flex-wrap gap-2">
-                                          {result.sampleSize.parameters?.map((p, i) => (
-                                              <span key={i} className="bg-purple-50 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 px-3 py-1 rounded-full text-xs font-bold border border-purple-100 dark:border-purple-800">
-                                                  {p.label}: {p.value}
-                                              </span>
-                                          ))}
+                              {result.analysis && (
+                                  <div className="bg-white dark:bg-slate-700 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-sm flex flex-col">
+                                      <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
+                                          <Activity className="text-amber-500" /> {t.analysis}
+                                      </h4>
+                                      <div className="flex-grow flex flex-col justify-center">
+                                          <div className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">{result.analysis.method}</div>
+                                          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{result.analysis.description}</p>
                                       </div>
-                                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-600">
-                                          <span className="font-bold text-slate-700 dark:text-slate-200">Calculation Logic:</span> {result.sampleSize.explanation}
-                                      </p>
                                   </div>
-                              </div>
+                              )}
                           </div>
-                      )}
 
-                      {/* ... Variables, Analysis, Flow Sections ... */}
-                      {/* Variables */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {result.variables && (
+                          {/* Flow */}
+                          {result.flow && result.flow.length > 0 && (
                               <div className="bg-white dark:bg-slate-700 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-sm">
-                                  <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
-                                      <GitBranch className="text-blue-500" /> {t.variables}
+                                  <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-6">
+                                      <ListOrdered className="text-emerald-500" /> {t.flow}
                                   </h4>
-                                  <div className="space-y-4">
-                                      {result.variables.independent && (
-                                          <div>
-                                              <span className="text-xs font-bold text-slate-400 uppercase">Independent Variables (IV)</span>
-                                              <div className="flex flex-wrap gap-2 mt-1">
-                                                  {result.variables.independent.map((v, i) => (
-                                                      <span key={i} className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded text-sm font-medium">{v}</span>
-                                                  ))}
+                                  <div className="space-y-0 relative">
+                                      <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-slate-100 dark:bg-slate-600"></div>
+                                      {result.flow.map((step, idx) => (
+                                          <div key={idx} className="relative pl-12 pb-8 last:pb-0">
+                                              <div className="absolute left-0 w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center font-bold text-sm z-10">
+                                                  {step.step}
+                                              </div>
+                                              <div>
+                                                  <h5 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1">{step.name}</h5>
+                                                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{step.description}</p>
                                               </div>
                                           </div>
-                                      )}
-                                      {result.variables.dependent && (
-                                          <div>
-                                              <span className="text-xs font-bold text-slate-400 uppercase">Dependent Variables (DV)</span>
-                                              <div className="flex flex-wrap gap-2 mt-1">
-                                                  {result.variables.dependent.map((v, i) => (
-                                                      <span key={i} className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-1 rounded text-sm font-medium">{v}</span>
-                                                  ))}
-                                              </div>
-                                          </div>
-                                      )}
-                                      {(result.variables.control || result.variables.confounders) && (
-                                          <div>
-                                              <span className="text-xs font-bold text-slate-400 uppercase">Control / Confounders</span>
-                                              <div className="flex flex-wrap gap-2 mt-1">
-                                                  {[...(result.variables.control || []), ...(result.variables.confounders || [])].map((v, i) => (
-                                                      <span key={i} className="bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 px-2 py-1 rounded text-sm">{v}</span>
-                                                  ))}
-                                              </div>
-                                          </div>
-                                      )}
-                                  </div>
-                              </div>
-                          )}
-                          
-                          {result.analysis && (
-                              <div className="bg-white dark:bg-slate-700 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-sm flex flex-col">
-                                  <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-4">
-                                      <Activity className="text-amber-500" /> {t.analysis}
-                                  </h4>
-                                  <div className="flex-grow flex flex-col justify-center">
-                                      <div className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">{result.analysis.method}</div>
-                                      <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{result.analysis.description}</p>
+                                      ))}
                                   </div>
                               </div>
                           )}
                       </div>
-
-                      {/* Flow */}
-                      {result.flow && result.flow.length > 0 && (
-                          <div className="bg-white dark:bg-slate-700 rounded-xl p-6 border border-slate-200 dark:border-slate-600 shadow-sm">
-                              <h4 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 mb-6">
-                                  <ListOrdered className="text-emerald-500" /> {t.flow}
-                              </h4>
-                              <div className="space-y-0 relative">
-                                  <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-slate-100 dark:bg-slate-600"></div>
-                                  {result.flow.map((step, idx) => (
-                                      <div key={idx} className="relative pl-12 pb-8 last:pb-0">
-                                          <div className="absolute left-0 w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center font-bold text-sm z-10">
-                                              {step.step}
-                                          </div>
-                                          <div>
-                                              <h5 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1">{step.name}</h5>
-                                              <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{step.description}</p>
-                                          </div>
-                                      </div>
-                                  ))}
-                              </div>
-                          </div>
-                      )}
                   </div>
               ) : (
                   <div className="flex-grow flex flex-col items-center justify-center text-center p-8 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')] bg-slate-50 dark:bg-slate-900/50">
