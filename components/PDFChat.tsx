@@ -19,11 +19,12 @@ interface PDFChatProps {
   language: Language;
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  initialFile?: File | null;
 }
 
 type ReadingTheme = 'light' | 'dark' | 'sepia';
 
-const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSidebarCollapsed }) => {
+const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSidebarCollapsed, initialFile }) => {
   const t = TRANSLATIONS[language].pdfChat;
   
   // File State
@@ -81,6 +82,13 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
 
   // Insight Cards Data
   const [insightCards, setInsightCards] = useState<any[]>([]);
+
+  // Effect to load initial file
+  useEffect(() => {
+      if (initialFile) {
+          processFile(initialFile);
+      }
+  }, [initialFile]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -218,9 +226,7 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
     renderPage();
   }, [pdfDoc, pageNum, scale, isImage]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
+  const processFile = (selectedFile: File) => {
       setFile(selectedFile);
       setFileUrl(URL.createObjectURL(selectedFile));
       setHistory([]); 
@@ -228,6 +234,11 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
       setStreamingText('');
       setPdfDoc(null);
       setSidebarCollapsed(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      processFile(e.target.files[0]);
     }
   };
 

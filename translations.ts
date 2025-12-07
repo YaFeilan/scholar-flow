@@ -18,7 +18,7 @@ export const TRANSLATIONS = {
       data: 'Data Analysis',
       chart: 'Chart Extraction',
       code: 'Code',
-      pdfChat: 'PDF Chat',
+      pdfChat: 'Lit. Reading',
       knowledge: 'Knowledge Graph',
       figure: 'Figure Gen',
       grant: 'Grant App',
@@ -37,8 +37,8 @@ export const TRANSLATIONS = {
       source: { online: 'Online Databases', local: 'Local Files' },
       placeholder: 'Search for keywords, titles, or DOIs...',
       btn: 'Search',
-      filters: { time: 'Time Range', partition: 'Partition', resultCount: 'Results' },
-      sort: { label: 'Sort by', relevance: 'Relevance', date: 'Date', if: 'Impact Factor' },
+      filters: { time: 'Time Range', partition: 'Partition', resultCount: 'Results', dateAdded: 'Date Added' },
+      sort: { label: 'Sort by', relevance: 'Relevance', date: 'Pub Date', if: 'Impact Factor', added: 'Date Added' },
       results: 'Search Results',
       generateBtn: 'Generate Review',
       batchInterpret: 'Batch Interpret',
@@ -261,10 +261,10 @@ export const TRANSLATIONS = {
       }
     },
     pdfChat: {
-      title: 'PDF Chat',
+      title: 'Lit. Reading',
       upload: 'Upload PDF',
       dragDrop: 'Drag & Drop PDF here',
-      welcome: 'Welcome to PDF Chat',
+      welcome: 'Welcome to Literature Intensive Reading',
       placeholder: 'Ask questions about the document...'
     },
     knowledge: {
@@ -466,7 +466,7 @@ export const TRANSLATIONS = {
       data: '数据分析',
       chart: '图表提取',
       code: '代码助手',
-      pdfChat: 'PDF对话',
+      pdfChat: '文献精读',
       knowledge: '知识图谱',
       figure: '科研绘图',
       grant: '基金申请',
@@ -485,8 +485,8 @@ export const TRANSLATIONS = {
       source: { online: '在线数据库', local: '本地文件' },
       placeholder: '搜索关键词、标题或DOI...',
       btn: '搜索',
-      filters: { time: '时间范围', partition: '分区筛选', resultCount: '结果数量' },
-      sort: { label: '排序', relevance: '相关性', date: '日期', if: '影响因子' },
+      filters: { time: '时间范围', partition: '分区筛选', resultCount: '结果数量', dateAdded: '入库时间' },
+      sort: { label: '排序', relevance: '相关性', date: '发表日期', if: '影响因子', added: '加入时间' },
       results: '搜索结果',
       generateBtn: '生成综述',
       batchInterpret: '批量解读',
@@ -709,10 +709,10 @@ export const TRANSLATIONS = {
       }
     },
     pdfChat: {
-      title: 'PDF 对话',
+      title: '文献精读',
       upload: '上传 PDF',
       dragDrop: '拖拽 PDF 到此处',
-      welcome: '欢迎使用 PDF 对话',
+      welcome: '欢迎使用文献精读',
       placeholder: '关于文档提问...'
     },
     knowledge: {

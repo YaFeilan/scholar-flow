@@ -1,4 +1,6 @@
 
+
+
 import { GoogleGenAI } from "@google/genai";
 
 import {
@@ -371,18 +373,18 @@ export const extractChartData = async (file: File, language: Language, mode: 'ch
   const prompt = `Analyze this image thoroughly to extract ALL content. Mode: ${mode}.
   Language: ${language}.
   
-  Goal: Extract all meaningful information from the image.
+  Goal: Extract all meaningful information from the image with high fidelity.
   
-  1. If Mode is 'chart' or 'auto': Extract data into a structured JSON array.
-  2. If Mode is 'formula' or 'auto': Identify math formulas and convert to LaTeX.
-  3. If Mode is 'text' or 'auto': Perform comprehensive OCR on all visible text.
-  4. ALWAYS provide a 'fullDescription' encompassing all visual elements, relationships, and key insights.
+  1. If Mode is 'chart' or 'auto': Detect and extract tabular data from any charts or tables. Return structured JSON data representing the chart's underlying dataset. Include coordinates if possible.
+  2. If Mode is 'formula' or 'auto': Identify math formulas and transcribe them into LaTeX format in the 'ocrText' field.
+  3. If Mode is 'text' or 'auto': Perform comprehensive OCR on all visible text, captions, and labels. Return this in 'ocrText'.
+  4. ALWAYS provide a 'fullDescription' encompassing all visual elements, relationships, colors, and key insights. Describe the image structure in detail.
   
   Return a JSON object:
   {
-    "title": "Main Title or Topic",
-    "type": "Chart / Formula / Text / etc.",
-    "summary": "Concise summary",
+    "title": "Main Title or Topic inferred from image",
+    "type": "Chart / Formula / Text / Mixed",
+    "summary": "Concise summary of what the image contains",
     "fullDescription": "Detailed visual description of the image contents including text analysis.",
     "data": [
        // If chart/table: Array of objects representing rows. Keys should be column headers.

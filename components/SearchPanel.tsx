@@ -1,20 +1,23 @@
 
+
+
 import React, { useState, useMemo, useRef } from 'react';
-import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database, Lock, Copy, Check, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database, Lock, Copy, Check, ExternalLink, AlertTriangle, MessageCircle, Image as ImageIcon } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
 import { MOCK_PAPERS } from '../constants';
 import { TRANSLATIONS } from '../translations';
 import ReactMarkdown from 'react-markdown';
-import { generatePaperInterpretation, searchAcademicPapers, generateSimulatedFullText } from '../services/geminiService';
+import { generatePaperInterpretation, searchAcademicPapers, generateSimulatedFullText, extractChartData } from '../services/geminiService';
 
 interface SearchPanelProps {
   onReviewRequest: (papers: Paper[]) => void;
   language: Language;
+  onChatRequest?: (file: File) => void;
 }
 
 type ModalTab = 'abstract' | 'fulltext' | 'interpretation';
 
-const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) => {
+const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, onChatRequest }) => {
   const t = TRANSLATIONS[language].search;
   const appName = TRANSLATIONS[language].appName;
   const [query, setQuery] = useState('');
@@ -36,11 +39,13 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   const [searchSource, setSearchSource] = useState<'online' | 'local'>('online');
   const [localPapers, setLocalPapers] = useState<Paper[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageImportRef = useRef<HTMLInputElement>(null);
   
   // Search Results
   const [results, setResults] = useState<Paper[]>(MOCK_PAPERS);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isImageAnalyzing, setIsImageAnalyzing] = useState(false);
 
   // Detail Modal State
   const [viewingPaper, setViewingPaper] = useState<Paper | null>(null);
@@ -211,6 +216,42 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }));
       setLocalPapers(prev => [...prev, ...newPapers]);
     }
+  };
+
+  const handleImageImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files.length > 0) {
+          setIsImageAnalyzing(true);
+          const file = e.target.files[0];
+          // Use extractChartData as a generic image analyzer here
+          const analysis = await extractChartData(file, language, 'auto');
+          
+          const newPaper: Paper = {
+              id: `img-${Date.now()}`,
+              title: analysis.title || "Extracted from Image",
+              authors: ["Image Source"],
+              journal: "Image Import",
+              year: new Date().getFullYear(),
+              citations: 0,
+              badges: [{ type: 'LOCAL' }],
+              abstract: analysis.fullDescription || analysis.summary,
+              source: 'local',
+              file: file, // Store original image as file
+              addedDate: new Date().toISOString().split('T')[0]
+          };
+          
+          setLocalPapers(prev => [...prev, newPaper]);
+          setIsImageAnalyzing(false);
+          setSearchSource('local');
+      }
+  };
+
+  const handleChatWithFile = (e: React.MouseEvent, paper: Paper) => {
+      e.stopPropagation();
+      if (paper.file && onChatRequest) {
+          onChatRequest(paper.file);
+      } else {
+          alert("No local file available for chat. Please upload a PDF.");
+      }
   };
 
   // Client-side Sort & Filter
@@ -418,7 +459,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                      
                      {/* Added Date Filters */}
                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium flex items-center gap-1"><Clock size={14}/> {language === 'ZH' ? '加入时间:' : 'Added:'}</span>
+                        <span className="font-medium flex items-center gap-1"><Clock size={14}/> {t.filters.dateAdded}:</span>
                         <input
                            type="date"
                            value={addedAfter}
@@ -452,21 +493,41 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
              </div>
           </>
         ) : (
-            <div 
-               className="max-w-2xl mx-auto border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-10 text-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer relative"
-               onClick={() => fileInputRef.current?.click()}
-            >
-               <input 
-                 type="file" 
-                 ref={fileInputRef} 
-                 multiple 
-                 className="hidden" 
-                 onChange={handleLocalUpload}
-                 accept=".pdf,.doc,.docx,.txt,.md,.jpg,.jpeg,.png,.webp"
-               />
-               <UploadCloud size={48} className="mx-auto text-blue-400 mb-4" />
-               <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">{t.upload.btn}</h3>
-               <p className="text-slate-400 dark:text-slate-500 text-sm mt-2">{t.upload.tip}</p>
+            <div className="flex flex-col gap-4 max-w-2xl mx-auto">
+                <div 
+                   className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-10 text-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer relative"
+                   onClick={() => fileInputRef.current?.click()}
+                >
+                   <input 
+                     type="file" 
+                     ref={fileInputRef} 
+                     multiple 
+                     className="hidden" 
+                     onChange={handleLocalUpload}
+                     accept=".pdf,.doc,.docx,.txt,.md,.jpg,.jpeg,.png,.webp"
+                   />
+                   <UploadCloud size={48} className="mx-auto text-blue-400 mb-4" />
+                   <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">{t.upload.btn}</h3>
+                   <p className="text-slate-400 dark:text-slate-500 text-sm mt-2">{t.upload.tip}</p>
+                </div>
+                
+                {/* Image Import Button */}
+                <div 
+                   onClick={() => imageImportRef.current?.click()}
+                   className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                >
+                   <input 
+                     type="file" 
+                     ref={imageImportRef} 
+                     className="hidden" 
+                     accept="image/*"
+                     onChange={handleImageImport}
+                   />
+                   {isImageAnalyzing ? <Loader2 className="animate-spin text-purple-600" /> : <ImageIcon className="text-purple-600" />}
+                   <span className="font-bold text-slate-700 dark:text-slate-300 text-sm">
+                       {isImageAnalyzing ? (language === 'ZH' ? '正在解析图片...' : 'Analyzing Image...') : (language === 'ZH' ? '从图片导入 (OCR)' : 'Import from Image (OCR)')}
+                   </span>
+                </div>
             </div>
         )}
       </div>
@@ -490,7 +551,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                      <option value="relevance" className="dark:bg-slate-800">{t.sort.relevance}</option>
                      <option value="date" className="dark:bg-slate-800">{t.sort.date}</option>
                      <option value="if" className="dark:bg-slate-800">{t.sort.if}</option>
-                     <option value="added" className="dark:bg-slate-800">{language === 'ZH' ? '加入时间' : 'Date Added'}</option>
+                     <option value="added" className="dark:bg-slate-800">{t.sort.added}</option>
                   </select>
                </div>
                
@@ -567,17 +628,25 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                       {paper.abstract || "No abstract available."}
                    </p>
                    
-                   {/* Quick Link Button */}
-                   {searchSource === 'online' && (
-                       <div className="mt-2 flex justify-end">
+                   {/* Quick Link / Chat Button */}
+                   <div className="mt-2 flex justify-end gap-2">
+                       {searchSource === 'local' && (
+                           <button 
+                               onClick={(e) => handleChatWithFile(e, paper)}
+                               className="text-xs text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1 transition-colors font-bold"
+                           >
+                               <MessageCircle size={12} /> {language === 'ZH' ? '对话' : 'Chat'}
+                           </button>
+                       )}
+                       {searchSource === 'online' && (
                            <button 
                                onClick={(e) => { e.stopPropagation(); const doi = `https://doi.org/10.1038/s41586-${Math.floor(Math.random() * 10000)}`; navigator.clipboard.writeText(doi); alert(language === 'ZH' ? '链接已复制' : 'URL copied'); }}
                                className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                            >
                                <ExternalLink size={12} /> {language === 'ZH' ? '复制链接' : 'Copy Link'}
                            </button>
-                       </div>
-                   )}
+                       )}
+                   </div>
                 </div>
              </div>
           </div>

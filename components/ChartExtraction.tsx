@@ -175,7 +175,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
   };
 
   useEffect(() => {
-    const handlePaste = (e: ClipboardEvent) => {
+    const handlePaste = (e: any) => {
       if (e.clipboardData && e.clipboardData.items) {
         const items = e.clipboardData.items;
         const newFiles: ChartFile[] = [];

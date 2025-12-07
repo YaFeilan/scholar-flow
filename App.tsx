@@ -34,6 +34,7 @@ const App: React.FC = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [ideaTopic, setIdeaTopic] = useState<string>('');
   const [analysisData, setAnalysisData] = useState<any[][] | null>(null); // Shared data for DataAnalysis
+  const [pdfChatFile, setPdfChatFile] = useState<File | null>(null);
   
   // Sidebar State
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -100,6 +101,11 @@ const App: React.FC = () => {
       setCurrentView(ViewState.DATA_ANALYSIS);
   };
 
+  const handleOpenPdfChat = (file: File) => {
+      setPdfChatFile(file);
+      setCurrentView(ViewState.PDF_CHAT);
+  };
+
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
       {/* Sidebar Layout */}
@@ -120,7 +126,11 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
         <div className="h-full">
             {currentView === ViewState.SEARCH && (
-            <SearchPanel onReviewRequest={handleReviewRequest} language={language} />
+            <SearchPanel 
+                onReviewRequest={handleReviewRequest} 
+                language={language} 
+                onChatRequest={handleOpenPdfChat}
+            />
             )}
             {currentView === ViewState.IDEA_GUIDE && (
             <IdeaGuide 
@@ -134,6 +144,7 @@ const App: React.FC = () => {
                 language={language} 
                 sidebarCollapsed={sidebarCollapsed}
                 setSidebarCollapsed={setSidebarCollapsed}
+                initialFile={pdfChatFile}
             />
             )}
             {currentView === ViewState.KNOWLEDGE_GRAPH && (
