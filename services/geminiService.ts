@@ -1,5 +1,6 @@
 
 
+
 import { GoogleGenAI } from "@google/genai";
 import { 
   Language, 
@@ -199,8 +200,10 @@ export const generateLiteratureReview = async (paperDescriptions: string[], lang
     return getText(prompt);
 };
 
-export const generateStructuredReview = async (topic: string, papers: string[], wordCount: number, language: 'ZH' | 'EN'): Promise<string> => {
-    const prompt = `Write a structured literature review on "${topic}". Papers: ${papers.join('; ')}. Length: approx ${wordCount} words. Language: ${language}.`;
+export const generateStructuredReview = async (topic: string, papers: string[], wordCount: number, language: 'ZH' | 'EN', focus?: string): Promise<string> => {
+    const prompt = `Write a structured literature review on "${topic}".
+    ${focus ? `**Focus/Instructions:** ${focus}` : ''}
+    Papers: ${papers.join('; ')}. Length: approx ${wordCount} words. Language: ${language}.`;
     return getText(prompt);
 };
 

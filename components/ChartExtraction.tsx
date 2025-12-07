@@ -186,7 +186,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
           if (item.type.indexOf('image') !== -1) {
             const blob = item.getAsFile();
             if (blob) {
-                const file = blob as File;
+                const file = blob as any as File;
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
                     file: file,

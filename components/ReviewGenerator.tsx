@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { generateStructuredReview } from '../services/geminiService';
-import { FileText, Search, CheckSquare, Settings, Download, ChevronRight, ChevronLeft, FileBadge, Loader2 } from 'lucide-react';
+import { FileText, Search, CheckSquare, Settings, Download, ChevronRight, ChevronLeft, FileBadge, Loader2, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { MOCK_PAPERS } from '../constants';
 import { Paper, Language } from '../types';
@@ -19,6 +19,7 @@ const ReviewGenerator: React.FC<ReviewGeneratorProps> = ({ language: globalLangu
 
   // Step 1: Criteria
   const [topic, setTopic] = useState('');
+  const [focus, setFocus] = useState(''); // New State for Focus
   const [databases, setDatabases] = useState<string[]>(['SCI']);
   const [timeRange, setTimeRange] = useState('Last 3 Years');
 
@@ -62,8 +63,8 @@ const ReviewGenerator: React.FC<ReviewGeneratorProps> = ({ language: globalLangu
     const selectedPapers = searchResults.filter(p => selectedPaperIds.has(p.id));
     const paperDescriptions = selectedPapers.map(p => `${p.title} (${p.year}) - ${p.abstract?.substring(0, 100)}...`);
     
-    // Pass outputLanguage to service, which dictates content language
-    const result = await generateStructuredReview(topic, paperDescriptions, wordCount, outputLanguage);
+    // Pass outputLanguage and focus to service
+    const result = await generateStructuredReview(topic, paperDescriptions, wordCount, outputLanguage, focus);
     setReviewContent(result);
     setLoading(false);
   };
@@ -135,6 +136,19 @@ const ReviewGenerator: React.FC<ReviewGeneratorProps> = ({ language: globalLangu
                       onChange={e => setTopic(e.target.value)}
                       placeholder="e.g. Artificial Intelligence in Climate Change Modeling"
                       className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                   />
+                </div>
+
+                <div>
+                   <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                       <MessageSquare size={16} className="text-blue-500" />
+                       {t.focusLabel || (globalLanguage === 'ZH' ? '综述侧重点 (AI 指令)' : 'Review Focus / AI Instructions')}
+                   </label>
+                   <textarea 
+                      value={focus}
+                      onChange={e => setFocus(e.target.value)}
+                      placeholder={globalLanguage === 'ZH' ? '例如：重点关注最新的深度学习方法，忽略传统的统计模型...' : 'e.g. Focus on recent deep learning methods, ignoring traditional statistical models...'}
+                      className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24 text-sm"
                    />
                 </div>
 

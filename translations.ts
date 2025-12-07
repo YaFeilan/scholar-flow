@@ -1,5 +1,6 @@
 
 
+
 export const TRANSLATIONS = {
   EN: {
     appName: 'ResearchAssistant',
@@ -75,6 +76,7 @@ export const TRANSLATIONS = {
       steps: { 1: 'Scope', 2: 'Select', 3: 'Config', 4: 'Result' },
       scopeTitle: 'Define Review Scope',
       topicLabel: 'Review Topic',
+      focusLabel: 'Focus / AI Instructions',
       dbLabel: 'Databases',
       timeLabel: 'Time Range',
       searchBtn: 'Search Papers',
@@ -528,6 +530,7 @@ export const TRANSLATIONS = {
       steps: { 1: '范围', 2: '筛选', 3: '配置', 4: '结果' },
       scopeTitle: '定义综述范围',
       topicLabel: '综述主题',
+      focusLabel: '综述侧重点 (AI 指令)',
       dbLabel: '数据库',
       timeLabel: '时间范围',
       searchBtn: '搜索文献',
