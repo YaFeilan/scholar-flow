@@ -86,6 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
   const toggleProvider = () => {
       if (modelProvider === 'Gemini') setModelProvider('DeepSeek');
       else if (modelProvider === 'DeepSeek') setModelProvider('ChatGPT');
+      else if (modelProvider === 'ChatGPT') setModelProvider('Doubao');
       else setModelProvider('Gemini');
   };
 
@@ -165,12 +166,16 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
                   ? 'bg-blue-900 text-white border-blue-900 hover:bg-blue-800' 
                   : modelProvider === 'ChatGPT'
                   ? 'bg-emerald-900 text-white border-emerald-900 hover:bg-emerald-800'
+                  : modelProvider === 'Doubao'
+                  ? 'bg-orange-600 text-white border-orange-600 hover:bg-orange-500'
                   : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
               } ${collapsed ? 'justify-center' : ''}`}
               title={collapsed ? `Provider: ${modelProvider}` : undefined}
            >
                {modelProvider === 'ChatGPT' ? (
                    <Sparkles size={16} className="text-emerald-400" />
+               ) : modelProvider === 'Doubao' ? (
+                   <Bot size={16} className="text-white" />
                ) : (
                    <Bot size={16} className={modelProvider === 'DeepSeek' ? 'text-cyan-400' : 'text-blue-500'} />
                )}

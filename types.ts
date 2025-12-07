@@ -1,6 +1,6 @@
 
 export type Language = 'ZH' | 'EN';
-export type ModelProvider = 'Gemini' | 'DeepSeek' | 'ChatGPT';
+export type ModelProvider = 'Gemini' | 'DeepSeek' | 'ChatGPT' | 'Doubao';
 
 export interface Paper {
   id: string;

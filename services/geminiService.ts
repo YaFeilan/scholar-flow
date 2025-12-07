@@ -71,6 +71,36 @@ const callDeepSeek = async (messages: any[], jsonMode: boolean = false): Promise
   }
 };
 
+// Doubao / Ark Compatible API Logic
+const callDoubao = async (messages: any[], jsonMode: boolean = false): Promise<string> => {
+  try {
+    const apiKey = process.env.DOUBAO_API_KEY || process.env.API_KEY; 
+    // Ark Base URL
+    const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: process.env.DOUBAO_MODEL || "doubao-pro-32k", // Needs Endpoint ID in real usage, utilizing generic mapping for demo
+        messages: messages,
+        stream: false
+      })
+    });
+
+    if (!response.ok) {
+        throw new Error(`Doubao API Error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error("Doubao API Call Failed:", error);
+    return "";
+  }
+};
+
 // OpenAI / ChatGPT Compatible API Logic
 const callOpenAI = async (messages: any[], jsonMode: boolean = false, model: string = "gpt-4o"): Promise<string> => {
   try {
@@ -117,6 +147,13 @@ const getText = async (prompt: string, image?: File, modelName: string = 'gemini
   // If provider is DeepSeek and NO image is present (DeepSeek V3 is text-only usually)
   if (currentProvider === 'DeepSeek' && !image) {
       return callDeepSeek([{ role: "user", content: prompt }]);
+  }
+
+  // If provider is Doubao (Ark)
+  if (currentProvider === 'Doubao') {
+      // Doubao currently supports text primarily via standard chat endpoints in this implementation
+      if (image) console.warn("Doubao provider in this demo supports Text-only input. Image ignored.");
+      return callDoubao([{ role: "user", content: prompt }]);
   }
 
   // If provider is ChatGPT (OpenAI)
@@ -175,6 +212,20 @@ const getJson = async <T>(prompt: string, image?: File, modelName: string = 'gem
           return JSON.parse(cleanText) as T;
       } catch (e) {
           console.error("DeepSeek JSON Parse Error", e);
+          return null;
+      }
+  }
+
+  // Doubao JSON Mode (Simulated via System Prompt)
+  if (currentProvider === 'Doubao' && !image) {
+      const systemMsg = { role: "system", content: "You are a helpful assistant. You MUST output valid JSON only. Do not wrap in markdown." };
+      const userMsg = { role: "user", content: prompt };
+      const resultText = await callDoubao([systemMsg, userMsg], true); // jsonMode param passed but strictly prompt enforced for Doubao/Ark
+      try {
+          const cleanText = resultText.replace(/```json\n?|```/g, '');
+          return JSON.parse(cleanText) as T;
+      } catch (e) {
+          console.error("Doubao JSON Parse Error", e);
           return null;
       }
   }
