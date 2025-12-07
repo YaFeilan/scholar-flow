@@ -1,6 +1,8 @@
 
 
 
+
+
 import React, { useState, useMemo, useRef } from 'react';
 import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database, Lock, Copy, Check, ExternalLink, AlertTriangle, MessageCircle, Image as ImageIcon } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
@@ -225,6 +227,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
           // Use extractChartData as a generic image analyzer here
           const analysis = await extractChartData(file, language, 'auto');
           
+          // Append OCR text to abstract for visibility
+          const fullContent = (analysis.fullDescription || '') + '\n\n' + (analysis.ocrText ? `[Extracted Text]\n${analysis.ocrText}` : '');
+
           const newPaper: Paper = {
               id: `img-${Date.now()}`,
               title: analysis.title || "Extracted from Image",
@@ -233,7 +238,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
               year: new Date().getFullYear(),
               citations: 0,
               badges: [{ type: 'LOCAL' }],
-              abstract: analysis.fullDescription || analysis.summary,
+              abstract: fullContent || "No text detected.",
               source: 'local',
               file: file, // Store original image as file
               addedDate: new Date().toISOString().split('T')[0]
@@ -525,7 +530,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                    />
                    {isImageAnalyzing ? <Loader2 className="animate-spin text-purple-600" /> : <ImageIcon className="text-purple-600" />}
                    <span className="font-bold text-slate-700 dark:text-slate-300 text-sm">
-                       {isImageAnalyzing ? (language === 'ZH' ? '正在解析图片...' : 'Analyzing Image...') : (language === 'ZH' ? '从图片导入 (OCR)' : 'Import from Image (OCR)')}
+                       {isImageAnalyzing ? (language === 'ZH' ? '正在解析图片...' : 'Analyzing Image...') : (language === 'ZH' ? '从图片导入 (提取全文)' : 'Import from Image (Extract Full Text)')}
                    </span>
                 </div>
             </div>
