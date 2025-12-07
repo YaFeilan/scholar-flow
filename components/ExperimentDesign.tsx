@@ -1,9 +1,9 @@
 
-import React, { useState, useMemo } from 'react';
-import { Beaker, Calculator, ListOrdered, GitBranch, Target, Download, Loader2, ArrowRight, Settings, ChevronDown, ChevronUp, Sparkles, Zap, Wand2, Activity } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { Beaker, Calculator, ListOrdered, GitBranch, Target, Download, Loader2, ArrowRight, Settings, ChevronDown, ChevronUp, Sparkles, Zap, Wand2, Activity, Image as ImageIcon, X } from 'lucide-react';
 import { Language, ExperimentDesignResult } from '../types';
 import { TRANSLATIONS } from '../translations';
-import { generateExperimentDesign, optimizeHypothesis } from '../services/geminiService';
+import { generateExperimentDesign, optimizeHypothesis, analyzeImageNote } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { jsPDF } from 'jspdf';
 
@@ -15,7 +15,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
   const t = TRANSLATIONS[language].experimentDesign;
   
   // State
-  const [hypothesis, setHypothesis] = useState(language === 'ZH' ? 'The original hypothesis "间隔重复学习法相比集中学习法能显著提高长期记忆保留率。" is a good starting point, but can be optimized for greater clarity and testability by...' : 'New Drug X significantly reduces systolic blood pressure in hypertensive patients compared to placebo.');
+  const [hypothesis, setHypothesis] = useState(language === 'ZH' ? '间隔重复学习法相比集中学习法能显著提高长期记忆保留率。' : 'New Drug X significantly reduces systolic blood pressure in hypertensive patients compared to placebo.');
   const [field, setField] = useState('Psychology');
   const [methodology, setMethodology] = useState('Auto'); 
   const [structure, setStructure] = useState('Between');
@@ -26,6 +26,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
 
   // Optimization State
   const [optimizing, setOptimizing] = useState(false);
+  const [analyzingImage, setAnalyzingImage] = useState(false);
 
   // Advanced Stats Settings
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -36,6 +37,7 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ExperimentDesignResult | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleGenerate = async () => {
     if (!hypothesis.trim()) return;
@@ -55,8 +57,17 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
     const selectedMethodologyLabel = t.methodologies[methodology as keyof typeof t.methodologies];
     const selectedStructureLabel = t.structures[structure as keyof typeof t.structures];
 
-    const data = await generateExperimentDesign(hypothesis, field, selectedMethodologyLabel, language, iv, dv, statsParams, selectedStructureLabel);
-    setResult(data);
+    try {
+        const data = await generateExperimentDesign(hypothesis, field, selectedMethodologyLabel, language, iv, dv, statsParams, selectedStructureLabel);
+        if (data) {
+            setResult(data);
+        } else {
+            alert(language === 'ZH' ? '生成失败，请重试。' : 'Generation failed, please try again.');
+        }
+    } catch(e) {
+        console.error("Experiment Generation Error", e);
+        alert(language === 'ZH' ? '生成时发生错误。' : 'An error occurred during generation.');
+    }
     setLoading(false);
   };
 
@@ -66,6 +77,19 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
       const optimized = await optimizeHypothesis(hypothesis, language);
       if (optimized) setHypothesis(optimized.replace(/^"|"$/g, ''));
       setOptimizing(false);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          setAnalyzingImage(true);
+          try {
+              const text = await analyzeImageNote(e.target.files[0], language);
+              if (text) setHypothesis(text);
+          } catch(e) {
+              console.error(e);
+          }
+          setAnalyzingImage(false);
+      }
   };
 
   const handleExport = () => {
@@ -157,6 +181,18 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                 <Target size={16} className="text-blue-500" /> {t.hypothesisLabel}
                             </label>
+                            
+                            {/* Image Extract Button */}
+                            <button 
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={analyzingImage}
+                                className="text-xs font-bold text-slate-500 hover:text-purple-600 flex items-center gap-1 transition-colors"
+                                title="Extract from Image"
+                            >
+                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                                {analyzingImage ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />}
+                                Image
+                            </button>
                         </div>
                         <div className="relative">
                             <textarea 
@@ -460,7 +496,24 @@ const ExperimentDesign: React.FC<ExperimentDesignProps> = ({ language }) => {
                                 {['rct', 'ab', 'memory'].map((tmpl) => (
                                     <div 
                                       key={tmpl}
-                                      onClick={() => { /* Template logic same as before */ }} 
+                                      onClick={() => { 
+                                          if (tmpl === 'rct') {
+                                              setField('Medicine');
+                                              setMethodology('RCT');
+                                              setStructure('Between');
+                                              setHypothesis('New treatment X improves survival rates compared to standard care.');
+                                          } else if (tmpl === 'ab') {
+                                              setField('UX');
+                                              setMethodology('Survey');
+                                              setStructure('Between');
+                                              setHypothesis('Design A leads to higher conversion rates than Design B.');
+                                          } else {
+                                              setField('Psychology');
+                                              setMethodology('Lab');
+                                              setStructure('Within');
+                                              setHypothesis('Cognitive load negatively impacts memory recall.');
+                                          }
+                                      }} 
                                       className="bg-white dark:bg-slate-700 p-6 rounded-xl border border-slate-200 dark:border-slate-600 shadow-sm hover:shadow-md hover:border-purple-300 dark:hover:border-purple-500 cursor-pointer transition-all group"
                                     >
                                         <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform ${tmpl === 'rct' ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-600' : tmpl === 'ab' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600'}`}>

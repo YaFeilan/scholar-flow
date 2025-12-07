@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { 
   Language, 
@@ -314,7 +315,6 @@ export const generatePPTContent = async (file: File, config: any, language: Lang
 };
 
 export const generateSlideImage = async (visualSuggestion: string, style: string): Promise<string | null> => {
-    // Use standard image model for generation
     try {
         const ai = getAiClient();
         const response = await ai.models.generateContent({
@@ -327,7 +327,6 @@ export const generateSlideImage = async (visualSuggestion: string, style: string
             }
         });
         
-        // Find image part
         for (const part of response.candidates?.[0]?.content?.parts || []) {
             if (part.inlineData) {
                 return `data:image/png;base64,${part.inlineData.data}`;
@@ -408,14 +407,12 @@ export const performCodeAssistance = async (
     signal: AbortSignal
 ): Promise<string> => {
     const ai = getAiClient();
-    // Streaming implementation
     let parts: any[] = [{ text: `Mode: ${mode}. Language: ${lang}. Output Language: ${language}. User Input: ${input}` }];
     if (file) {
         const fPart = await fileToGenerativePart(file);
         parts.push(fPart);
     }
     
-    // Construct history for Chat
     const chatHistory = history.map(h => ({
         role: h.role === 'model' ? 'model' : 'user',
         parts: [{ text: h.text }]
@@ -445,7 +442,30 @@ export const performCodeAssistance = async (
 };
 
 export const generateExperimentDesign = async (hypothesis: string, field: string, methodology: string, language: Language, iv: string, dv: string, stats: any, structure: string): Promise<ExperimentDesignResult | null> => {
-    const prompt = `Design experiment. Hypothesis: ${hypothesis}. Field: ${field}. Methodology: ${methodology}. Structure: ${structure}. IV: ${iv}. DV: ${dv}. Stats: ${JSON.stringify(stats)}. Language: ${language}. Return JSON matching ExperimentDesignResult.`;
+    const schema = {
+      title: "Title",
+      flow: [{ step: 1, name: "Step", description: "Desc" }],
+      sampleSize: { recommended: 100, explanation: "Exp", parameters: [{ label: "Param", value: "Val" }] },
+      variables: { independent: ["IV"], dependent: ["DV"], control: ["Ctrl"], confounders: ["Conf"] },
+      analysis: { method: "Method", description: "Desc" }
+    };
+
+    const prompt = `Act as a senior research scientist. Design a rigorous experiment based on the parameters below.
+    
+    Hypothesis: "${hypothesis}"
+    Field: ${field}
+    Methodology Preference: ${methodology}
+    Experimental Structure: ${structure}
+    Independent Variable (IV): ${iv || 'Auto-detect'}
+    Dependent Variable (DV): ${dv || 'Auto-detect'}
+    Statistical Parameters: ${JSON.stringify(stats)}
+    
+    Output Language: ${language === 'ZH' ? 'Simplified Chinese' : 'English'}
+    
+    Return a strictly valid JSON object adhering to this structure:
+    ${JSON.stringify(schema)}
+    `;
+    
     return getJson<ExperimentDesignResult>(prompt);
 };
 
@@ -455,7 +475,6 @@ export const optimizeHypothesis = async (hypothesis: string, language: Language)
 
 export const performPDFChat = async (query: string, language: Language, file: File, history: {role: string, text: string}[], onStream: (text: string) => void, signal: AbortSignal): Promise<string> => {
     const ai = getAiClient();
-    // Similar to code assistance but for PDF
     const filePart = await fileToGenerativePart(file);
     
     const context = history.map(h => `${h.role}: ${h.text}`).join('\n');
@@ -497,7 +516,6 @@ export const analyzeImageNote = async (file: File, language: Language): Promise<
 };
 
 export const chatWithKnowledgeGraph = async (query: string, nodes: GraphNode[], language: Language, onStream: (text: string) => void): Promise<string> => {
-    // Simplified: non-streaming return for now or implement streaming similar to others
     const prompt = `Answer based on knowledge graph nodes: ${JSON.stringify(nodes.map(n => n.label))}. Question: ${query}. Language: ${language}.`;
     return getText(prompt);
 };
@@ -522,14 +540,9 @@ export const findRelevantNodes = async (query: string, nodes: GraphNode[], langu
 };
 
 export const generateScientificFigure = async (prompt: string, style: string, mode: string, file?: File, bgOnly?: boolean, mask?: File, size?: '1K'|'2K'|'4K'): Promise<string | null> => {
-    // Using generateContent for image editing/generation with Gemini 3 Pro Image
-    // Note: 'generateImages' is for Imagen. 'generateContent' is for Gemini.
-    // Instructions say use gemini-2.5-flash-image or gemini-3-pro-image-preview.
-    
-    const model = size === '1K' ? 'gemini-3-pro-image-preview' : 'gemini-3-pro-image-preview'; // Size support
+    const model = size === '1K' ? 'gemini-3-pro-image-preview' : 'gemini-3-pro-image-preview'; 
     const contentParts: any[] = [{ text: `${mode === 'generate' ? 'Generate' : 'Edit'} scientific figure. Prompt: ${prompt}. Style: ${style}.` }];
     if (file) contentParts.push(await fileToGenerativePart(file));
-    // Mask handling is complex in simple SDK usage without specific method, usually passed as image part with instruction.
     
     try {
         const ai = getAiClient();
