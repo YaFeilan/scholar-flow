@@ -1,4 +1,6 @@
 
+
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import SearchPanel from './components/SearchPanel';
@@ -21,6 +23,7 @@ import ChartExtraction from './components/ChartExtraction';
 import GrantApplication from './components/GrantApplication';
 import ConferenceFinder from './components/ConferenceFinder'; 
 import AIDetector from './components/AIDetector'; 
+import ResearchDiscussion from './components/ResearchDiscussion';
 import { ViewState, Paper, Language, ModelProvider } from './types';
 import { generateLiteratureReview, setModelProvider } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -210,6 +213,9 @@ const App: React.FC = () => {
                 initialTopic={ideaTopic} 
                 onClearInitialTopic={() => setIdeaTopic('')}
             />
+            )}
+            {currentView === ViewState.RESEARCH_DISCUSSION && (
+            <ResearchDiscussion language={language} />
             )}
             {currentView === ViewState.PDF_CHAT && (
             <PDFChat 

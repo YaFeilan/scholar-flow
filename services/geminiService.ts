@@ -1,4 +1,8 @@
 
+
+
+
+
 import { GoogleGenAI } from "@google/genai";
 import { 
   Language, 
@@ -31,7 +35,9 @@ import {
   ModelProvider,
   GapAnalysisResult,
   TrackedReference,
-  CodeMessage
+  CodeMessage,
+  DiscussionAnalysisResult,
+  DiscussionPersonaType
 } from '../types';
 
 // Helper to get a fresh client instance with the latest key
@@ -290,7 +296,9 @@ export const generateSlideImage = async (visualSuggestion: string, style: string
 };
 
 export const generateResearchIdeas = async (topic: string, language: Language, focus: string, file?: File): Promise<IdeaGuideResult | null> => {
-    const prompt = `Generate research ideas ${topic ? `for topic "${topic}"` : 'based on the provided image content'}. Focus: ${focus}. Language: ${language}.
+    const prompt = `Generate research ideas ${topic ? `for topic "${topic}"` : 'based on the provided image content'}. 
+    ${file ? 'If an image is provided, perform a comprehensive analysis of ALL visual elements, text, and data within the picture to inform the research ideas.' : ''}
+    Focus: ${focus}. Language: ${language}.
     
     Return a JSON object strictly matching this schema:
     {
@@ -548,4 +556,49 @@ export const detectAIContent = async (content: string | File, language: Language
 export const humanizeText = async (text: string, language: Language): Promise<AIHumanizeResult | null> => {
     const prompt = `Humanize this AI-generated text to reduce AI detection score. Language: ${language}. Return JSON matching AIHumanizeResult.`;
     return getJson<AIHumanizeResult>(prompt);
+};
+
+export const generateResearchDiscussion = async (topic: string, language: Language): Promise<DiscussionAnalysisResult | null> => {
+    const prompt = `Analyze this research topic: "${topic}".
+    Language: ${language}.
+    Provide a comprehensive analysis including Innovation Scores, Feasibility Checks, and Initial Comments from three distinct personas.
+    
+    1. Innovation Scorecard: Rate Theory, Methodology, Application (1-10) with brief reasons.
+    2. Feasibility Check: Evaluate Data (availability/cost), Technical (compute/equipment), and Ethical (IRB) feasibility.
+    3. Personas:
+       - Reviewer: Critical, looks for logic gaps.
+       - Collaborator: Interdisciplinary perspective (e.g., social impact for tech).
+       - Mentor: Socratic method, asks guiding questions.
+    
+    Return JSON matching:
+    {
+      "scorecard": { "theory": number, "method": number, "application": number, "theoryReason": string, "methodReason": string, "applicationReason": string },
+      "feasibility": { "data": string, "tech": string, "ethics": string },
+      "initialComments": { "reviewer": string, "collaborator": string, "mentor": string }
+    }`;
+    return getJson<DiscussionAnalysisResult>(prompt);
+};
+
+export const chatWithDiscussionPersona = async (
+    topic: string, 
+    persona: DiscussionPersonaType, 
+    message: string, 
+    history: {role: string, text: string}[], 
+    language: Language
+): Promise<string> => {
+    const historyText = history.map(h => `${h.role}: ${h.text}`).join('\n');
+    const prompt = `Context: Research Topic "${topic}".
+    Persona: You are the "${persona}". 
+    - Reviewer: Critical, finds loopholes.
+    - Collaborator: Suggests interdisciplinary angles.
+    - Mentor: Uses Socratic questioning, guides the user.
+    
+    Conversation History:
+    ${historyText}
+    
+    User: ${message}
+    
+    Respond as the ${persona} in ${language}. Keep it concise and insightful.`;
+    
+    return getText(prompt);
 };

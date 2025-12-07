@@ -184,12 +184,12 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
           if (item.type.indexOf('image') !== -1) {
-            const file = item.getAsFile();
-            if (file) {
+            const blob = item.getAsFile();
+            if (blob) {
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
-                    file: file,
-                    previewUrl: URL.createObjectURL(file),
+                    file: blob as unknown as File,
+                    previewUrl: URL.createObjectURL(blob as unknown as Blob),
                     metadata: { addedDate: new Date().toISOString().split('T')[0], partition: 'SCI' }
                 });
             }

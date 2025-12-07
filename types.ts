@@ -46,7 +46,8 @@ export enum ViewState {
   CHART_EXTRACTION = 'CHART_EXTRACTION',
   GRANT_APPLICATION = 'GRANT_APPLICATION',
   CONFERENCE_FINDER = 'CONFERENCE_FINDER',
-  AI_DETECTOR = 'AI_DETECTOR', // New
+  AI_DETECTOR = 'AI_DETECTOR',
+  RESEARCH_DISCUSSION = 'RESEARCH_DISCUSSION', // New
 }
 
 // Trend Types
@@ -475,4 +476,28 @@ export interface AIHumanizeResult {
   newScore: number;
   text: string;
   changesSummary: string;
+}
+
+// Research Discussion Types (New)
+export type DiscussionPersonaType = 'Reviewer' | 'Collaborator' | 'Mentor';
+
+export interface DiscussionAnalysisResult {
+  scorecard: {
+    theory: number;
+    method: number;
+    application: number;
+    theoryReason: string;
+    methodReason: string;
+    applicationReason: string;
+  };
+  feasibility: {
+    data: string;
+    tech: string;
+    ethics: string;
+  };
+  initialComments: {
+    reviewer: string;
+    collaborator: string;
+    mentor: string;
+  };
 }

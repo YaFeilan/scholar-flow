@@ -1,6 +1,9 @@
 
 
 
+
+
+
 export const TRANSLATIONS = {
   EN: {
     appName: 'ResearchAssistant',
@@ -24,7 +27,8 @@ export const TRANSLATIONS = {
       figure: 'Figure Gen',
       grant: 'Grant App',
       conference: 'Call for Papers',
-      aiDetector: 'AI Detector'
+      aiDetector: 'AI Detector',
+      discussion: 'Discussion'
     },
     groups: {
       planning: 'Planning',
@@ -291,7 +295,7 @@ export const TRANSLATIONS = {
     figure: {
       title: 'Figure Generator',
       subtitle: 'Create scientific figures.',
-      mode: { generate: 'Generate', polish: 'Polish' },
+      mode: { generate: 'Generate', polish: 'Refine' },
       polishTasks: { general: 'General', sketchTo3D: 'Sketch to 3D', chartBeautify: 'Beautify Chart' },
       input: {
         referenceLabel: 'Reference Image (Optional)',
@@ -454,6 +458,30 @@ export const TRANSLATIONS = {
       humanizing: 'Rewriting...',
       copy: 'Copy',
       files: 'Supported: PDF, DOCX, TXT'
+    },
+    discussion: {
+      title: 'Research Discussion',
+      subtitle: 'Debate your research topic with diverse AI personas to find innovation and feasibility gaps.',
+      placeholder: 'Describe your research topic or hypothesis...',
+      btn: 'Start Discussion',
+      analyzing: 'Analyzing Topic...',
+      personas: {
+        reviewer: 'Reviewer',
+        collaborator: 'Interdisciplinary',
+        mentor: 'Mentor'
+      },
+      scorecard: {
+        title: 'Innovation Scorecard',
+        theory: 'Theory',
+        method: 'Methodology',
+        app: 'Application'
+      },
+      feasibility: {
+        title: 'Feasibility Check',
+        data: 'Data',
+        tech: 'Technical',
+        ethics: 'Ethics/IRB'
+      }
     }
   },
   ZH: {
@@ -478,7 +506,8 @@ export const TRANSLATIONS = {
       figure: '科研绘图',
       grant: '基金申请',
       conference: '学术征稿',
-      aiDetector: 'AI率检测'
+      aiDetector: 'AI率检测',
+      discussion: '科研讨论'
     },
     groups: {
       planning: '科研规划',
@@ -745,7 +774,7 @@ export const TRANSLATIONS = {
     figure: {
       title: '科研绘图',
       subtitle: '生成或优化高质量科研配图。',
-      mode: { generate: '生成模式', polish: '润色模式' },
+      mode: { generate: '生成模式', polish: '精修模型' },
       polishTasks: { general: '通用优化', sketchTo3D: '草图转3D', chartBeautify: '图表美化' },
       input: {
         referenceLabel: '参考图 (可选)',
@@ -908,6 +937,30 @@ export const TRANSLATIONS = {
       humanizing: '正在降重...',
       copy: '复制',
       files: '支持格式: PDF, DOCX, TXT'
+    },
+    discussion: {
+      title: '科研课题讨论',
+      subtitle: '与AI专家角色进行辩论，全方位评估课题创新性与可行性。',
+      placeholder: '描述你的研究课题或假设...',
+      btn: '开始讨论',
+      analyzing: '正在分析课题...',
+      personas: {
+        reviewer: '审稿人 (批判)',
+        collaborator: '跨学科合作者',
+        mentor: '导师 (引导)'
+      },
+      scorecard: {
+        title: '创新性评分卡',
+        theory: '理论贡献',
+        method: '方法论突破',
+        app: '应用场景'
+      },
+      feasibility: {
+        title: '可行性三维检查',
+        data: '数据可行性',
+        tech: '技术可行性',
+        ethics: '伦理/合规性'
+      }
     }
   }
 };
