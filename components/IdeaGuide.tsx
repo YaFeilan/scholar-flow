@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect } from 'react';
 import { Lightbulb, Send, Loader2, BookOpen, Target, ArrowRight, MessageCircle, ChevronDown, Key, Database, Cpu, FileText, ExternalLink, Download, Layout, RefreshCw } from 'lucide-react';
 import { generateResearchIdeas, generateIdeaFollowUp } from '../services/geminiService';

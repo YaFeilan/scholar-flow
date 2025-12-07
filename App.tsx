@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import SearchPanel from './components/SearchPanel';
@@ -20,7 +19,7 @@ import FigureGenerator from './components/FigureGenerator';
 import ChartExtraction from './components/ChartExtraction';
 import GrantApplication from './components/GrantApplication';
 import ConferenceFinder from './components/ConferenceFinder'; 
-import AIDetector from './components/AIDetector'; // New Import
+import AIDetector from './components/AIDetector'; 
 import { ViewState, Paper, Language, ModelProvider } from './types';
 import { generateLiteratureReview, setModelProvider } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';

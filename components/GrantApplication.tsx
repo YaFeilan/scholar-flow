@@ -1,4 +1,4 @@
-
+// ... (Existing imports remain the same)
 import React, { useState, useRef, useEffect } from 'react';
 import { FileText, Feather, ShieldCheck, Send, Loader2, Sparkles, AlertTriangle, CheckCircle, Download, BookOpen, Key, Briefcase, Upload, Link, Trash2, List, Lightbulb, Eye, Edit3, Wand2, Layers, Zap, Scale, LayoutDashboard, AlertOctagon, GitMerge, CheckSquare, VenetianMask, File as FileIcon, Settings, History, MessageSquare, Plus, Minus, ArrowRight, FileOutput, Network, Gavel, User, Layout } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -7,7 +7,7 @@ import { Language, GrantCheckResult, LogicNode, GrantPolishVersion, GrantReviewR
 import { TRANSLATIONS } from '../translations';
 import { jsPDF } from 'jspdf';
 
-// ... (Interface definitions and LogicNodeEditor component remain same) ...
+// ... (Interface definitions and LogicNodeEditor component remain same - include them briefly for context if needed, but here focusing on the component change)
 interface GrantApplicationProps {
   language: Language;
 }
@@ -289,18 +289,20 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       y += summaryLines.length * 5 + 10;
 
       // Dimensions
-      reviewResult.dimensions.forEach(dim => {
-          if (y > 250) { doc.addPage(); y = margin; }
-          doc.setFontSize(12);
-          doc.setFont("helvetica", "bold");
-          doc.text(`${dim.name}: ${dim.score}/10`, margin, y);
-          y += 6;
-          doc.setFont("helvetica", "italic");
-          doc.setFontSize(10);
-          const commLines = doc.splitTextToSize(dim.comment, contentWidth);
-          doc.text(commLines, margin, y);
-          y += commLines.length * 5 + 6;
-      });
+      if (reviewResult.dimensions) {
+          reviewResult.dimensions.forEach(dim => {
+              if (y > 250) { doc.addPage(); y = margin; }
+              doc.setFontSize(12);
+              doc.setFont("helvetica", "bold");
+              doc.text(`${dim.name}: ${dim.score}/10`, margin, y);
+              y += 6;
+              doc.setFont("helvetica", "italic");
+              doc.setFontSize(10);
+              const commLines = doc.splitTextToSize(dim.comment, contentWidth);
+              doc.text(commLines, margin, y);
+              y += commLines.length * 5 + 6;
+          });
+      }
 
       // Strengths & Weaknesses
       if (y > 240) { doc.addPage(); y = margin; }
@@ -311,11 +313,13 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       y += 6;
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      reviewResult.strengths.forEach(s => {
-          const l = doc.splitTextToSize(`- ${s}`, contentWidth);
-          doc.text(l, margin, y);
-          y += l.length * 5 + 2;
-      });
+      if (reviewResult.strengths) {
+          reviewResult.strengths.forEach(s => {
+              const l = doc.splitTextToSize(`- ${s}`, contentWidth);
+              doc.text(l, margin, y);
+              y += l.length * 5 + 2;
+          });
+      }
       y += 6;
 
       doc.setFontSize(14);
@@ -324,11 +328,13 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       y += 6;
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      reviewResult.weaknesses.forEach(s => {
-          const l = doc.splitTextToSize(`- ${s}`, contentWidth);
-          doc.text(l, margin, y);
-          y += l.length * 5 + 2;
-      });
+      if (reviewResult.weaknesses) {
+          reviewResult.weaknesses.forEach(s => {
+              const l = doc.splitTextToSize(`- ${s}`, contentWidth);
+              doc.text(l, margin, y);
+              y += l.length * 5 + 2;
+          });
+      }
 
       doc.save(`Grant_Review_${reviewRole}.pdf`);
   };
@@ -338,6 +344,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       alert('Copied!');
   };
 
+  // ... (Rest of component remains same) ...
   const handleExportWord = () => {
       if (!rationaleResult) return;
       const blob = new Blob(['<html><body>' + rationaleResult.replace(/\n/g, '<br/>') + '</body></html>'], { type: 'application/msword' });
@@ -369,10 +376,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       document.body.removeChild(link);
   };
 
-  const polishTags = language === 'ZH' 
-    ? ['更学术化', '精简字数', '强调创新性', '降低查重率/重写']
-    : ['More Academic', 'Concise', 'Highlight Innovation', 'Reduce Plagiarism/Rewrite'];
-
   const promptTemplates = [
       { label: "如何描述机制研究？", value: "请生成一段关于[主题]分子机制研究的描述，强调通路间的串扰。" },
       { label: "如何写研究背景？", value: "请基于[主题]写一段研究背景，从临床问题切入，引出科学问题。" },
@@ -381,6 +384,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-8 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
+       {/* ... (Header and UI structure remains identical) ... */}
        <div className="flex-shrink-0 mb-6">
           <h2 className="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Briefcase className="text-indigo-600" /> {t.title}
@@ -389,6 +393,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
        </div>
 
        <div className="flex-grow flex flex-col lg:flex-row gap-8 overflow-hidden">
+           {/* ... (Left Panel Content same as before) ... */}
            <div className="lg:w-1/3 flex flex-col gap-4 overflow-hidden">
                {/* Global Project Config */}
                <div className="bg-indigo-900 text-white rounded-xl p-5 shadow-lg flex-shrink-0">
@@ -459,10 +464,10 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                    </div>
 
                    <div className="p-6 flex-grow overflow-y-auto space-y-6 custom-scrollbar">
+                       {/* Rationale Tab */}
                        {activeTab === 'rationale' && (
                            <div className="space-y-4 animate-fadeIn">
                                <h3 className="font-bold text-slate-800 dark:text-slate-100">{t.rationale.title}</h3>
-                               {/* ... Rationale UI ... */}
                                {rationaleStep === 0 && (
                                    <>
                                        {/* Reference Section */}
@@ -470,8 +475,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                            <label className="text-xs font-bold text-slate-500 uppercase mb-2 block flex items-center gap-1">
                                                <BookOpen size={12} /> {t.rationale.references}
                                             </label>
-                                           
-                                           {/* File Upload */}
                                            <div className="mb-3">
                                                <button 
                                                   onClick={() => refFileInputRef.current?.click()}
@@ -499,8 +502,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                                    </div>
                                                )}
                                            </div>
-
-                                           {/* DOI Input */}
                                            <div>
                                                <textarea 
                                                   value={doiInput}
@@ -510,8 +511,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                                />
                                            </div>
                                        </div>
-
-                                       {/* Generation Mode Selector */}
                                        <div>
                                            <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">{t.rationale.modeLabel}</label>
                                            <div className="grid grid-cols-1 gap-2">
@@ -529,7 +528,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                                ))}
                                            </div>
                                        </div>
-
                                        <button 
                                           onClick={handleGenerateFramework}
                                           disabled={loading || !projectConfig.name}
@@ -540,7 +538,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                        </button>
                                    </>
                                )}
-
+                               {/* ... (Other Rationale Steps) ... */}
                                {rationaleStep === 1 && (
                                    <div className="flex flex-col gap-4">
                                        <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-100 text-xs text-indigo-700">
@@ -564,7 +562,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                        </div>
                                    </div>
                                )}
-
                                {rationaleStep === 2 && (
                                    <div className="flex flex-col gap-2">
                                        <button 
@@ -578,9 +575,9 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                            </div>
                        )}
 
+                       {/* Polish Tab */}
                        {activeTab === 'polish' && (
                            <div className="space-y-4 animate-fadeIn">
-                               {/* ... Polish UI (kept from previous code) ... */}
                                <h3 className="font-bold text-slate-800 dark:text-slate-100">{t.polish.title}</h3>
                                <div>
                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{t.polish.section}</label>
@@ -614,9 +611,9 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                            </div>
                        )}
 
+                       {/* Check Tab */}
                        {activeTab === 'check' && (
                            <div className="space-y-4 animate-fadeIn">
-                               {/* ... Check UI (kept from previous code) ... */}
                                <h3 className="font-bold text-slate-800 dark:text-slate-100">{t.check.title}</h3>
                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
                                    <input 
@@ -664,11 +661,11 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                            </div>
                        )}
 
+                       {/* Review Tab */}
                        {activeTab === 'review' && (
                            <div className="space-y-4 animate-fadeIn">
                                <h3 className="font-bold text-slate-800 dark:text-slate-100">{t.review.title}</h3>
                                
-                               {/* Role and Framework */}
                                <div className="space-y-3">
                                    <div>
                                        <label className="text-xs font-bold text-slate-500 uppercase mb-1 block flex items-center gap-1">
@@ -698,7 +695,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                    </div>
                                </div>
 
-                               {/* Upload Section */}
                                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
                                    <input 
                                       type="file" 
@@ -762,7 +758,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
 
                    {!loading && !rationaleResult && polishVersions.length === 0 && !checkResult && !reviewResult && rationaleStep !== 1 && (
                        <div className="h-full flex flex-col gap-8 animate-fadeIn">
-                           {/* ... (Existing empty state content for templates/inspiration) ... */}
                            {/* Prompt Templates */}
                            <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-6 border border-indigo-100 dark:border-indigo-800">
                                <h3 className="font-bold text-indigo-800 dark:text-indigo-300 flex items-center gap-2 mb-4">
@@ -811,7 +806,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                        </div>
                    )}
 
-                   {/* ... (Existing Rationale/Polish/Check result views) ... */}
+                   {/* Rationale Result View */}
                    {rationaleStep === 1 && logicTree && (
                        <div className="h-full flex flex-col animate-fadeIn">
                            <h3 className="text-lg font-bold text-indigo-600 mb-4 flex items-center gap-2">
@@ -837,6 +832,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                        </div>
                    )}
 
+                   {/* Polish Result View */}
                    {!loading && activeTab === 'polish' && polishVersions.length > 0 && (
                        <div>
                            <div className="flex flex-col mb-4 pb-4 border-b border-slate-100 dark:border-slate-700">
@@ -875,6 +871,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                        </div>
                    )}
 
+                   {/* Check Result View */}
                    {!loading && activeTab === 'check' && checkResult && (
                        <div className="space-y-6">
                            <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-700">
@@ -883,13 +880,13 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                            </div>
                            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 italic leading-relaxed">"{checkResult.summary}"</div>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                               {/* ... (Existing check logic views) ... */}
                                <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-white dark:bg-slate-800"><div className="flex justify-between items-center mb-3"><h4 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2"><AlertOctagon size={16} className="text-red-500" /> {t.check.dash.hard}</h4>{checkResult.hardErrors?.status === 'Pass' ? <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded">PASS</span> : <span className="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded">FAIL</span>}</div><ul className="text-xs space-y-1 text-slate-600 dark:text-slate-400">{checkResult.hardErrors?.issues?.length > 0 ? (checkResult.hardErrors.issues.map((issue, i) => <li key={i} className="flex items-start gap-1"><span className="text-red-500">•</span> {issue}</li>)) : (<li className="text-green-600 flex items-center gap-1"><CheckCircle size={10} /> No critical issues found.</li>)}</ul></div>
                                <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-white dark:bg-slate-800"><div className="flex justify-between items-center mb-3"><h4 className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2"><GitMerge size={16} className="text-amber-500" /> {t.check.dash.logic}</h4>{checkResult.logicCheck?.status === 'Pass' ? <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded">PASS</span> : <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded">WARNING</span>}</div><ul className="text-xs space-y-1 text-slate-600 dark:text-slate-400">{checkResult.logicCheck?.issues?.length > 0 ? (checkResult.logicCheck.issues.map((issue, i) => <li key={i} className="flex items-start gap-1"><span className="text-amber-500">•</span> {issue}</li>)) : (<li className="text-green-600 flex items-center gap-1"><CheckCircle size={10} /> Logic flow appears consistent.</li>)}</ul></div>
                            </div>
                        </div>
                    )}
 
+                   {/* Review Result View */}
                    {!loading && activeTab === 'review' && reviewResult && (
                        <div className="space-y-6 animate-fadeIn">
                            <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-700">
@@ -916,7 +913,7 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                    
                                    {/* Dimensions */}
                                    <div className="grid grid-cols-1 gap-3">
-                                       {reviewResult.dimensions.map((dim, i) => (
+                                       {reviewResult.dimensions && reviewResult.dimensions.map((dim, i) => (
                                            <div key={i} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-lg">
                                                <div className="flex justify-between items-center mb-1">
                                                    <span className="font-bold text-sm text-slate-800 dark:text-slate-200">{dim.name}</span>
@@ -934,13 +931,13 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-100 dark:border-green-800">
                                        <h4 className="text-xs font-bold text-green-800 dark:text-green-300 uppercase mb-2 flex items-center gap-1"><CheckCircle size={12}/> Strengths</h4>
                                        <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-2">
-                                           {reviewResult.strengths.map((s, i) => <li key={i}>• {s}</li>)}
+                                           {reviewResult.strengths && reviewResult.strengths.map((s, i) => <li key={i}>• {s}</li>)}
                                        </ul>
                                    </div>
                                    <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-100 dark:border-red-800">
                                        <h4 className="text-xs font-bold text-red-800 dark:text-red-300 uppercase mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Weaknesses</h4>
                                        <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-2">
-                                           {reviewResult.weaknesses.map((w, i) => <li key={i}>• {w}</li>)}
+                                           {reviewResult.weaknesses && reviewResult.weaknesses.map((w, i) => <li key={i}>• {w}</li>)}
                                        </ul>
                                    </div>
                                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800 text-center">

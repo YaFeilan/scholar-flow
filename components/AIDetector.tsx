@@ -1,4 +1,4 @@
-
+// ... existing imports
 import React, { useState, useRef, useEffect } from 'react';
 import { ShieldAlert, FileText, Upload, RefreshCw, AlertTriangle, CheckCircle, Copy, MoveRight, Loader2, X, Trash2, History, Clock, FileType, Link as LinkIcon, Settings, Search, BarChart } from 'lucide-react';
 import { Language, AIDetectionResult, AIHumanizeResult } from '../types';
@@ -194,21 +194,23 @@ const AIDetector: React.FC<AIDetectorProps> = ({ language }) => {
       // Simple highlighting logic
       let parts: {text: string, highlight?: boolean, score?: number}[] = [{text: fullText}];
       
-      highlights.forEach(h => {
-          const newParts: typeof parts = [];
-          parts.forEach(p => {
-              if (p.highlight) {
-                  newParts.push(p);
-              } else {
-                  const split = p.text.split(h.text);
-                  split.forEach((s, i) => {
-                      if (s) newParts.push({text: s});
-                      if (i < split.length - 1) newParts.push({text: h.text, highlight: true, score: h.score});
-                  });
-              }
+      if (highlights && highlights.length > 0) {
+          highlights.forEach(h => {
+              const newParts: typeof parts = [];
+              parts.forEach(p => {
+                  if (p.highlight) {
+                      newParts.push(p);
+                  } else {
+                      const split = p.text.split(h.text);
+                      split.forEach((s, i) => {
+                          if (s) newParts.push({text: s});
+                          if (i < split.length - 1) newParts.push({text: h.text, highlight: true, score: h.score});
+                      });
+                  }
+              });
+              parts = newParts;
           });
-          parts = newParts;
-      });
+      }
 
       return (
           <div className="whitespace-pre-wrap leading-relaxed text-sm text-slate-700 dark:text-slate-300">

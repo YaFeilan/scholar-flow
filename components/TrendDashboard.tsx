@@ -1,8 +1,3 @@
-
-
-
-
-
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import * as d3 from 'd3';
@@ -304,7 +299,18 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                   <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg p-5 border border-white/5 hover:bg-white/15 transition-all group relative overflow-hidden">
                      <div className="flex justify-between items-start mb-2">
                         <p className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">{tech.type || t.emerging}</p>
-                        <button onClick={() => handleAddToPPT(`Emerging Tech: ${tech.name}`)} className="text-white/20 hover:text-white transition-colors"><MonitorPlay size={14} /></button>
+                        <div className="flex gap-1">
+                            {onNavigateToIdea && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onNavigateToIdea(tech.name); }}
+                                    className="text-white/40 hover:text-yellow-400 transition-colors p-1"
+                                    title="Generate Research Idea"
+                                >
+                                    <Lightbulb size={14} />
+                                </button>
+                            )}
+                            <button onClick={() => handleAddToPPT(`Emerging Tech: ${tech.name}`)} className="text-white/20 hover:text-white transition-colors p-1"><MonitorPlay size={14} /></button>
+                        </div>
                      </div>
                      <h3 className="text-lg font-bold leading-tight mb-4 pr-4">{tech.name}</h3>
                      <div className="flex items-end justify-between">
@@ -422,6 +428,15 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                                   <button onClick={() => setSelectedKeyword(null)} className="text-slate-400 hover:text-slate-600"><X size={14}/></button>
                               </div>
                               
+                              {onNavigateToIdea && (
+                                <button 
+                                    onClick={() => onNavigateToIdea(selectedKeyword)}
+                                    className="w-full mb-3 bg-amber-500 text-white py-2 rounded-lg font-bold text-sm hover:bg-amber-600 flex items-center justify-center gap-2 shadow-sm"
+                                >
+                                    <Lightbulb size={16} /> Generate Research Idea
+                                </button>
+                              )}
+                              
                               {loadingPapers ? (
                                   <div className="flex justify-center py-10"><Loader2 className="animate-spin text-blue-600" /></div>
                               ) : (
@@ -446,15 +461,6 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                                           )}
                                       </div>
                                   ))
-                              )}
-                              
-                              {onNavigateToIdea && (
-                                <button 
-                                    onClick={() => onNavigateToIdea(selectedKeyword)}
-                                    className="w-full mt-4 bg-amber-500 text-white py-2 rounded-lg font-bold text-sm hover:bg-amber-600 flex items-center justify-center gap-2"
-                                >
-                                    <Lightbulb size={16} /> Generate Research Idea
-                                </button>
                               )}
                           </div>
                        ) : (
