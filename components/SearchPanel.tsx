@@ -3,6 +3,8 @@
 
 
 
+
+
 import React, { useState, useMemo, useRef } from 'react';
 import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database, Lock, Copy, Check, ExternalLink, AlertTriangle, MessageCircle, Image as ImageIcon } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
@@ -462,7 +464,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                         <ChevronDown size={14} className="text-slate-400 pointer-events-none" />
                      </div>
                      
-                     {/* Added Date Filters */}
+                     {/* Added Date Filters - NEW */}
                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
                         <span className="font-medium flex items-center gap-1"><Clock size={14}/> {t.filters.dateAdded}:</span>
                         <input

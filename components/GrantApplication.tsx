@@ -1,6 +1,8 @@
+
+
 // ... (Existing imports remain the same)
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Feather, ShieldCheck, Send, Loader2, Sparkles, AlertTriangle, CheckCircle, Download, BookOpen, Key, Briefcase, Upload, Link, Trash2, List, Lightbulb, Eye, Edit3, Wand2, Layers, Zap, Scale, LayoutDashboard, AlertOctagon, GitMerge, CheckSquare, VenetianMask, File as FileIcon, Settings, History, MessageSquare, Plus, Minus, ArrowRight, FileOutput, Network, Gavel, User, Layout } from 'lucide-react';
+import { FileText, Feather, ShieldCheck, Send, Loader2, Sparkles, AlertTriangle, CheckCircle, Download, BookOpen, Key, Briefcase, Upload, Link, Trash2, List, Lightbulb, Eye, Edit3, Wand2, Layers, Zap, Scale, LayoutDashboard, AlertOctagon, GitMerge, CheckSquare, VenetianMask, File as FileIcon, Settings, History, MessageSquare, Plus, Minus, ArrowRight, FileOutput, Network, Gavel, User, Layout, Image as ImageIcon, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { generateGrantLogicFramework, expandGrantRationale, polishGrantProposal, checkGrantFormat, getGrantInspiration, generateGrantReview } from '../services/geminiService';
 import { Language, GrantCheckResult, LogicNode, GrantPolishVersion, GrantReviewResult } from '../types';
@@ -98,7 +100,9 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
   const [refFiles, setRefFiles] = useState<globalThis.File[]>([]);
   const [doiInput, setDoiInput] = useState('');
   const [genMode, setGenMode] = useState<'full' | 'status' | 'significance'>('full');
+  const [rationaleImage, setRationaleImage] = useState<globalThis.File | null>(null);
   const refFileInputRef = useRef<HTMLInputElement>(null);
+  const rationaleImageRef = useRef<HTMLInputElement>(null);
   
   // Polish State
   const [polishText, setPolishText] = useState('');
@@ -167,7 +171,8 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
           { name: projectConfig.name, keywords: kws, domainCode: projectConfig.code },
           language,
           genMode,
-          references
+          references,
+          rationaleImage || undefined
       );
       
       if (tree) {
@@ -191,6 +196,12 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       if (e.target.files) {
           const newFiles = (Array.from(e.target.files) as globalThis.File[]).filter(f => f.type === 'application/pdf');
           setRefFiles(prev => [...prev, ...newFiles].slice(0, 10)); // Limit to 10
+      }
+  };
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          setRationaleImage(e.target.files[0]);
       }
   };
 
@@ -344,7 +355,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
       alert('Copied!');
   };
 
-  // ... (Rest of component remains same) ...
   const handleExportWord = () => {
       if (!rationaleResult) return;
       const blob = new Blob(['<html><body>' + rationaleResult.replace(/\n/g, '<br/>') + '</body></html>'], { type: 'application/msword' });
@@ -384,7 +394,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-8 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
-       {/* ... (Header and UI structure remains identical) ... */}
        <div className="flex-shrink-0 mb-6">
           <h2 className="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Briefcase className="text-indigo-600" /> {t.title}
@@ -393,7 +402,6 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
        </div>
 
        <div className="flex-grow flex flex-col lg:flex-row gap-8 overflow-hidden">
-           {/* ... (Left Panel Content same as before) ... */}
            <div className="lg:w-1/3 flex flex-col gap-4 overflow-hidden">
                {/* Global Project Config */}
                <div className="bg-indigo-900 text-white rounded-xl p-5 shadow-lg flex-shrink-0">
@@ -499,6 +507,28 @@ const GrantApplication: React.FC<GrantApplicationProps> = ({ language }) => {
                                                            </div>
                                                        ))}
                                                        <div className="text-[10px] text-slate-400 text-right">{refFiles.length}/10 {t.rationale.fileLimit}</div>
+                                                   </div>
+                                               )}
+                                           </div>
+                                           {/* Image Upload for Rationale */}
+                                           <div className="mb-3">
+                                               <button 
+                                                  onClick={() => rationaleImageRef.current?.click()}
+                                                  className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-500 hover:text-purple-600 hover:border-purple-400 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+                                               >
+                                                   <ImageIcon size={14} /> {t.rationale.imgUpload}
+                                               </button>
+                                               <input 
+                                                  type="file" 
+                                                  ref={rationaleImageRef} 
+                                                  className="hidden" 
+                                                  accept="image/*"
+                                                  onChange={handleImageFileChange}
+                                               />
+                                               {rationaleImage && (
+                                                   <div className="mt-2 flex justify-between items-center bg-purple-50 px-2 py-1 rounded border border-purple-200 text-xs text-purple-700 font-medium">
+                                                       <span className="truncate max-w-[200px] flex items-center gap-1"><ImageIcon size={12}/> {rationaleImage.name}</span>
+                                                       <button onClick={() => setRationaleImage(null)} className="text-purple-400 hover:text-purple-600"><X size={12}/></button>
                                                    </div>
                                                )}
                                            </div>

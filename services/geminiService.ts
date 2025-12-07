@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI } from "@google/genai";
 import { 
   Language, 
@@ -503,9 +504,9 @@ export const generateChartTrendAnalysis = async (data: any[], language: Language
     return getText(`Analyze trends in this data: ${JSON.stringify(data.slice(0, 20))}. Language: ${language}.`);
 };
 
-export const generateGrantLogicFramework = async (project: any, language: Language, mode: string, references: any[]): Promise<LogicNode | null> => {
-    const prompt = `Generate grant logic framework. Project: ${JSON.stringify(project)}. Mode: ${mode}. Language: ${language}. Return JSON LogicNode tree.`;
-    return getJson<LogicNode>(prompt);
+export const generateGrantLogicFramework = async (project: any, language: Language, mode: string, references: any[], imageFile?: File): Promise<LogicNode | null> => {
+    const prompt = `Generate grant logic framework. Project: ${JSON.stringify(project)}. Mode: ${mode}. Language: ${language}. If image provided, analyze it for context/structure. Return JSON LogicNode tree.`;
+    return getJson<LogicNode>(prompt, imageFile);
 };
 
 export const expandGrantRationale = async (node: LogicNode, language: Language): Promise<string> => {
