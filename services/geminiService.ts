@@ -176,6 +176,8 @@ export const parsePaperFromImage = async (file: File, language: Language): Promi
     const ai = getAiClient();
     const prompt = `Analyze this image of a research paper page. 
     Task: Extract metadata and FULL textual content visible in the image.
+    If the image contains the full paper text, transcribe as much as possible.
+    If it is a snippet, extract the context.
     Language: ${language}.
     
     Return a JSON object with this specific structure:
@@ -184,7 +186,8 @@ export const parsePaperFromImage = async (file: File, language: Language): Promi
       "authors": ["Author 1", "Author 2"],
       "journal": "Journal Name (if visible)",
       "year": 2024,
-      "abstract": "The full text content visible in the image (this may include body text, not just abstract)."
+      "abstract": "The full extracted text content from the image (not just abstract, include body text if available).",
+      "badges": [{"type": "SCI"}] (Infer potential journal tier if possible)
     }`;
 
     try {
@@ -208,7 +211,7 @@ export const parsePaperFromImage = async (file: File, language: Language): Promi
                 journal: data.journal || "Image Import",
                 year: data.year || new Date().getFullYear(),
                 citations: 0,
-                badges: [{ type: 'LOCAL' }],
+                badges: data.badges || [{ type: 'LOCAL' }],
                 abstract: data.abstract || "",
                 source: 'local',
                 file: file,

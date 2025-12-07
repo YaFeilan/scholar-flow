@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import SearchPanel from './components/SearchPanel';
@@ -27,7 +25,7 @@ import ResearchDiscussion from './components/ResearchDiscussion';
 import { ViewState, Paper, Language, ModelProvider } from './types';
 import { generateLiteratureReview, setModelProvider } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
-import { X, BookOpen, Key, ArrowRight } from 'lucide-react';
+import { X, BookOpen, Key, ArrowRight, Github, Star, Heart, ShieldCheck, Zap, Sparkles } from 'lucide-react';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.IDEA_GUIDE);
@@ -78,7 +76,7 @@ const App: React.FC = () => {
             setHasKey(has);
         } else {
             // Fallback for development environments without the injection
-            setHasKey(true);
+            setHasKey(false);
         }
       } catch (e) {
         console.error("API Key check failed", e);
@@ -154,28 +152,84 @@ const App: React.FC = () => {
   // Landing Page if no API Key
   if (!hasKey) {
       return (
-          <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
-              <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 text-center border border-slate-200 dark:border-slate-700">
-                  <div className="bg-blue-100 dark:bg-blue-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <BookOpen size={40} className="text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-slate-100 mb-2">Research Assistant</h1>
-                  <p className="text-slate-500 dark:text-slate-400 mb-8">
-                      Accelerate your academic journey with AI-powered insights, analysis, and writing tools.
-                  </p>
+          <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 p-4 font-sans">
+              <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                   
-                  <button 
-                      onClick={handleSelectKey}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-3 group"
-                  >
-                      <Key size={20} />
-                      <span>Connect API Key to Start</span>
-                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                  </button>
-                  
-                  <div className="mt-6 text-xs text-slate-400">
-                      Powered by Gemini 2.5 • Veo • Imagen
+                  {/* Left Column: Welcome Message */}
+                  <div className="space-y-8 animate-fadeIn">
+                      <div className="flex items-center gap-3 mb-4">
+                          <div className="bg-gradient-to-tr from-blue-600 to-indigo-600 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg">
+                              <BookOpen size={24} className="text-white" />
+                          </div>
+                          <span className="text-2xl font-serif font-bold text-slate-800 dark:text-white tracking-tight">Research Assistant</span>
+                      </div>
+                      
+                      <div>
+                          <h1 className="text-5xl font-black text-slate-900 dark:text-white leading-tight mb-6">
+                              Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Open Source</span> <br/>
+                              Academic Copilot.
+                          </h1>
+                          <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg">
+                              Accelerate your research with AI-powered literature review, data analysis, and writing tools. Completely free and open for the community.
+                          </p>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-4">
+                          <button 
+                              onClick={handleSelectKey}
+                              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-200 dark:shadow-none transition-all flex items-center justify-center gap-2 group"
+                          >
+                              <Zap size={20} className="fill-white" />
+                              Get Started
+                              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                          </button>
+                          
+                          <a 
+                              href="https://github.com" 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="px-8 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+                          >
+                              <Github size={20} />
+                              Star on GitHub
+                          </a>
+                      </div>
+
+                      <div className="flex items-center gap-6 text-sm font-medium text-slate-500 dark:text-slate-400 pt-4 border-t border-slate-200 dark:border-slate-700">
+                          <span className="flex items-center gap-1.5"><ShieldCheck size={16} className="text-green-500" /> Secure & Private</span>
+                          <span className="flex items-center gap-1.5"><Heart size={16} className="text-red-500" /> Free Forever</span>
+                          <span className="flex items-center gap-1.5"><Github size={16} /> Open Source</span>
+                      </div>
                   </div>
+
+                  {/* Right Column: Visual Feature Grid */}
+                  <div className="hidden lg:grid grid-cols-2 gap-4 animate-slideInRight">
+                      <div className="space-y-4 mt-8">
+                          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center text-blue-600 mb-3"><BookOpen size={20} /></div>
+                              <h3 className="font-bold text-slate-800 dark:text-white mb-1">Literature Review</h3>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">Smart search & summarization.</p>
+                          </div>
+                          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                              <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center text-purple-600 mb-3"><Sparkles size={20} /></div>
+                              <h3 className="font-bold text-slate-800 dark:text-white mb-1">AI Polishing</h3>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">Native-level academic writing.</p>
+                          </div>
+                      </div>
+                      <div className="space-y-4">
+                          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                              <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-600 mb-3"><Zap size={20} /></div>
+                              <h3 className="font-bold text-slate-800 dark:text-white mb-1">Idea Generator</h3>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">Brainstorm research directions.</p>
+                          </div>
+                          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
+                              <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center text-amber-600 mb-3"><ShieldCheck size={20} /></div>
+                              <h3 className="font-bold text-slate-800 dark:text-white mb-1">Grant Assistant</h3>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">Proposal checks & feedback.</p>
+                          </div>
+                      </div>
+                  </div>
+
               </div>
           </div>
       );
