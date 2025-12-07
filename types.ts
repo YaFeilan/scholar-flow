@@ -1,4 +1,6 @@
 
+
+
 export type Language = 'ZH' | 'EN';
 export type ModelProvider = 'Gemini' | 'DeepSeek' | 'ChatGPT' | 'Doubao';
 
@@ -479,7 +481,7 @@ export interface AIHumanizeResult {
 }
 
 // Research Discussion Types (New)
-export type DiscussionPersonaType = 'Reviewer' | 'Collaborator' | 'Mentor';
+export type DiscussionPersonaType = string; // Changed from 'Reviewer' | 'Collaborator' | 'Mentor' to string to support dynamic personas
 
 export interface DiscussionAnalysisResult {
   scorecard: {

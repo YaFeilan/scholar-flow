@@ -1,6 +1,8 @@
 
 
 
+
+
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Upload, FileText, Send, Download, CheckCircle, AlertTriangle, ClipboardCheck, Loader2, BarChart2, BookOpen, Target, Shield, Zap, ChevronRight, X, PenTool, ExternalLink, RefreshCw, Layout, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 import { jsPDF } from 'jspdf';
@@ -263,19 +265,19 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                        </div>
                        {/* Persona */}
                        <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-2">Reviewer Persona</label>
+                          <label className="block text-sm font-bold text-slate-700 mb-2">{t.personaLabel}</label>
                           <div className="flex bg-slate-100 p-1 rounded-lg">
                              <button
                                onClick={() => setPersona('Gentle')}
                                className={`flex-1 py-2 text-sm font-bold rounded-md transition-all flex items-center justify-center gap-2 ${persona === 'Gentle' ? 'bg-white shadow text-emerald-600' : 'text-slate-500 hover:text-slate-700'}`}
                              >
-                                <Shield size={14} /> Gentle Mentor
+                                <Shield size={14} /> {t.personas.gentle}
                              </button>
                              <button
                                onClick={() => setPersona('Critical')}
                                className={`flex-1 py-2 text-sm font-bold rounded-md transition-all flex items-center justify-center gap-2 ${persona === 'Critical' ? 'bg-white shadow text-red-600' : 'text-slate-500 hover:text-slate-700'}`}
                              >
-                                <Zap size={14} /> Critical Reviewer
+                                <Zap size={14} /> {t.personas.critical}
                              </button>
                           </div>
                        </div>

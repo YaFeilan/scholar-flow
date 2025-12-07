@@ -1,6 +1,10 @@
 
+
+
+
+
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, ShieldAlert, Network, Lightbulb, Send, Loader2, BarChart2, CheckCircle2, AlertTriangle, Play, RefreshCw, Zap } from 'lucide-react';
+import { MessageSquare, ShieldAlert, Network, Lightbulb, Send, Loader2, BarChart2, CheckCircle2, AlertTriangle, Play, RefreshCw, Zap, Plus, X, Users, Bot } from 'lucide-react';
 import { Language, DiscussionAnalysisResult, DiscussionPersonaType } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { generateResearchDiscussion, chatWithDiscussionPersona } from '../services/geminiService';
@@ -17,6 +21,14 @@ interface ChatMessage {
   persona?: DiscussionPersonaType;
 }
 
+interface PersonaConfig {
+    id: string;
+    name: string;
+    description: string;
+    icon: any;
+    color: string;
+}
+
 const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => {
   const t = TRANSLATIONS[language].discussion;
   
@@ -25,8 +37,18 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DiscussionAnalysisResult | null>(null);
   
+  // Persona Management State
+  const [personas, setPersonas] = useState<PersonaConfig[]>([
+      { id: 'Reviewer', name: t.personas.reviewer, description: "Critical, finds loopholes, focuses on rigor.", icon: ShieldAlert, color: 'red' },
+      { id: 'Interdisciplinary', name: t.personas.interdisciplinary, description: "Suggests interdisciplinary angles, helpful, expansionist.", icon: Network, color: 'blue' },
+      { id: 'Mentor', name: t.personas.mentor, description: "Uses Socratic questioning, guides big picture thinking.", icon: Lightbulb, color: 'amber' }
+  ]);
+  const [activePersonaId, setActivePersonaId] = useState<string>('Reviewer');
+  const [showAddPersona, setShowAddPersona] = useState(false);
+  const [newPersonaName, setNewPersonaName] = useState('');
+  const [newPersonaDesc, setNewPersonaDesc] = useState('');
+
   // Chat State
-  const [activePersona, setActivePersona] = useState<DiscussionPersonaType>('Reviewer');
   const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
@@ -46,9 +68,32 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
     const analysis = await generateResearchDiscussion(topic, language);
     if (analysis) {
         setResult(analysis);
-        // Initialize chat with opening statements, but don't display them as "messages" yet, just store them conceptually or show in UI cards
     }
     setLoading(false);
+  };
+
+  const handleAddPersona = () => {
+      if (newPersonaName.trim()) {
+          const newId = `Custom-${Date.now()}`;
+          const newP: PersonaConfig = {
+              id: newId,
+              name: newPersonaName,
+              description: newPersonaDesc || "Expert in the field.",
+              icon: Bot,
+              color: 'purple'
+          };
+          setPersonas([...personas, newP]);
+          setNewPersonaName('');
+          setNewPersonaDesc('');
+          setShowAddPersona(false);
+      }
+  };
+
+  const removePersona = (id: string) => {
+      setPersonas(prev => prev.filter(p => p.id !== id));
+      if (activePersonaId === id) {
+          setActivePersonaId(personas[0]?.id || '');
+      }
   };
 
   const handleSendMessage = async () => {
@@ -62,13 +107,15 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
     setChatLoading(true);
 
     try {
-        // Filter history for context relevant to this persona or global context?
-        // Let's send global context for better continuity, but formatted.
+        const activeP = personas.find(p => p.id === activePersonaId);
+        // Construct a persona string that includes description for context
+        const personaContext = activeP ? `${activeP.name} (${activeP.description})` : activePersonaId;
+
         const apiHistory = newHistory.map(m => ({ role: m.role, text: m.text }));
         
-        const response = await chatWithDiscussionPersona(topic, activePersona, userMsg, apiHistory, language);
+        const response = await chatWithDiscussionPersona(topic, personaContext, userMsg, apiHistory, language);
         
-        setChatHistory(prev => [...prev, { role: 'ai', text: response, persona: activePersona }]);
+        setChatHistory(prev => [...prev, { role: 'ai', text: response, persona: activeP?.name || activePersonaId }]);
     } catch (e) {
         console.error(e);
     }
@@ -81,20 +128,6 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
       { subject: t.scorecard.method, A: result.scorecard.method, fullMark: 10 },
       { subject: t.scorecard.app, A: result.scorecard.application, fullMark: 10 },
   ] : [];
-
-  const PersonaButton = ({ type, icon: Icon, label }: { type: DiscussionPersonaType, icon: any, label: string }) => (
-      <button
-          onClick={() => setActivePersona(type)}
-          className={`flex-1 py-3 px-4 rounded-lg border font-bold text-sm flex items-center justify-center gap-2 transition-all
-              ${activePersona === type 
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
-                  : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}
-          `}
-      >
-          <Icon size={16} />
-          <span className="hidden sm:inline">{label}</span>
-      </button>
-  );
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-8 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
@@ -115,10 +148,56 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                       placeholder={t.placeholder}
                       className="w-full h-32 p-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none bg-transparent"
                    />
+                   
+                   {/* Persona Configuration */}
+                   <div className="mt-4 border-t border-slate-100 dark:border-slate-700 pt-4">
+                       <div className="flex justify-between items-center mb-2">
+                           <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><Users size={12}/> {t.participantsHeader}</span>
+                           <button onClick={() => setShowAddPersona(!showAddPersona)} className="text-xs text-indigo-600 hover:text-indigo-700 font-bold flex items-center gap-1">
+                               {showAddPersona ? 'Cancel' : t.addRole}
+                           </button>
+                       </div>
+                       
+                       {showAddPersona && (
+                           <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg mb-3 animate-fadeIn">
+                               <input 
+                                  className="w-full mb-2 p-2 text-xs border border-indigo-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  placeholder={language === 'ZH' ? "角色名称 (如：统计学家)" : "Role Name (e.g. Statistician)"}
+                                  value={newPersonaName}
+                                  onChange={e => setNewPersonaName(e.target.value)}
+                               />
+                               <input 
+                                  className="w-full mb-2 p-2 text-xs border border-indigo-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  placeholder={language === 'ZH' ? "角色描述/侧重点" : "Role Description / Focus"}
+                                  value={newPersonaDesc}
+                                  onChange={e => setNewPersonaDesc(e.target.value)}
+                               />
+                               <button 
+                                  onClick={handleAddPersona}
+                                  className="w-full bg-indigo-600 text-white text-xs font-bold py-1.5 rounded hover:bg-indigo-700"
+                               >
+                                  Add to Panel
+                               </button>
+                           </div>
+                       )}
+
+                       <div className="flex flex-wrap gap-2">
+                           {personas.map(p => (
+                               <div key={p.id} className="flex items-center gap-1 bg-slate-50 dark:bg-slate-700 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-600 text-xs font-bold text-slate-700 dark:text-slate-300">
+                                   <p.icon size={12} className={`text-${p.color}-500`} />
+                                   <span>{p.name}</span>
+                                   {!['Reviewer', 'Interdisciplinary', 'Mentor'].includes(p.id) && (
+                                       <button onClick={() => removePersona(p.id)} className="ml-1 text-slate-400 hover:text-red-500"><X size={10}/></button>
+                                   )}
+                               </div>
+                           ))}
+                       </div>
+                   </div>
+
                    <button 
                       onClick={handleStartDiscussion}
                       disabled={loading || !topic.trim()}
-                      className="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                      className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                    >
                       {loading ? <Loader2 className="animate-spin" /> : <Play size={18} />}
                       {loading ? t.analyzing : t.btn}
@@ -198,11 +277,22 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                    </div>
                ) : (
                    <>
-                       {/* Persona Tabs */}
-                       <div className="flex p-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 gap-2">
-                           <PersonaButton type="Reviewer" icon={ShieldAlert} label={t.personas.reviewer} />
-                           <PersonaButton type="Collaborator" icon={Network} label={t.personas.collaborator} />
-                           <PersonaButton type="Mentor" icon={Lightbulb} label={t.personas.mentor} />
+                       {/* Persona Tabs - Dynamic */}
+                       <div className="flex p-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 gap-2 overflow-x-auto no-scrollbar">
+                           {personas.map(p => (
+                               <button
+                                  key={p.id}
+                                  onClick={() => setActivePersonaId(p.id)}
+                                  className={`flex-1 min-w-[100px] py-3 px-2 rounded-lg border font-bold text-xs flex items-center justify-center gap-1 transition-all
+                                      ${activePersonaId === p.id 
+                                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
+                                          : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}
+                                  `}
+                               >
+                                  <p.icon size={14} />
+                                  <span className="truncate">{p.name}</span>
+                               </button>
+                           ))}
                        </div>
 
                        {/* Chat Feed */}
@@ -210,24 +300,19 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                            {/* Initial Comments as System Messages */}
                            {chatHistory.length === 0 && (
                                <div className="space-y-4">
-                                   {activePersona === 'Reviewer' && (
-                                       <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 p-4 rounded-xl rounded-tl-none">
-                                           <div className="text-xs font-bold text-red-600 mb-1 flex items-center gap-1"><ShieldAlert size={12}/> {t.personas.reviewer} Initial Thoughts</div>
-                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.reviewer}</p>
-                                       </div>
-                                   )}
-                                   {activePersona === 'Collaborator' && (
-                                       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl rounded-tl-none">
-                                           <div className="text-xs font-bold text-blue-600 mb-1 flex items-center gap-1"><Network size={12}/> {t.personas.collaborator} Initial Thoughts</div>
-                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.collaborator}</p>
-                                       </div>
-                                   )}
-                                   {activePersona === 'Mentor' && (
-                                       <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 p-4 rounded-xl rounded-tl-none">
-                                           <div className="text-xs font-bold text-amber-600 mb-1 flex items-center gap-1"><Lightbulb size={12}/> {t.personas.mentor} Initial Thoughts</div>
-                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.mentor}</p>
-                                       </div>
-                                   )}
+                                   {/* Only show initial comments for the 3 base personas if they exist */}
+                                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 p-4 rounded-xl rounded-tl-none">
+                                       <div className="text-xs font-bold text-red-600 mb-1 flex items-center gap-1"><ShieldAlert size={12}/> {t.personas.reviewer} Initial Thoughts</div>
+                                       <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.reviewer}</p>
+                                   </div>
+                                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl rounded-tl-none">
+                                       <div className="text-xs font-bold text-blue-600 mb-1 flex items-center gap-1"><Network size={12}/> {t.personas.interdisciplinary} Initial Thoughts</div>
+                                       <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.collaborator}</p>
+                                   </div>
+                                   <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 p-4 rounded-xl rounded-tl-none">
+                                       <div className="text-xs font-bold text-amber-600 mb-1 flex items-center gap-1"><Lightbulb size={12}/> {t.personas.mentor} Initial Thoughts</div>
+                                       <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.mentor}</p>
+                                   </div>
                                </div>
                            )}
 
@@ -260,7 +345,7 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                                   value={chatInput}
                                   onChange={(e) => setChatInput(e.target.value)}
                                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                  placeholder={`Reply to ${activePersona}...`}
+                                  placeholder={`Reply to ${personas.find(p => p.id === activePersonaId)?.name || 'expert'}...`}
                                   className="w-full pl-4 pr-12 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all"
                                />
                                <button 

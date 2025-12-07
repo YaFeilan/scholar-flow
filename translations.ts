@@ -1,9 +1,3 @@
-
-
-
-
-
-
 export const TRANSLATIONS = {
   EN: {
     appName: 'ResearchAssistant',
@@ -55,8 +49,10 @@ export const TRANSLATIONS = {
     trends: {
       title: 'Trend Analysis',
       subtitle: 'Analyze research trends and emerging topics.',
-      placeholder: 'Enter a research topic...',
-      analyze: 'Analyze Trends',
+      placeholder: 'Enter research field...',
+      view: { researcher: 'Researcher View', institution: 'Institution View' },
+      timeRange: 'TIME RANGE',
+      analyze: 'Analyze',
       emerging: 'Emerging',
       yoy: 'YoY Growth',
       hotspots: 'Research Hotspots',
@@ -187,7 +183,9 @@ export const TRANSLATIONS = {
       targetPlaceholder: 'Journal / Conference / Thesis (Bachelor/Master/PhD)',
       focusLabel: 'Review Focus (Optional)',
       focusPlaceholder: 'e.g. Focus on innovation and methodology...',
-      btn: 'Review Opening'
+      btn: 'Review Opening',
+      personaLabel: 'Reviewer Persona',
+      personas: { gentle: 'Gentle Mentor', critical: 'Critical Reviewer' }
     },
     data: {
       title: 'Data Analysis',
@@ -465,9 +463,11 @@ export const TRANSLATIONS = {
       placeholder: 'Describe your research topic or hypothesis...',
       btn: 'Start Discussion',
       analyzing: 'Analyzing Topic...',
+      participantsHeader: 'PANEL PARTICIPANTS',
+      addRole: 'Add Role',
       personas: {
         reviewer: 'Reviewer',
-        collaborator: 'Interdisciplinary',
+        interdisciplinary: 'Interdisciplinary',
         mentor: 'Mentor'
       },
       scorecard: {
@@ -535,6 +535,8 @@ export const TRANSLATIONS = {
       title: '趋势分析',
       subtitle: '分析研究热点、技术趋势与未来方向。',
       placeholder: '输入研究领域...',
+      view: { researcher: 'Researcher View', institution: 'Institution View' },
+      timeRange: 'TIME RANGE',
       analyze: '分析趋势',
       emerging: '新兴技术',
       yoy: '同比增长',
@@ -666,7 +668,9 @@ export const TRANSLATIONS = {
       targetPlaceholder: '期刊 / 会议 / 本硕博毕业论文',
       focusLabel: '评审侧重点 (可选)',
       focusPlaceholder: '例如：重点关注创新点与方法论...',
-      btn: '开始评审'
+      btn: '开始评审',
+      personaLabel: 'Reviewer Persona',
+      personas: { gentle: 'Gentle Mentor', critical: 'Critical Reviewer' }
     },
     data: {
       title: '智能数据分析',
@@ -944,10 +948,12 @@ export const TRANSLATIONS = {
       placeholder: '描述你的研究课题或假设...',
       btn: '开始讨论',
       analyzing: '正在分析课题...',
+      participantsHeader: 'PANEL PARTICIPANTS',
+      addRole: '+ Add Role',
       personas: {
-        reviewer: '审稿人 (批判)',
-        collaborator: '跨学科合作者',
-        mentor: '导师 (引导)'
+        reviewer: 'Reviewer',
+        interdisciplinary: 'Interdisciplinary',
+        mentor: 'Mentor'
       },
       scorecard: {
         title: '创新性评分卡',

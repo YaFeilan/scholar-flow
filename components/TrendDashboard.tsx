@@ -1,9 +1,10 @@
+
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import * as d3 from 'd3';
 import { EMERGING_TECH, HOTSPOTS } from '../constants';
 import { analyzeResearchTrends, searchAcademicPapers, getPaperTLDR } from '../services/geminiService';
-import { Search, Loader2, Move, BarChart2, Tag, X, Filter, BookOpen, Lightbulb, Share2, Github, LayoutGrid, MonitorPlay, Zap, ArrowRight, User } from 'lucide-react';
+import { Search, Loader2, Move, BarChart2, Tag, X, Filter, BookOpen, Lightbulb, Share2, Github, LayoutGrid, MonitorPlay, Zap, ArrowRight, User, ChevronDown } from 'lucide-react';
 import { Language, HotspotItem, Paper, TrendTimeRange, TrendPersona, TrendAnalysisResult } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -238,57 +239,48 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
       <div className="bg-darkbg rounded-xl p-8 mb-8 text-white relative overflow-hidden shadow-2xl">
          <div className="relative z-10">
             <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
-                <div>
-                  <h2 className="text-3xl font-bold font-serif mb-2">{appName} <span className="text-blue-400">{t.title}</span></h2>
-                  <p className="text-slate-400 text-sm max-w-lg">{t.subtitle}</p>
-                </div>
-                
-                {/* Global Controls */}
-                <div className="flex flex-col gap-3 w-full md:w-auto">
-                    <div className="flex items-center gap-2 bg-slate-800/50 p-1 rounded-lg border border-slate-700/50">
-                        <User size={14} className="ml-2 text-slate-400" />
+                {/* Updated Controls for specific look */}
+                <div className="flex flex-col gap-4 w-full md:w-auto">
+                    {/* View Dropdown */}
+                    <div className="flex items-center gap-2 bg-slate-800/80 p-2 rounded-lg border border-slate-700 w-fit">
+                        <User size={16} className="text-slate-400" />
                         <select 
                            value={persona}
                            onChange={(e) => setPersona(e.target.value as TrendPersona)}
-                           className="bg-transparent text-white text-xs font-bold border-none focus:ring-0 cursor-pointer py-1"
+                           className="bg-transparent text-white font-bold border-none focus:ring-0 cursor-pointer py-1 pr-8 appearance-none text-sm"
                         >
-                           <option value="Researcher">Researcher View</option>
-                           <option value="Institution">Institution View</option>
+                           <option value="Researcher">{t.view.researcher}</option>
+                           <option value="Institution">{t.view.institution}</option>
                         </select>
+                        <ChevronDown size={14} className="text-slate-400 -ml-6 pointer-events-none" />
                     </div>
                     
-                    <div className="flex gap-2">
-                        <div className="relative flex-grow md:w-64">
+                    <div className="flex gap-3 flex-wrap items-center">
+                        <div className="relative flex-grow md:w-80">
                             <input 
                               type="text" 
                               value={topic}
                               onChange={(e) => setTopic(e.target.value)}
                               onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-                              className="w-full bg-slate-800 border border-slate-700 rounded-lg text-white text-sm px-4 py-2 focus:ring-1 focus:ring-blue-500 outline-none"
+                              className="w-full bg-slate-800/80 border border-slate-700 rounded-lg text-white text-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none placeholder-slate-500"
                               placeholder={t.placeholder}
                             />
                         </div>
-                        <button 
-                          onClick={handleAnalyze}
-                          disabled={isLoading}
-                          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                        >
-                          {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : <Search className="h-4 w-4" />}
-                          {t.analyze}
-                        </button>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                       <span className="text-xs font-bold text-slate-500 uppercase">Time Range:</span>
-                       {['1Y', '3Y', '5Y'].map((range) => (
-                           <button
-                             key={range}
-                             onClick={() => setTimeRange(range as TrendTimeRange)}
-                             className={`text-xs px-2 py-1 rounded border transition-all ${timeRange === range ? 'bg-blue-500/20 border-blue-500 text-blue-400' : 'border-slate-700 text-slate-500 hover:text-slate-300'}`}
-                           >
-                             {range}
-                           </button>
-                       ))}
+                    <div className="flex items-center gap-3 mt-1">
+                       <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t.timeRange}:</span>
+                       <div className="flex gap-2">
+                           {['1Y', '3Y', '5Y'].map((range) => (
+                               <button
+                                 key={range}
+                                 onClick={() => setTimeRange(range as TrendTimeRange)}
+                                 className={`text-xs font-bold px-4 py-1.5 rounded-md border transition-all ${timeRange === range ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-900/50' : 'border-slate-700 text-slate-400 hover:text-white hover:border-slate-600'}`}
+                               >
+                                 {range}
+                               </button>
+                           ))}
+                       </div>
                     </div>
                 </div>
             </div>
