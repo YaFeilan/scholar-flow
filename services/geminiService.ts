@@ -1,8 +1,3 @@
-
-
-
-
-
 import { GoogleGenAI } from "@google/genai";
 import { 
   Language, 
@@ -174,6 +169,55 @@ export const extractChartData = async (file: File, language: Language, mode: str
     Return JSON with title, type, summary, and data (array of objects). If formula, put in ocrText.`;
     const res = await getJson<ChartExtractionResult>(prompt, file);
     return res || { title: '', type: 'Unknown', summary: '', data: [] };
+};
+
+export const parsePaperFromImage = async (file: File, language: Language): Promise<Paper | null> => {
+    const ai = getAiClient();
+    const prompt = `Analyze this image of a research paper page. 
+    Task: Extract metadata and FULL textual content visible in the image.
+    Language: ${language}.
+    
+    Return a JSON object with this specific structure:
+    {
+      "title": "Paper Title (if visible, else infer)",
+      "authors": ["Author 1", "Author 2"],
+      "journal": "Journal Name (if visible)",
+      "year": 2024,
+      "abstract": "The full text content visible in the image (this may include body text, not just abstract)."
+    }`;
+
+    try {
+        const filePart = await fileToGenerativePart(file);
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: {
+                parts: [{ text: prompt }, filePart]
+            },
+            config: {
+                responseMimeType: "application/json"
+            }
+        });
+        
+        if (response.text) {
+            const data = JSON.parse(response.text);
+            return {
+                id: `img-parsed-${Date.now()}`,
+                title: data.title || "Untitled From Image",
+                authors: data.authors || ["Unknown"],
+                journal: data.journal || "Image Import",
+                year: data.year || new Date().getFullYear(),
+                citations: 0,
+                badges: [{ type: 'LOCAL' }],
+                abstract: data.abstract || "",
+                source: 'local',
+                file: file,
+                addedDate: new Date().toISOString().split('T')[0]
+            };
+        }
+    } catch (e) {
+        console.error("Parse Paper Image Error", e);
+    }
+    return null;
 };
 
 export const analyzeResearchTrends = async (topic: string, language: Language, timeRange: TrendTimeRange, persona: TrendPersona): Promise<TrendAnalysisResult | null> => {

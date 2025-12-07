@@ -1,21 +1,10 @@
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useMemo, useRef } from 'react';
 import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database, Lock, Copy, Check, ExternalLink, AlertTriangle, MessageCircle, Image as ImageIcon } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
 import { MOCK_PAPERS } from '../constants';
 import { TRANSLATIONS } from '../translations';
 import ReactMarkdown from 'react-markdown';
-import { generatePaperInterpretation, searchAcademicPapers, generateSimulatedFullText, extractChartData } from '../services/geminiService';
+import { generatePaperInterpretation, searchAcademicPapers, generateSimulatedFullText, extractChartData, parsePaperFromImage } from '../services/geminiService';
 
 interface SearchPanelProps {
   onReviewRequest: (papers: Paper[]) => void;
@@ -230,29 +219,19 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
       if (e.target.files && e.target.files.length > 0) {
           setIsImageAnalyzing(true);
           const file = e.target.files[0];
-          // Use extractChartData as a generic image analyzer here
-          const analysis = await extractChartData(file, language, 'auto');
           
-          // Append OCR text to abstract for visibility
-          const fullContent = (analysis.fullDescription || '') + '\n\n' + (analysis.ocrText ? `[Extracted Text]\n${analysis.ocrText}` : '');
-
-          const newPaper: Paper = {
-              id: `img-${Date.now()}`,
-              title: analysis.title || "Extracted from Image",
-              authors: ["Image Source"],
-              journal: "Image Import",
-              year: new Date().getFullYear(),
-              citations: 0,
-              badges: [{ type: 'LOCAL' }],
-              abstract: fullContent || "No text detected.",
-              source: 'local',
-              file: file, // Store original image as file
-              addedDate: new Date().toISOString().split('T')[0]
-          };
+          // Use specific paper parser for full content extraction
+          const paper = await parsePaperFromImage(file, language);
           
-          setLocalPapers(prev => [...prev, newPaper]);
+          if (paper) {
+              setLocalPapers(prev => [...prev, paper]);
+              setSearchSource('local'); // Switch to local view to see it
+          } else {
+              // Fallback if parsing fails but shouldn't happen often
+              alert(language === 'ZH' ? "无法从图片解析论文内容。" : "Failed to parse paper from image.");
+          }
+          
           setIsImageAnalyzing(false);
-          setSearchSource('local');
       }
   };
 
@@ -536,7 +515,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                    />
                    {isImageAnalyzing ? <Loader2 className="animate-spin text-purple-600" /> : <ImageIcon className="text-purple-600" />}
                    <span className="font-bold text-slate-700 dark:text-slate-300 text-sm">
-                       {isImageAnalyzing ? (language === 'ZH' ? '正在解析图片...' : 'Analyzing Image...') : (language === 'ZH' ? '从图片导入 (提取全文)' : 'Import from Image (Extract Full Text)')}
+                       {isImageAnalyzing ? (language === 'ZH' ? '正在提取全内容...' : 'Extracting Full Content...') : (language === 'ZH' ? '从图片提取论文 (含全文)' : 'Extract Paper from Image (Full Text)')}
                    </span>
                 </div>
             </div>
@@ -726,7 +705,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                       <div className="space-y-4">
                           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 mb-4 uppercase tracking-wide opacity-50">Abstract</h3>
-                              <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base">
+                              <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base whitespace-pre-wrap">
                                   {viewingPaper.abstract || "No abstract available for this paper."}
                               </p>
                           </div>
