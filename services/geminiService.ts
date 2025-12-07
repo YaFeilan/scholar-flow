@@ -227,8 +227,10 @@ export const refinePolish = async (originalText: string, instruction: string, la
     return getJson<PolishResult>(prompt);
 };
 
-export const generateAdvisorReport = async (title: string, journal: string, abstract: string, language: Language): Promise<AdvisorReport | null> => {
-    const prompt = `Evaluate paper fit. Title: ${title}. Journal: ${journal}. Abstract: ${abstract}. Language: ${language}. Return JSON matching AdvisorReport.`;
+export const generateAdvisorReport = async (title: string, journal: string, abstract: string, language: Language, focus?: string): Promise<AdvisorReport | null> => {
+    const prompt = `Evaluate paper fit. Title: ${title}. Journal: ${journal}. Abstract: ${abstract}. 
+    ${focus ? `**Review Focus/Instructions:** ${focus}` : ''}
+    Language: ${language}. Return JSON matching AdvisorReport.`;
     return getJson<AdvisorReport>(prompt);
 };
 

@@ -15,6 +15,7 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
   const [title, setTitle] = useState('');
   const [abstract, setAbstract] = useState('');
   const [journal, setJournal] = useState('');
+  const [reviewFocus, setReviewFocus] = useState(''); // New State
   const [currentReport, setCurrentReport] = useState<AdvisorReport | null>(null);
   const [history, setHistory] = useState<AdvisorReport[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,7 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
     }
     setCurrentReport(null);
 
-    const result = await generateAdvisorReport(title, journal, abstract, language);
+    const result = await generateAdvisorReport(title, journal, abstract, language, reviewFocus);
     if (result) {
         setCurrentReport(result);
     }
@@ -127,6 +128,17 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
                   onChange={(e) => setJournal(e.target.value)}
                   placeholder="e.g. Nature Communications"
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                />
+              </div>
+
+              {/* New Review Focus Input */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{t.focusLabel || 'Review Focus (Optional)'}</label>
+                <textarea
+                  value={reviewFocus}
+                  onChange={(e) => setReviewFocus(e.target.value)}
+                  placeholder={t.focusPlaceholder || 'e.g. Focus on methodological novelty...'}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none resize-none h-20 text-sm leading-relaxed"
                 />
               </div>
 

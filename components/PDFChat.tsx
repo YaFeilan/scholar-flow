@@ -306,7 +306,8 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
 
       if (isCitation) {
           const prompt = `Locate reference ${text} and summarize it.`;
-          await performPDFChat(prompt, language, file!, [], () => {}).then((res) => {
+          const ac = new AbortController();
+          await performPDFChat(prompt, language, file!, [], () => {}, ac.signal).then((res) => {
               setReferencePopup(prev => prev ? {...prev, loading: false, content: res} : null);
           });
       }
