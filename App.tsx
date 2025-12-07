@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
 import SearchPanel from './components/SearchPanel';
@@ -23,24 +24,27 @@ import AIDetector from './components/AIDetector';
 import { ViewState, Paper, Language, ModelProvider } from './types';
 import { generateLiteratureReview, setModelProvider } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
-import { X } from 'lucide-react';
+import { X, BookOpen, Key, ArrowRight } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>(ViewState.IDEA_GUIDE); // Start with Idea Guide in new flow
+  const [currentView, setCurrentView] = useState<ViewState>(ViewState.IDEA_GUIDE);
   const [language, setLanguage] = useState<Language>('EN');
   const [modelProvider, setModelProviderState] = useState<ModelProvider>('Gemini');
   const [generatedReview, setGeneratedReview] = useState<string | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [ideaTopic, setIdeaTopic] = useState<string>('');
-  const [analysisData, setAnalysisData] = useState<any[][] | null>(null); // Shared data for DataAnalysis
+  const [analysisData, setAnalysisData] = useState<any[][] | null>(null);
   const [pdfChatFile, setPdfChatFile] = useState<File | null>(null);
   
+  // API Key State
+  const [hasKey, setHasKey] = useState(false);
+  const [keyCheckLoading, setKeyCheckLoading] = useState(true);
+
   // Sidebar State
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Dark Mode State
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    // Check local storage or system preference on initial load
     if (typeof window !== 'undefined') {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
@@ -62,6 +66,39 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
+  // Check for API Key on mount
+  useEffect(() => {
+    const checkKey = async () => {
+      try {
+        if ((window as any).aistudio) {
+            const has = await (window as any).aistudio.hasSelectedApiKey();
+            setHasKey(has);
+        } else {
+            // Fallback for development environments without the injection
+            setHasKey(true);
+        }
+      } catch (e) {
+        console.error("API Key check failed", e);
+        setHasKey(false);
+      } finally {
+        setKeyCheckLoading(false);
+      }
+    };
+    checkKey();
+  }, []);
+
+  const handleSelectKey = async () => {
+      if ((window as any).aistudio) {
+          try {
+            await (window as any).aistudio.openSelectKey();
+            // Race condition mitigation: Assume success if dialog opens/returns
+            setHasKey(true);
+          } catch(e) {
+              console.error("Failed to select key", e);
+          }
+      }
+  };
+
   const handleSetModelProvider = (provider: ModelProvider) => {
       setModelProviderState(provider);
       setModelProvider(provider);
@@ -72,11 +109,9 @@ const App: React.FC = () => {
   };
 
   const handleReviewRequest = async (papers: Paper[]) => {
-    // Show modal immediately with loading state (handled inside by waiting for content)
     setShowReviewModal(true);
     setGeneratedReview("Generating comprehensive review based on selected papers...");
     
-    // Format papers for Gemini
     const paperDescriptions = papers.map(p => 
       `Title: ${p.title}. Abstract: ${p.abstract || 'N/A'}. Year: ${p.year}`
     );
@@ -104,6 +139,44 @@ const App: React.FC = () => {
       setPdfChatFile(file);
       setCurrentView(ViewState.PDF_CHAT);
   };
+
+  if (keyCheckLoading) {
+      return (
+          <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
+              <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+          </div>
+      );
+  }
+
+  // Landing Page if no API Key
+  if (!hasKey) {
+      return (
+          <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
+              <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 text-center border border-slate-200 dark:border-slate-700">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <BookOpen size={40} className="text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <h1 className="text-3xl font-serif font-bold text-slate-900 dark:text-slate-100 mb-2">Research Assistant</h1>
+                  <p className="text-slate-500 dark:text-slate-400 mb-8">
+                      Accelerate your academic journey with AI-powered insights, analysis, and writing tools.
+                  </p>
+                  
+                  <button 
+                      onClick={handleSelectKey}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-3 group"
+                  >
+                      <Key size={20} />
+                      <span>Connect API Key to Start</span>
+                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  
+                  <div className="mt-6 text-xs text-slate-400">
+                      Powered by Gemini 2.5 • Veo • Imagen
+                  </div>
+              </div>
+          </div>
+      );
+  }
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">

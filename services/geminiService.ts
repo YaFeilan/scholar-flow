@@ -1,6 +1,4 @@
 
-
-
 import { GoogleGenAI } from "@google/genai";
 import { 
   Language, 
@@ -36,7 +34,10 @@ import {
   CodeMessage
 } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to get a fresh client instance with the latest key
+const getAiClient = () => {
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+};
 
 // Helper to convert file to base64 for Gemini
 async function fileToGenerativePart(file: File) {
@@ -59,6 +60,7 @@ async function fileToGenerativePart(file: File) {
 // Generic Helper for JSON response
 async function getJson<T>(prompt: string, file?: File): Promise<T | null> {
   try {
+    const ai = getAiClient();
     const model = 'gemini-2.5-flash';
     let parts: any[] = [{ text: prompt }];
     if (file) {
@@ -85,6 +87,7 @@ async function getJson<T>(prompt: string, file?: File): Promise<T | null> {
 // Generic Helper for Text response
 async function getText(prompt: string, file?: File): Promise<string> {
   try {
+    const ai = getAiClient();
     const model = 'gemini-2.5-flash';
     let parts: any[] = [{ text: prompt }];
     if (file) {
@@ -126,6 +129,7 @@ export const generatePaperInterpretation = async (paper: Paper, language: Langua
 export const searchAcademicPapers = async (query: string, language: Language, limit: number): Promise<Paper[]> => {
     // Using Google Search grounding to find papers
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: `Find ${limit} academic papers about "${query}". Return a JSON array of papers with title, authors, journal, year, citations (approx), abstract, and badges (SCI/Q1 etc inferred). Language: ${language}.`,
@@ -136,10 +140,6 @@ export const searchAcademicPapers = async (query: string, language: Language, li
         });
         
         if (response.text) {
-             // Note: The model might return JSON markdown block, strip it if necessary, though responseMimeType handles it usually.
-             // However, with googleSearch tool, responseMimeType might be ignored or behave differently.
-             // But for this simulation, we assume it works or returns structured text we can parse.
-             // Fallback to mock if parsing fails or returns text.
              try {
                  const papers = JSON.parse(response.text);
                  if (Array.isArray(papers)) return papers;
@@ -266,6 +266,7 @@ export const generatePPTContent = async (file: File, config: any, language: Lang
 export const generateSlideImage = async (visualSuggestion: string, style: string): Promise<string | null> => {
     // Use standard image model for generation
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-3-pro-image-preview",
             contents: {
@@ -354,6 +355,7 @@ export const performCodeAssistance = async (
     onStream: (text: string) => void,
     signal: AbortSignal
 ): Promise<string> => {
+    const ai = getAiClient();
     // Streaming implementation
     let parts: any[] = [{ text: `Mode: ${mode}. Language: ${lang}. Output Language: ${language}. User Input: ${input}` }];
     if (file) {
@@ -400,13 +402,9 @@ export const optimizeHypothesis = async (hypothesis: string, language: Language)
 };
 
 export const performPDFChat = async (query: string, language: Language, file: File, history: {role: string, text: string}[], onStream: (text: string) => void, signal: AbortSignal): Promise<string> => {
+    const ai = getAiClient();
     // Similar to code assistance but for PDF
     const filePart = await fileToGenerativePart(file);
-    const parts = [{ text: `Question: ${query}. Language: ${language}.` }, filePart];
-    
-    // Simplification: Using generateContentStream instead of Chat for file context in every turn or use caching.
-    // For single turn or small history, we can pass file every time or rely on caching.
-    // Here using generateContentStream with history as context text.
     
     const context = history.map(h => `${h.role}: ${h.text}`).join('\n');
     const fullPrompt = `Context:\n${context}\n\nUser Question: ${query}\nLanguage: ${language}`;
@@ -482,6 +480,7 @@ export const generateScientificFigure = async (prompt: string, style: string, mo
     // Mask handling is complex in simple SDK usage without specific method, usually passed as image part with instruction.
     
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: model,
             contents: { parts: contentParts },
