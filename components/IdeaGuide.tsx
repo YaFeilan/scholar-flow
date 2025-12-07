@@ -5,6 +5,7 @@ import { generateResearchIdeas, generateIdeaFollowUp } from '../services/geminiS
 import { Language, IdeaGuideResult, IdeaFollowUpResult } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface IdeaGuideProps {
   language: Language;
@@ -20,6 +21,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
   const [result, setResult] = useState<IdeaGuideResult | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Deep Dive State
   const [selectedDirectionIndex, setSelectedDirectionIndex] = useState<number | null>(null);
@@ -84,73 +86,54 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
     setFollowUpLoading(false);
   };
 
-  const handleExportProposal = () => {
-    if (!result) return;
+  const handleExportProposal = async () => {
+    if (!resultsRef.current) return;
     
-    const doc = new jsPDF();
-    const margin = 20;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let yPos = margin;
-
-    // Title
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.text("Research Proposal Draft", margin, yPos);
-    yPos += 10;
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Topic: ${topic} (${focus} Focus)`, margin, yPos);
-    yPos += 10;
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, margin, yPos);
-    yPos += 15;
-
-    // Directions
-    result.directions.forEach((dir, idx) => {
-      if (yPos > 250) { doc.addPage(); yPos = margin; }
-      
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text(`Direction ${idx + 1}: ${dir.angle}`, margin, yPos);
-      yPos += 8;
-      
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "italic");
-      const descLines = doc.splitTextToSize(dir.description, pageWidth - 2 * margin);
-      doc.text(descLines, margin, yPos);
-      yPos += (descLines.length * 6) + 4;
-
-      doc.setFont("helvetica", "normal");
-      doc.text(`Methodology: ${dir.methodology}`, margin, yPos);
-      yPos += 6;
-      doc.text(`Data Sources: ${dir.dataSources}`, margin, yPos);
-      yPos += 10;
-
-      // Titles
-      doc.setFont("helvetica", "bold");
-      doc.text("Suggested Titles:", margin, yPos);
-      yPos += 6;
-      doc.setFont("helvetica", "normal");
-      dir.recommendedTitles.forEach(t => {
-          doc.text(`- ${t}`, margin + 5, yPos);
-          yPos += 6;
-      });
-      yPos += 4;
-      
-      // Papers
-      if (dir.corePapers) {
-          doc.setFont("helvetica", "bold");
-          doc.text("Core References:", margin, yPos);
-          yPos += 6;
-          doc.setFont("helvetica", "normal");
-          dir.corePapers.forEach(p => {
-              doc.text(`- ${p.title} (${p.year}) - ${p.author}`, margin + 5, yPos);
-              yPos += 6;
-          });
-      }
-      yPos += 10;
+    // Capture the results area as an image to preserve Chinese characters/Unicode
+    const canvas = await html2canvas(resultsRef.current, {
+        scale: 2, // High resolution
+        useCORS: true,
+        backgroundColor: '#ffffff'
     });
 
-    doc.save('Research_Proposal_Draft.pdf');
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    
+    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+    const imgX = (pdfWidth - imgWidth * ratio) / 2;
+    const imgY = 10; 
+
+    // If image height exceeds page, we might need multi-page logic, but for simple export, scaling to fit width and adding pages is complex.
+    // For now, we fit width and let it span pages if supported, but addImage puts it on one. 
+    // A robust multi-page implementation cuts the canvas. Simple version scales to width.
+    
+    const scaledHeight = imgHeight * (pdfWidth / imgWidth);
+    
+    if (scaledHeight > pdfHeight) {
+        // Multi-page logic roughly
+        let heightLeft = scaledHeight;
+        let position = 0;
+        let pageHeight = pdfHeight; 
+
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - scaledHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
+          heightLeft -= pageHeight;
+        }
+    } else {
+        pdf.addImage(imgData, 'PNG', 0, imgY, pdfWidth, scaledHeight);
+    }
+
+    pdf.save('Research_Results.pdf');
   };
 
   return (
@@ -253,7 +236,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
         )}
 
         {result && (
-           <>
+           <div ref={resultsRef} className="lg:col-span-12 grid grid-cols-1 lg:grid-cols-12 gap-8 bg-slate-50 p-4 rounded-xl">
               {/* Research Directions */}
               <div className="lg:col-span-8 space-y-6">
                  <div className="flex items-center justify-between">
@@ -469,7 +452,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                     ))}
                  </div>
               </div>
-           </>
+           </div>
         )}
       </div>
     </div>

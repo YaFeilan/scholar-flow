@@ -1,3 +1,4 @@
+
 export const TRANSLATIONS = {
   EN: {
     appName: 'ResearchAssistant',
@@ -173,7 +174,7 @@ export const TRANSLATIONS = {
       deepDive: 'Deep Dive Analysis',
       keywords: 'Keywords',
       journals: 'Target Journals',
-      exportProposal: 'Export Proposal'
+      exportProposal: 'Download Results'
     },
     opening: {
       title: 'Opening Review',
@@ -658,7 +659,7 @@ export const TRANSLATIONS = {
       deepDive: '深度解析',
       keywords: '关键词',
       journals: '推荐期刊',
-      exportProposal: '导出开题报告'
+      exportProposal: '结果下载'
     },
     opening: {
       title: '开题评审',
