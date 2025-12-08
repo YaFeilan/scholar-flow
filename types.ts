@@ -1,6 +1,3 @@
-
-
-
 export type Language = 'ZH' | 'EN';
 export type ModelProvider = 'Gemini' | 'DeepSeek' | 'ChatGPT' | 'Doubao';
 
@@ -49,7 +46,8 @@ export enum ViewState {
   GRANT_APPLICATION = 'GRANT_APPLICATION',
   CONFERENCE_FINDER = 'CONFERENCE_FINDER',
   AI_DETECTOR = 'AI_DETECTOR',
-  RESEARCH_DISCUSSION = 'RESEARCH_DISCUSSION', // New
+  RESEARCH_DISCUSSION = 'RESEARCH_DISCUSSION',
+  TITLE_PRISM = 'TITLE_PRISM', // New
 }
 
 // Trend Types
@@ -502,4 +500,18 @@ export interface DiscussionAnalysisResult {
     collaborator: string;
     mentor: string;
   };
+}
+
+// Title Prism Types (New)
+export interface TitleRefinementResult {
+  council: {
+    role: 'Reviewer' | 'Editor' | 'Generalist' | 'SEO';
+    feedback: string;
+    critiqueQuote: string; // e.g. "Variables are vague"
+  }[];
+  options: {
+    type: 'Safe' | 'Impact' | 'Detailed';
+    title: string;
+    rationale: string;
+  }[];
 }

@@ -2,7 +2,7 @@
 
 
 import React, { useState } from 'react';
-import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, ShieldAlert, Bot, Sparkles, MessagesSquare } from 'lucide-react';
+import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, ShieldAlert, Bot, Sparkles, MessagesSquare, Gem } from 'lucide-react';
 import { ViewState, Language, ModelProvider } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
           title: t.groups.planning,
           items: [
              { label: navT.idea, icon: <Lightbulb size={20} />, id: ViewState.IDEA_GUIDE },
-             { label: navT.discussion, icon: <MessagesSquare size={20} />, id: ViewState.RESEARCH_DISCUSSION }, // New
+             { label: navT.discussion, icon: <MessagesSquare size={20} />, id: ViewState.RESEARCH_DISCUSSION },
              { label: navT.trends, icon: <TrendingUp size={20} />, id: ViewState.TRENDS },
              { label: navT.search, icon: <Search size={20} />, id: ViewState.SEARCH },
              { label: navT.pdfChat, icon: <MessageSquare size={20} />, id: ViewState.PDF_CHAT }, 
@@ -66,6 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
           items: [
              { label: navT.review, icon: <FileText size={20} />, id: ViewState.REVIEW_GENERATION },
              { label: navT.polish, icon: <PenTool size={20} />, id: ViewState.POLISH },
+             { label: navT.titlePrism, icon: <Gem size={20} />, id: ViewState.TITLE_PRISM }, // New
              { label: navT.figure, icon: <ImageIcon size={20} />, id: ViewState.FIGURE_GEN },
              { label: navT.ppt, icon: <MonitorPlay size={20} />, id: ViewState.PPT_GENERATION },
           ]

@@ -22,6 +22,7 @@ import GrantApplication from './components/GrantApplication';
 import ConferenceFinder from './components/ConferenceFinder'; 
 import AIDetector from './components/AIDetector'; 
 import ResearchDiscussion from './components/ResearchDiscussion';
+import TitlePrism from './components/TitlePrism';
 import { ViewState, Paper, Language, ModelProvider } from './types';
 import { generateLiteratureReview, setModelProvider } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -302,6 +303,9 @@ const App: React.FC = () => {
             )}
             {currentView === ViewState.POLISH && (
             <PolishAssistant language={language} />
+            )}
+            {currentView === ViewState.TITLE_PRISM && (
+            <TitlePrism language={language} />
             )}
             {currentView === ViewState.FIGURE_GEN && (
             <FigureGenerator language={language} />

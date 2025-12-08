@@ -23,7 +23,8 @@ export const TRANSLATIONS = {
       grant: 'Grant App',
       conference: 'Call for Papers',
       aiDetector: 'AI Detector',
-      discussion: 'Discussion'
+      discussion: 'Discussion',
+      titlePrism: 'Title Prism'
     },
     groups: {
       planning: 'Planning',
@@ -31,6 +32,7 @@ export const TRANSLATIONS = {
       writing: 'Writing',
       publish: 'Publish'
     },
+    // ... existing search translations ...
     search: {
       title: 'Academic Search',
       subtitle: 'Find relevant papers from multiple databases.',
@@ -47,6 +49,7 @@ export const TRANSLATIONS = {
       download: 'Download',
       interpretationResult: 'AI Interpretation'
     },
+    // ... existing trends translations ...
     trends: {
       title: 'Trend Analysis',
       subtitle: 'Analyze research trends and emerging topics.',
@@ -59,6 +62,7 @@ export const TRANSLATIONS = {
       hotspots: 'Research Hotspots',
       methodologies: 'Top Methodologies'
     },
+    // ... existing peer translations ...
     peer: {
       title: 'Peer Review Simulator',
       subtitle: 'Simulate peer review feedback for your manuscript.',
@@ -73,6 +77,7 @@ export const TRANSLATIONS = {
       rebuttalBtn: 'Generate Rebuttal',
       coverLetterBtn: 'Generate Cover Letter'
     },
+    // ... existing review translations ...
     review: {
       steps: { 1: 'Scope', 2: 'Select', 3: 'Config', 4: 'Result' },
       scopeTitle: 'Define Review Scope',
@@ -88,6 +93,7 @@ export const TRANSLATIONS = {
       genBtn: 'Generate Review',
       complete: 'Review Generated'
     },
+    // ... existing track translations ...
     track: {
       title: 'Citation Tracker',
       subtitle: 'Track citations and analyze research gaps.',
@@ -97,6 +103,7 @@ export const TRANSLATIONS = {
       btn: 'Track Network',
       dragDrop: 'Drag & drop PDF here'
     },
+    // ... existing polish translations ...
     polish: {
       title: 'Polishing Assistant',
       subtitle: 'Improve your writing with AI.',
@@ -123,6 +130,7 @@ export const TRANSLATIONS = {
       },
       revisionNotes: 'Revision Notes'
     },
+    // ... existing advisor translations ...
     advisor: {
       title: 'Publication Advisor',
       subtitle: 'Get advice on where to publish.',
@@ -139,6 +147,7 @@ export const TRANSLATIONS = {
       risks: 'Risk Assessment',
       alternatives: 'Alternative Journals'
     },
+    // ... existing ppt translations ...
     ppt: {
       title: 'PPT Generator',
       subtitle: 'Generate presentation slides from your paper.',
@@ -155,6 +164,7 @@ export const TRANSLATIONS = {
       genBtn: 'Generate Slides',
       generating: 'Generating PPT...'
     },
+    // ... existing idea translations ...
     idea: {
       title: 'Research Idea Guide',
       subtitle: 'Generate research ideas based on a topic.',
@@ -176,6 +186,7 @@ export const TRANSLATIONS = {
       journals: 'Target Journals',
       exportProposal: 'Download Results'
     },
+    // ... existing opening translations ...
     opening: {
       title: 'Opening Review',
       subtitle: 'Evaluate the opening section of your paper.',
@@ -188,6 +199,7 @@ export const TRANSLATIONS = {
       personaLabel: 'Reviewer Persona',
       personas: { gentle: 'Gentle Mentor', critical: 'Critical Reviewer' }
     },
+    // ... existing data translations ...
     data: {
       title: 'Data Analysis',
       subtitle: 'Analyze your data with AI.',
@@ -221,6 +233,7 @@ export const TRANSLATIONS = {
       selectAll: 'All',
       deselectAll: 'None'
     },
+    // ... existing code translations ...
     code: {
       title: 'Code Assistant',
       newSession: 'New Session',
@@ -232,6 +245,7 @@ export const TRANSLATIONS = {
       shortcut: 'Ctrl+Enter to Run',
       followUpPlaceholder: 'Follow up...'
     },
+    // ... existing experimentDesign translations ...
     experimentDesign: {
       title: 'Experiment Design',
       subtitle: 'Design your research experiments.',
@@ -269,6 +283,7 @@ export const TRANSLATIONS = {
         memoryDesc: 'Cognitive Psychology'
       }
     },
+    // ... existing pdfChat translations ...
     pdfChat: {
       title: 'Lit. Reading',
       upload: 'Upload PDF',
@@ -276,6 +291,7 @@ export const TRANSLATIONS = {
       welcome: 'Welcome to Literature Intensive Reading',
       placeholder: 'Ask questions about the document...'
     },
+    // ... existing knowledge translations ...
     knowledge: {
       title: 'Knowledge Graph',
       subtitle: 'Visualize research connections.',
@@ -291,6 +307,7 @@ export const TRANSLATIONS = {
       chatWelcome: 'Ask questions about the connected papers.',
       chatPlaceholder: 'Ask a question...'
     },
+    // ... existing figure translations ...
     figure: {
       title: 'Figure Generator',
       subtitle: 'Create scientific figures.',
@@ -329,6 +346,7 @@ export const TRANSLATIONS = {
       history: 'History',
       refinePlaceholder: 'Refine this figure...'
     },
+    // ... existing chart translations ...
     chart: {
       title: 'Chart Extraction',
       subtitle: 'Extract data from charts.',
@@ -347,6 +365,7 @@ export const TRANSLATIONS = {
       conferences: 'Conferences',
       journals: 'Journals'
     },
+    // ... existing grant translations ...
     grant: {
       title: 'Grant Application Assistant',
       subtitle: 'Specialized tools for grant writing (NSFC, etc.): Rationale Generation, Proposal Polishing, and Format Review.',
@@ -415,6 +434,7 @@ export const TRANSLATIONS = {
         verdict: 'Verdict'
       }
     },
+    // ... existing conference translations ...
     conference: { 
       title: 'Call for Papers Calendar',
       subtitle: 'Track upcoming academic deadlines for conferences (e.g. CVPR, AAAI) and journal special issues.',
@@ -441,6 +461,7 @@ export const TRANSLATIONS = {
           partition: 'JCR Partition'
       }
     },
+    // ... existing aiDetector translations ...
     aiDetector: {
       title: 'AI Detection & Humanizer',
       subtitle: 'Detect AI-generated text and rewrite it to lower AI probability scores.',
@@ -458,6 +479,7 @@ export const TRANSLATIONS = {
       copy: 'Copy',
       files: 'Supported: PDF, DOCX, TXT'
     },
+    // ... existing discussion translations ...
     discussion: {
       title: 'Research Discussion',
       subtitle: 'Debate your research topic with diverse AI personas to find innovation and feasibility gaps.',
@@ -483,6 +505,24 @@ export const TRANSLATIONS = {
         tech: 'Technical',
         ethics: 'Ethics/IRB'
       }
+    },
+    // New Title Prism Translations
+    titlePrism: {
+      title: 'Title Prism',
+      subtitle: 'Optimize your research title with multi-perspective AI feedback.',
+      inputSection: 'Input & Configuration',
+      draftTitle: 'Draft Title',
+      draftPlaceholder: 'Enter your draft title...',
+      abstract: 'Abstract / Key Contribution (Optional)',
+      abstractPlaceholder: 'Paste abstract to help AI understand context...',
+      target: 'Target Journal / Field',
+      targetPlaceholder: 'Select or type journal name...',
+      optimizeBtn: 'Start Multi-dimensional Optimization',
+      resultsSection: 'Smart Analysis & Results',
+      councilTitle: 'The Council Diagnosis',
+      optionsTitle: 'Refined Options',
+      analyzing: 'Analyzing...',
+      copy: 'Copy'
     }
   },
   ZH: {
@@ -508,7 +548,8 @@ export const TRANSLATIONS = {
       grant: '基金申请',
       conference: '学术征稿',
       aiDetector: 'AI率检测',
-      discussion: '科研讨论'
+      discussion: '科研讨论',
+      titlePrism: '标题精炼'
     },
     groups: {
       planning: '科研规划',
@@ -516,6 +557,7 @@ export const TRANSLATIONS = {
       writing: '论文写作',
       publish: '投稿与发表'
     },
+    // ... existing search translations ...
     search: {
       title: '学术文献搜索',
       subtitle: '一站式检索多个学术数据库，获取最新文献。',
@@ -532,6 +574,7 @@ export const TRANSLATIONS = {
       download: '下载',
       interpretationResult: 'AI 解读结果'
     },
+    // ... existing trends translations ...
     trends: {
       title: '趋势分析',
       subtitle: '分析研究热点、技术趋势与未来方向。',
@@ -544,6 +587,7 @@ export const TRANSLATIONS = {
       hotspots: '研究热点',
       methodologies: '热门方法'
     },
+    // ... existing peer translations ...
     peer: {
       title: '模拟同行评审',
       subtitle: '在投稿前获取AI模拟的同行评审意见。',
@@ -558,6 +602,7 @@ export const TRANSLATIONS = {
       rebuttalBtn: '生成回复信',
       coverLetterBtn: '生成投稿信'
     },
+    // ... existing review translations ...
     review: {
       steps: { 1: '范围', 2: '筛选', 3: '配置', 4: '结果' },
       scopeTitle: '定义综述范围',
@@ -573,6 +618,7 @@ export const TRANSLATIONS = {
       genBtn: '生成综述',
       complete: '生成完成'
     },
+    // ... existing track translations ...
     track: {
       title: '引文追踪',
       subtitle: '追踪引文网络，发现研究空白。',
@@ -582,6 +628,7 @@ export const TRANSLATIONS = {
       btn: '构建网络',
       dragDrop: '拖拽 PDF 到此处'
     },
+    // ... existing polish translations ...
     polish: {
       title: '润色助手',
       subtitle: '提升学术写作质量与地道性。',
@@ -608,6 +655,7 @@ export const TRANSLATIONS = {
       },
       revisionNotes: '修订说明'
     },
+    // ... existing advisor translations ...
     advisor: {
       title: '投稿选刊顾问',
       subtitle: '分析稿件质量，推荐合适期刊。',
@@ -624,6 +672,7 @@ export const TRANSLATIONS = {
       risks: '风险评估',
       alternatives: '推荐期刊'
     },
+    // ... existing ppt translations ...
     ppt: {
       title: 'PPT 生成器',
       subtitle: '从论文自动生成演示文稿。',
@@ -640,6 +689,7 @@ export const TRANSLATIONS = {
       genBtn: '生成 PPT',
       generating: '正在生成 PPT...'
     },
+    // ... existing idea translations ...
     idea: {
       title: '选题向导',
       subtitle: '激发研究灵感，生成选题方案。',
@@ -661,6 +711,7 @@ export const TRANSLATIONS = {
       journals: '推荐期刊',
       exportProposal: '结果下载'
     },
+    // ... existing opening translations ...
     opening: {
       title: '开题评审',
       subtitle: '对开题报告进行预评估与优化。',
@@ -673,6 +724,7 @@ export const TRANSLATIONS = {
       personaLabel: 'Reviewer Persona',
       personas: { gentle: 'Gentle Mentor', critical: 'Critical Reviewer' }
     },
+    // ... existing data translations ...
     data: {
       title: '智能数据分析',
       subtitle: '上传数据，自动获取洞察与模型推荐。',
@@ -706,6 +758,7 @@ export const TRANSLATIONS = {
       selectAll: '全选',
       deselectAll: '反选'
     },
+    // ... existing code translations ...
     code: {
       title: '代码助手',
       newSession: '新会话',
@@ -717,6 +770,7 @@ export const TRANSLATIONS = {
       shortcut: 'Ctrl+Enter 运行',
       followUpPlaceholder: '继续提问...'
     },
+    // ... existing experimentDesign translations ...
     experimentDesign: {
       title: '实验设计助手',
       subtitle: '辅助设计严谨的科学实验。',
@@ -754,6 +808,7 @@ export const TRANSLATIONS = {
         memoryDesc: '认知心理学'
       }
     },
+    // ... existing pdfChat translations ...
     pdfChat: {
       title: '文献精读',
       upload: '上传 PDF',
@@ -761,6 +816,7 @@ export const TRANSLATIONS = {
       welcome: '欢迎使用文献精读',
       placeholder: '关于文档提问...'
     },
+    // ... existing knowledge translations ...
     knowledge: {
       title: '知识图谱',
       subtitle: '可视化文献关联与知识结构。',
@@ -776,6 +832,7 @@ export const TRANSLATIONS = {
       chatWelcome: '针对图谱中的文献进行提问。',
       chatPlaceholder: '输入问题...'
     },
+    // ... existing figure translations ...
     figure: {
       title: '科研绘图',
       subtitle: '生成或优化高质量科研配图。',
@@ -814,6 +871,7 @@ export const TRANSLATIONS = {
       history: '历史记录',
       refinePlaceholder: '输入修改指令...'
     },
+    // ... existing chart translations ...
     chart: {
       title: '图表提取',
       subtitle: '从图片中提取数据并还原图表。',
@@ -832,6 +890,7 @@ export const TRANSLATIONS = {
       conferences: '会议',
       journals: '期刊'
     },
+    // ... existing grant translations ...
     grant: {
       title: '基金项目申报助手',
       subtitle: '专为 NSFC 等基金申请打造：立项依据生成、标书润色与形式审查。',
@@ -900,6 +959,7 @@ export const TRANSLATIONS = {
         verdict: '最终结论'
       }
     },
+    // ... existing conference translations ...
     conference: { 
       title: '学术征稿日历',
       subtitle: '追踪各类学术会议（如 CVPR, AAAI）和期刊特刊的截稿日期。',
@@ -926,6 +986,7 @@ export const TRANSLATIONS = {
           partition: 'JCR 分区'
       }
     },
+    // ... existing aiDetector translations ...
     aiDetector: {
       title: 'AI率检测与降重',
       subtitle: '检测文本AI生成概率，并提供去AI化润色服务。',
@@ -943,6 +1004,7 @@ export const TRANSLATIONS = {
       copy: '复制',
       files: '支持格式: PDF, DOCX, TXT'
     },
+    // ... existing discussion translations ...
     discussion: {
       title: '科研课题讨论',
       subtitle: '与AI专家角色进行辩论，全方位评估课题创新性与可行性。',
@@ -968,6 +1030,24 @@ export const TRANSLATIONS = {
         tech: '技术可行性',
         ethics: '伦理/合规性'
       }
+    },
+    // New Title Prism Translations
+    titlePrism: {
+      title: 'Title Prism',
+      subtitle: '您的科研标题优化专家 (Title Optimization Expert)',
+      inputSection: '输入与配置 (Input & Configuration)',
+      draftTitle: '原标题 (Draft)',
+      draftPlaceholder: '[ 输入您的草稿标题... ]',
+      abstract: '摘要/核心贡献 (Abstract/Key Contribution)',
+      abstractPlaceholder: '[ 粘贴摘要以帮助AI 理解上下文... ]',
+      target: '目标期刊/领域 (Target Journal/Field)',
+      targetPlaceholder: '[ 选择或输入期刊名 v ]',
+      optimizeBtn: '开始多维优化',
+      resultsSection: '智能分析与结果 (Smart Analysis & Results)',
+      councilTitle: '评审团诊断 (The Council)',
+      optionsTitle: '优化方案 (Refined Options)',
+      analyzing: '正在分析中...',
+      copy: '复制'
     }
   }
 };
