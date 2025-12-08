@@ -178,7 +178,7 @@ export const parsePaperFromImage = async (file: File, language: Language): Promi
     TASK: PERFORM A FULL OCR EXTRACTION OF ALL VISIBLE TEXT.
     
     1. Extract metadata: title, authors, journal, year.
-    2. Extract ALL main body content visible. Do not summarize. Transcribe fully.
+    2. **CRITICAL**: Extract ALL main body content visible. Do not summarize. Transcribe fully verbatim.
     3. If the image is just a snippet or abstract, transcribe it exactly.
     4. If the image covers full pages, extract as much text as possible from all columns.
     
@@ -190,7 +190,7 @@ export const parsePaperFromImage = async (file: File, language: Language): Promi
       "authors": ["Author 1", "Author 2"],
       "journal": "Journal Name",
       "year": 2024,
-      "abstract": "THE FULL EXTRACTED CONTENT goes here (put body text here if it's not just an abstract)",
+      "abstract": "THE FULL EXTRACTED CONTENT goes here (IMPORTANT: Put the full body text here if it is more than just an abstract, so the user can read it all)",
       "badges": [{"type": "SCI"}] (Infer potential journal tier if possible)
     }`;
 
@@ -229,7 +229,14 @@ export const parsePaperFromImage = async (file: File, language: Language): Promi
 };
 
 export const analyzeResearchTrends = async (topic: string, language: Language, timeRange: TrendTimeRange, persona: TrendPersona): Promise<TrendAnalysisResult | null> => {
-    const prompt = `Analyze research trends for "${topic}". Time Range: ${timeRange}. Persona: ${persona}. Language: ${language}. Return JSON matching TrendAnalysisResult.`;
+    const prompt = `Analyze research trends for "${topic}". Time Range: ${timeRange}. Persona: ${persona}. Language: ${language}. 
+    Return a JSON object strictly matching this schema:
+    {
+      "emergingTech": [{"name": "Tech Name", "growth": 120, "predictedGrowth": 150, "type": "Type"}],
+      "hotspots": [{"text": "Hotspot Name", "value": 100, "category": "Category", "relatedTo": ["Related1"]}],
+      "methodologies": [{"name": "Method Name", "value": 80, "growth": 50, "relatedHotspots": ["Hotspot1"], "codeStats": {"github": "1k", "huggingface": "500"}}],
+      "researchGaps": [{"problem": "Problem Desc", "potential": "Potential Desc", "difficulty": "High", "type": "Blue Ocean"}]
+    }`;
     return getJson<TrendAnalysisResult>(prompt);
 };
 

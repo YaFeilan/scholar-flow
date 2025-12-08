@@ -44,7 +44,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
             const blob = item.getAsFile();
             if (blob) {
                 // Ensure correct File type casting
-                const file = blob as globalThis.File;
+                const file = blob as File;
                 newFiles.push({
                     id: Math.random().toString(36).substring(2, 9),
                     file: file,
@@ -70,7 +70,7 @@ const ChartExtraction: React.FC<ChartExtractionProps> = ({ language, onSendDataT
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files.length > 0) {
-          const newFiles: ChartFile[] = Array.from(e.target.files).map(file => ({
+          const newFiles: ChartFile[] = Array.from(e.target.files).map((file: File) => ({
               id: Math.random().toString(36).substring(2, 9),
               file,
               previewUrl: URL.createObjectURL(file)

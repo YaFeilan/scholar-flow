@@ -255,7 +255,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                         <ChevronDown size={14} className="text-slate-400 -ml-6 pointer-events-none" />
                     </div>
                     
-                    <div className="flex gap-3 flex-wrap items-center">
+                    <div className="flex gap-2 flex-wrap items-center">
                         <div className="relative flex-grow md:w-80">
                             <input 
                               type="text" 
@@ -266,6 +266,13 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                               placeholder={t.placeholder}
                             />
                         </div>
+                        <button 
+                           onClick={handleAnalyze}
+                           disabled={isLoading || !topic.trim()}
+                           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50"
+                        >
+                           {isLoading ? <Loader2 className="animate-spin" /> : t.analyze}
+                        </button>
                     </div>
 
                     <div className="flex items-center gap-3 mt-1">
