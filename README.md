@@ -61,38 +61,36 @@ Comprehensive tools covering every step of your research journey.
 
 ---
 
-## 🛠 Tech Stack
+## ⚡ Deployment / Local Preview
 
-- **Language:** TypeScript (99.5%)
-- **AI Integration:** Google Gemini API
-- **Visualization:** D3.js
+Follow these steps to build and preview the project locally.
 
----
+1.  **Get the Code:**
+    Clone the repository or download the source code to your local machine.
 
-## ⚡ Run Locally
-
-### Prerequisites
-- **Node.js** (Required)
-
-### Steps
-
-1.  **Install dependencies:**
+2.  **Install Dependencies:**
     ```bash
     npm install
     ```
 
-2.  **Configure Environment:**
-    Open the included `.env.local` file in the root directory and replace the placeholder with your own API key:
+3.  **Configure Environment:**
+    Open the existing `.env.local` file in the project root directory and replace the placeholder with your actual API key:
     ```env
     GEMINI_API_KEY=your_actual_api_key_here
     ```
 
-3.  **Run the app:**
+4.  **Build for Production:**
+    Compile the project for production deployment:
     ```bash
-    npm run dev
+    npm run build
     ```
 
----
+5.  **Run Preview:**
+    Launch a local server to preview the built project:
+    ```bash
+    npm run preview
+    ```
+    Once running, open your browser and visit the default address (usually `http://localhost:4173`) to view the deployed application.
 
 ## 🤝 Contributing
 
