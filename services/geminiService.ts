@@ -59,6 +59,37 @@ async function fileToGenerativePart(file: File) {
   });
 }
 
+// Robust JSON Parsing Helper
+function parseGenerativeJSON(text: string | undefined): any {
+    if (!text) return null;
+    try {
+        let cleaned = text.trim();
+        // Remove markdown code blocks if present
+        cleaned = cleaned.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+        
+        // Find JSON object or array bounds to strip surrounding text
+        const firstBrace = cleaned.indexOf('{');
+        const firstBracket = cleaned.indexOf('[');
+        let start = -1;
+        if (firstBrace > -1 && firstBracket > -1) start = Math.min(firstBrace, firstBracket);
+        else if (firstBrace > -1) start = firstBrace;
+        else if (firstBracket > -1) start = firstBracket;
+
+        const lastBrace = cleaned.lastIndexOf('}');
+        const lastBracket = cleaned.lastIndexOf(']');
+        const end = Math.max(lastBrace, lastBracket);
+
+        if (start > -1 && end > -1 && end >= start) {
+            cleaned = cleaned.substring(start, end + 1);
+        }
+        
+        return JSON.parse(cleaned);
+    } catch (e) {
+        console.error("JSON Parse Error:", e, "\nOriginal Text:", text);
+        return null;
+    }
+}
+
 // Generic Helper for JSON response
 async function getJson<T>(prompt: string, file?: File): Promise<T | null> {
   try {
@@ -77,7 +108,7 @@ async function getJson<T>(prompt: string, file?: File): Promise<T | null> {
     });
     
     if (response.text) {
-      return JSON.parse(response.text) as T;
+      return parseGenerativeJSON(response.text) as T;
     }
     return null;
   } catch (error) {
@@ -134,20 +165,27 @@ export const searchAcademicPapers = async (query: string, language: Language, li
         const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
-            contents: `Find ${limit} academic papers about "${query}". Return a JSON array of papers with title, authors, journal, year, citations (approx), abstract, and badges (SCI/Q1 etc inferred). Language: ${language}.`,
+            contents: `Find ${limit} academic papers about "${query}". 
+            Return a JSON ARRAY of objects. Each object must have:
+            - "title": string
+            - "authors": array of strings
+            - "journal": string
+            - "year": number
+            - "citations": number (approx)
+            - "abstract": string
+            - "badges": array of objects with "type" string (e.g. "SCI", "Q1", "SSCI") inferred from journal prestige.
+            
+            Language: ${language}. 
+            IMPORTANT: Use double quotes for all JSON keys and values. Output strict valid JSON only.`,
             config: {
                 tools: [{ googleSearch: {} }],
-                responseMimeType: "application/json"
+                // responseMimeType is NOT allowed when using tools
             }
         });
         
         if (response.text) {
-             try {
-                 const papers = JSON.parse(response.text);
-                 if (Array.isArray(papers)) return papers;
-             } catch (e) {
-                 // Fallback to empty or parsing logic
-             }
+             const papers = parseGenerativeJSON(response.text);
+             if (Array.isArray(papers)) return papers;
         }
     } catch (e) {
         console.error(e);
@@ -207,7 +245,9 @@ export const parsePaperFromImage = async (file: File, language: Language): Promi
         });
         
         if (response.text) {
-            const data = JSON.parse(response.text);
+            const data = parseGenerativeJSON(response.text);
+            if (!data) return null;
+            
             return {
                 id: `img-parsed-${Date.now()}`,
                 title: data.title || "Untitled From Image",
