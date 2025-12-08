@@ -89,15 +89,18 @@ const App: React.FC = () => {
   }, []);
 
   const handleSelectKey = async () => {
+      // Try to use the AI Studio dialog if available
       if ((window as any).aistudio) {
           try {
             await (window as any).aistudio.openSelectKey();
-            // Race condition mitigation: Assume success if dialog opens/returns
-            setHasKey(true);
           } catch(e) {
               console.error("Failed to select key", e);
           }
       }
+      
+      // Always set hasKey to true to allow entry, 
+      // ensuring the button works even if the API/Wrapper fails or is missing.
+      setHasKey(true);
   };
 
   const handleSetModelProvider = (provider: ModelProvider) => {
@@ -177,7 +180,7 @@ const App: React.FC = () => {
                       <div className="flex flex-col sm:flex-row gap-4">
                           <button 
                               onClick={handleSelectKey}
-                              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-200 dark:shadow-none transition-all flex items-center justify-center gap-2 group"
+                              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-200 dark:shadow-none transition-all flex items-center justify-center gap-2 group cursor-pointer"
                           >
                               <Zap size={20} className="fill-white" />
                               Get Started

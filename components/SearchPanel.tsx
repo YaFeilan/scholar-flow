@@ -448,14 +448,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                         <ChevronDown size={14} className="text-slate-400 pointer-events-none" />
                      </div>
                      
-                     {/* Added Date Filters - NEW */}
+                     {/* Added Date Filters - Join Time Query */}
                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium flex items-center gap-1"><Clock size={14}/> {t.filters.dateAdded}:</span>
+                        <span className="font-medium flex items-center gap-1"><Clock size={14}/> {language === 'ZH' ? '加入时间:' : 'Added:'}</span>
                         <input
                            type="date"
                            value={addedAfter}
                            onChange={(e) => setAddedAfter(e.target.value)}
-                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm p-0 cursor-pointer w-24"
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-xs p-0 cursor-pointer w-[110px]"
                            placeholder="Start"
                         />
                         <span className="text-slate-400">-</span>
@@ -463,7 +463,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                            type="date"
                            value={addedBefore}
                            onChange={(e) => setAddedBefore(e.target.value)}
-                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-sm p-0 cursor-pointer w-24"
+                           className="bg-transparent border-none focus:ring-0 text-slate-800 dark:text-slate-200 font-bold text-xs p-0 cursor-pointer w-[110px]"
                            placeholder="End"
                         />
                      </div>
