@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Gem, Zap, Search, Gavel, Users, Copy, Loader2, RefreshCw } from 'lucide-react';
 import { Language, TitleRefinementResult } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -18,6 +18,26 @@ const TitlePrism: React.FC<TitlePrismProps> = ({ language }) => {
   const [target, setTarget] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TitleRefinementResult | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState('');
+
+  // Loading animation effect
+  useEffect(() => {
+    let interval: any;
+    if (loading) {
+      const messages = language === 'ZH' 
+        ? ["🔍 正在分析语义结构...", "🧠 正在调用学术知识库...", "✨ 正在生成优化建议..."]
+        : ["🔍 Analyzing semantic structure...", "🧠 Consulting academic knowledge base...", "✨ Generating optimization suggestions..."];
+      
+      let index = 0;
+      setLoadingMessage(messages[0]);
+      
+      interval = setInterval(() => {
+        index = (index + 1) % messages.length;
+        setLoadingMessage(messages[index]);
+      }, 1500);
+    }
+    return () => clearInterval(interval);
+  }, [loading, language]);
 
   const handleOptimize = async () => {
     if (!draftTitle) return;
@@ -116,14 +136,21 @@ const TitlePrism: React.FC<TitlePrismProps> = ({ language }) => {
                    />
                </div>
 
-               <button 
-                  onClick={handleOptimize}
-                  disabled={loading || !draftTitle}
-                  className="w-full mt-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-md disabled:opacity-50"
-               >
-                  {loading ? <Loader2 className="animate-spin" /> : <Zap size={18} fill="white" />}
-                  {loading ? t.analyzing : t.optimizeBtn}
-               </button>
+               <div>
+                   <button 
+                      onClick={handleOptimize}
+                      disabled={loading || !draftTitle}
+                      className="w-full mt-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-md disabled:opacity-50 disabled:grayscale"
+                   >
+                      {loading ? <Loader2 className="animate-spin" /> : <Zap size={18} fill="white" />}
+                      {loading ? (language === 'ZH' ? '正在优化...' : 'Optimizing...') : t.optimizeBtn}
+                   </button>
+                   {loading && (
+                       <div className="mt-3 text-xs text-center text-slate-500 dark:text-slate-400 animate-pulse font-medium transition-all duration-300">
+                           {loadingMessage}
+                       </div>
+                   )}
+               </div>
            </div>
 
            {/* Right Panel: Results */}
@@ -139,7 +166,7 @@ const TitlePrism: React.FC<TitlePrismProps> = ({ language }) => {
                            ))}
                        </div>
                    ) : (
-                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fadeIn">
                            {result.council.map((member, idx) => (
                                <div key={idx} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex flex-col items-center text-center hover:shadow-md transition-shadow relative overflow-hidden group">
                                    <div className="mb-3 transform group-hover:scale-110 transition-transform">
@@ -167,7 +194,7 @@ const TitlePrism: React.FC<TitlePrismProps> = ({ language }) => {
                            <p>Optimize to see refined titles.</p>
                        </div>
                    ) : (
-                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
+                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow animate-fadeIn">
                            {result.options.map((opt, idx) => (
                                <div key={idx} className={`rounded-xl border p-5 flex flex-col h-full relative transition-all hover:shadow-lg
                                    ${opt.type === 'Safe' ? 'bg-blue-50/50 border-blue-200 hover:border-blue-300' : 
