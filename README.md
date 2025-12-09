@@ -76,7 +76,7 @@ Comprehensive tools covering every step of your research journey.
 ## ⚡ Deployment / Local Preview
 
 Follow these steps to build and preview the project locally.
-
+You need to install Node.js first.
 1.  **Get the Code:**
     Clone the repository or download the source code to your local machine.
 
