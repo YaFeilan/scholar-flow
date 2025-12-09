@@ -1,3 +1,4 @@
+
 export type Language = 'ZH' | 'EN';
 export type ModelProvider = 'Gemini' | 'DeepSeek' | 'ChatGPT' | 'Doubao';
 
@@ -14,6 +15,7 @@ export interface Paper {
     if?: number;
   }[];
   abstract?: string;
+  fullText?: string; // New field for full text content
   source?: 'online' | 'local';
   file?: File;
   addedDate?: string; // New field for "Date Added"

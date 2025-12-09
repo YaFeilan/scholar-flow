@@ -1,3 +1,4 @@
+
 // ... existing imports
 import { GoogleGenAI } from "@google/genai";
 import { 
@@ -64,6 +65,18 @@ async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: s
   });
 }
 
+// Helper to clean JSON string from Markdown code blocks
+function cleanJson(text: string | undefined): string {
+  if (!text) return '{}';
+  let clean = text.trim();
+  if (clean.startsWith('```json')) {
+    clean = clean.replace(/^```json/, '').replace(/```$/, '');
+  } else if (clean.startsWith('```')) {
+    clean = clean.replace(/^```/, '').replace(/```$/, '');
+  }
+  return clean;
+}
+
 // Search
 export async function searchAcademicPapers(query: string, language: Language, limit: number = 10): Promise<Paper[]> {
   const ai = getAiClient();
@@ -77,7 +90,7 @@ export async function searchAcademicPapers(query: string, language: Language, li
       contents: prompt,
       config: { responseMimeType: 'application/json' }
     });
-    return JSON.parse(response.text || '[]');
+    return JSON.parse(cleanJson(response.text) || '[]');
   } catch (e) {
     console.error(e);
     return [];
@@ -123,7 +136,7 @@ export async function extractChartData(file: File, language: Language): Promise<
       },
       config: { responseMimeType: 'application/json' }
     });
-    return JSON.parse(response.text || '{}');
+    return JSON.parse(cleanJson(response.text));
   } catch (e) {
     console.error(e);
     return { title: '', type: '', summary: '', data: [] };
@@ -143,7 +156,7 @@ export async function parsePaperFromImage(file: File, language: Language): Promi
         contents: { parts: [imagePart, { text: prompt }] },
         config: { responseMimeType: 'application/json' }
     });
-    const data = JSON.parse(response.text || '{}');
+    const data = JSON.parse(cleanJson(response.text));
     return {
         id: Date.now().toString(),
         citations: 0,
@@ -160,7 +173,11 @@ export async function parsePaperFromImage(file: File, language: Language): Promi
 export async function analyzeResearchTrends(topic: string, language: Language, timeRange: TrendTimeRange, persona: TrendPersona): Promise<TrendAnalysisResult | null> {
     const ai = getAiClient();
     const prompt = `Analyze research trends for "${topic}" over ${timeRange} from a ${persona} perspective.
-    Return JSON with emergingTech (array), hotspots (array), methodologies (array), researchGaps (array).
+    Return JSON with:
+    - emergingTech: array of { name: string, growth: number, predictedGrowth: number, type: string }
+    - hotspots: array of { text: string, value: number, category: string, relatedTo: string[] }
+    - methodologies: array of { name: string, value: number, growth: number, relatedHotspots: string[], codeStats: { github: string, huggingface: string } }
+    - researchGaps: array of { problem: string, potential: string, difficulty: 'High'|'Medium'|'Low', type: 'Blue Ocean'|'Hard Problem' }
     Language: ${language}.`;
 
     try {
@@ -169,8 +186,11 @@ export async function analyzeResearchTrends(topic: string, language: Language, t
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
-    } catch (e) { return null; }
+        return JSON.parse(cleanJson(response.text));
+    } catch (e) { 
+        console.error("Trend Analysis Error:", e);
+        return null; 
+    }
 }
 
 export async function getPaperTLDR(title: string, language: Language): Promise<string> {
@@ -196,7 +216,7 @@ export async function performPeerReview(content: string, filename: string, targe
             contents: [{ parts: [{ text: prompt }, { text: content.substring(0, 30000) }] }], // Truncate if too long
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -250,7 +270,7 @@ export async function trackCitationNetwork(query: string, isFile: boolean, langu
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '[]');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -263,7 +283,7 @@ export async function analyzeNetworkGaps(papers: any[], language: Language): Pro
             contents: JSON.stringify(papers),
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -297,7 +317,7 @@ export async function polishContent(content: string | File, language: Language, 
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -313,7 +333,7 @@ export async function refinePolish(currentText: string, instruction: string, lan
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -330,7 +350,7 @@ export async function generateAdvisorReport(title: string, journal: string, abst
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        const res = JSON.parse(response.text || '{}');
+        const res = JSON.parse(cleanJson(response.text));
         res.timestamp = Date.now();
         return res;
     } catch (e) { return null; }
@@ -345,7 +365,7 @@ export async function generatePPTStyleSuggestions(file: File, language: Language
         contents: prompt,
         config: { responseMimeType: 'application/json' }
     });
-    return JSON.parse(response.text || '[]');
+    return JSON.parse(cleanJson(response.text) || '[]');
 }
 
 export async function generatePPTContent(file: File, config: any, language: Language): Promise<any> {
@@ -360,7 +380,7 @@ export async function generatePPTContent(file: File, config: any, language: Lang
         contents: prompt,
         config: { responseMimeType: 'application/json' }
     });
-    return JSON.parse(response.text || '{}');
+    return JSON.parse(cleanJson(response.text));
 }
 
 export async function generateSlideImage(description: string, style: string): Promise<string> {
@@ -399,7 +419,7 @@ export async function generateResearchIdeas(topic: string, language: Language, f
             contents: contents.length > 1 ? { parts: contents } : contents[0].text,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -415,7 +435,7 @@ export async function generateIdeaFollowUp(topic: string, angle: string, query: 
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -432,7 +452,7 @@ export async function generateOpeningReview(file: File, target: string, language
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -459,7 +479,7 @@ export async function performDataAnalysis(payload: any, language: Language): Pro
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -534,7 +554,7 @@ export async function generateExperimentDesign(hypothesis: string, field: string
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -638,7 +658,7 @@ export async function generateKnowledgeGraph(nodes: GraphNode[], language: Langu
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '[]');
+        return JSON.parse(cleanJson(response.text) || '[]');
     } catch (e) { return []; }
 }
 
@@ -663,7 +683,7 @@ export async function generateGraphSuggestions(nodes: GraphNode[], language: Lan
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -679,7 +699,7 @@ export async function deepParsePDF(file: File, language: Language): Promise<{sum
             contents: { parts: [filePart, { text: prompt }] },
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -703,7 +723,7 @@ export async function findRelevantNodes(query: string, nodes: GraphNode[], langu
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '[]');
+        return JSON.parse(cleanJson(response.text) || '[]');
     } catch (e) { return []; }
 }
 
@@ -760,7 +780,7 @@ export async function generateGrantLogicFramework(config: any, language: Languag
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -784,7 +804,7 @@ export async function polishGrantProposal(text: string, section: string, languag
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -800,7 +820,7 @@ export async function checkGrantFormat(content: string | File, language: Languag
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -812,7 +832,7 @@ export async function getGrantInspiration(name: string, code: string, language: 
         config: { responseMimeType: 'application/json' }
     });
     try {
-        return JSON.parse(response.text || '[]');
+        return JSON.parse(cleanJson(response.text) || '[]');
     } catch (e) { return []; }
 }
 
@@ -827,7 +847,7 @@ export async function generateGrantReview(content: string | File, language: Lang
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -844,9 +864,7 @@ export async function findConferences(query: string, language: Language): Promis
             contents: prompt,
             config: { responseMimeType: 'application/json', tools: [{googleSearch: {}}] }
         });
-        let jsonStr = response.text || '{}';
-        jsonStr = jsonStr.replace(/```json|```/g, '').trim();
-        return JSON.parse(jsonStr);
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -863,7 +881,7 @@ export async function detectAIContent(content: string | File, language: Language
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -878,7 +896,7 @@ export async function humanizeText(content: string, language: Language): Promise
             contents: [{ text: prompt }, { text: content }],
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -894,7 +912,7 @@ export async function generateResearchDiscussion(topic: string, language: Langua
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
 
@@ -921,6 +939,6 @@ export async function generateTitleOptimization(draft: string, abstract: string,
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(response.text || '{}');
+        return JSON.parse(cleanJson(response.text));
     } catch (e) { return null; }
 }
