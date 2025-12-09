@@ -1,4 +1,6 @@
 
+
+
 // ... existing imports
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
@@ -587,6 +589,8 @@ export async function generateIdeaFollowUp(topic: string, angle: string, query: 
 // Opening Review
 export async function generateOpeningReview(file: File, target: string, language: Language, persona: ReviewPersona, focus: string): Promise<OpeningReviewResponse | null> {
     const ai = getAiClient();
+    const filePart = await fileToGenerativePart(file);
+    
     const prompt = `Review this opening section/proposal. Target: ${target}. Persona: ${persona}. Focus: ${focus}.
     Return JSON with overallScore, radarMap, executiveSummary, titleAnalysis, methodologyAnalysis, logicAnalysis, literatureAnalysis, journalFit.
     Language: ${language}.`;
@@ -594,7 +598,9 @@ export async function generateOpeningReview(file: File, target: string, language
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: prompt,
+            contents: {
+                parts: [filePart, { text: prompt }]
+            },
             config: { responseMimeType: 'application/json' }
         });
         const res = JSON.parse(cleanJson(response.text));

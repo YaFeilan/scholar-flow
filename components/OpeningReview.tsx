@@ -3,6 +3,8 @@
 
 
 
+
+
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Upload, FileText, Send, Download, CheckCircle, AlertTriangle, ClipboardCheck, Loader2, BarChart2, BookOpen, Target, Shield, Zap, ChevronRight, X, PenTool, ExternalLink, RefreshCw, Layout, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 import { jsPDF } from 'jspdf';
@@ -32,6 +34,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
   
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<OpeningReviewResponse | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState('');
   
   // Optimization State
   const [optimizing, setOptimizing] = useState<string | null>(null); // key of section being optimized
@@ -56,6 +59,37 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Loading Message Cycle
+  useEffect(() => {
+    let interval: any;
+    if (loading) {
+      const messages = language === 'ZH' 
+        ? [
+            "评审正在打架，导师在保护你...",
+            "正在深入分析开题逻辑...", 
+            "正在核查文献综述...", 
+            "AI 评审团正在激烈讨论...",
+            "别急，导师正在为你争取高分..."
+          ]
+        : [
+            "Reviewers are fighting, mentor is protecting you...",
+            "Analyzing proposal logic...", 
+            "Checking literature review...", 
+            "AI Review Board is debating...",
+            "Mentor is defending your proposal..."
+          ];
+      
+      let index = 0;
+      setLoadingMessage(messages[0]);
+      
+      interval = setInterval(() => {
+        index = (index + 1) % messages.length;
+        setLoadingMessage(messages[index]);
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [loading, language]);
 
   // --- PDF Handling ---
 
@@ -224,7 +258,21 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                    <p className="text-emerald-100 mt-1">{t.subtitle}</p>
                 </div>
                 
-                <div className="p-8 space-y-6">
+                <div className="p-8 space-y-6 relative">
+                    {/* Loading Overlay */}
+                    {loading && (
+                        <div className="absolute inset-0 bg-white/95 z-20 flex flex-col items-center justify-center text-center rounded-xl">
+                            <div className="relative mb-6">
+                                <div className="w-20 h-20 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin"></div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <Shield size={32} className="text-emerald-600" />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">{language === 'ZH' ? '评审进行中' : 'Review in Progress'}</h3>
+                            <p className="text-emerald-600 font-medium animate-pulse text-lg px-4">{loadingMessage}</p>
+                        </div>
+                    )}
+
                     {/* File Upload */}
                     <div 
                       onClick={() => fileInputRef.current?.click()}
