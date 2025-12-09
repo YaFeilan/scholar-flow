@@ -29,6 +29,28 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
   const [followUpLoading, setFollowUpLoading] = useState(false);
   const [followUpResult, setFollowUpResult] = useState<IdeaFollowUpResult | null>(null);
 
+  // Loading Message State
+  const [loadingMessage, setLoadingMessage] = useState('');
+
+  // Cycle Loading Messages
+  useEffect(() => {
+    let interval: any;
+    if (loading) {
+      const messages = language === 'ZH' 
+        ? ["正在喝可乐找灵感...", "正在翻阅顶级期刊...", "正在准备核心内容...", "正在整理研究思路...", "正在构建逻辑框架..."]
+        : ["Drinking Coke for inspiration...", "Reading top journals...", "Preparing content...", "Structuring research ideas...", "Building logic framework..."];
+      
+      let index = 0;
+      setLoadingMessage(messages[0]);
+      
+      interval = setInterval(() => {
+        index = (index + 1) % messages.length;
+        setLoadingMessage(messages[index]);
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [loading, language]);
+
   // Auto-trigger when initialTopic is provided
   useEffect(() => {
     if (initialTopic) {
@@ -231,7 +253,7 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                     <Lightbulb size={20} className="text-amber-500" />
                  </div>
               </div>
-              <p className="text-amber-600 font-bold mt-4 animate-pulse">{t.generating}</p>
+              <p className="text-amber-600 font-bold mt-4 animate-pulse">{loadingMessage}</p>
            </div>
         )}
 

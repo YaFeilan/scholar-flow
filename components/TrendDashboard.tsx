@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import * as d3 from 'd3';
 import { EMERGING_TECH, HOTSPOTS } from '../constants';
 import { analyzeResearchTrends, searchAcademicPapers, getPaperTLDR } from '../services/geminiService';
-import { Search, Loader2, Move, BarChart2, Tag, X, Filter, BookOpen, Lightbulb, Share2, Github, LayoutGrid, MonitorPlay, Zap, ArrowRight, User, ChevronDown } from 'lucide-react';
+import { Search, Loader2, Move, BarChart2, Tag, X, Filter, BookOpen, Lightbulb, Share2, Github, LayoutGrid, MonitorPlay, Zap, ArrowRight, User, ChevronDown, Globe, Twitter } from 'lucide-react';
 import { Language, HotspotItem, Paper, TrendTimeRange, TrendPersona, TrendAnalysisResult } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -20,6 +20,9 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
   // -- State --
   const [topic, setTopic] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Loading Messages
+  const [loadingMessage, setLoadingMessage] = useState('');
   
   // Filters
   const [timeRange, setTimeRange] = useState<TrendTimeRange>('1Y');
@@ -47,6 +50,25 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
 
   // Refs
   const d3ContainerRef = useRef<HTMLDivElement>(null);
+
+  // Cycle Loading Messages
+  useEffect(() => {
+    let interval: any;
+    if (isLoading) {
+      const messages = language === 'ZH' 
+        ? ["正在查看行业报表...", "正在翻阅海量数据...", "正在浏览 X (Twitter) 趋势...", "正在分析学术热点...", "正在生成可视化图表..."]
+        : ["Reading industry reports...", "Analyzing massive datasets...", "Browsing X (Twitter) trends...", "Identifying academic hotspots...", "Generating visualizations..."];
+      
+      let index = 0;
+      setLoadingMessage(messages[0]);
+      
+      interval = setInterval(() => {
+        index = (index + 1) % messages.length;
+        setLoadingMessage(messages[index]);
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading, language]);
 
   // -- Handlers --
   const handleAnalyze = async () => {
@@ -236,7 +258,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header & Controls */}
-      <div className="bg-darkbg rounded-xl p-8 mb-8 text-white relative overflow-hidden shadow-2xl">
+      <div className="bg-darkbg rounded-xl p-8 mb-8 text-white relative overflow-hidden shadow-2xl transition-all duration-500">
          <div className="relative z-10">
             <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
                 {/* Updated Controls for specific look */}
@@ -269,7 +291,7 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                         <button 
                            onClick={handleAnalyze}
                            disabled={isLoading || !topic.trim()}
-                           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50"
+                           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50 min-w-[120px]"
                         >
                            {isLoading ? <Loader2 className="animate-spin" /> : t.analyze}
                         </button>
@@ -293,220 +315,239 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
             </div>
 
              {/* Emerging Tech Cards (with Forecast) */}
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {trendData.emergingTech?.map((tech, idx) => (
-                  <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg p-5 border border-white/5 hover:bg-white/15 transition-all group relative overflow-hidden">
-                     <div className="flex justify-between items-start mb-2">
-                        <p className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">{tech.type || t.emerging}</p>
-                        <div className="flex gap-1">
-                            {onNavigateToIdea && (
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onNavigateToIdea(tech.name); }}
-                                    className="text-white/40 hover:text-yellow-400 transition-colors p-1"
-                                    title="Generate Research Idea"
-                                >
-                                    <Lightbulb size={14} />
-                                </button>
-                            )}
-                            <button onClick={() => handleAddToPPT(`Emerging Tech: ${tech.name}`)} className="text-white/20 hover:text-white transition-colors p-1"><MonitorPlay size={14} /></button>
-                        </div>
-                     </div>
-                     <h3 className="text-lg font-bold leading-tight mb-4 pr-4">{tech.name}</h3>
-                     <div className="flex items-end justify-between">
-                        <div>
-                            <span className="text-2xl font-bold text-green-400">+{tech.growth}%</span>
-                            <span className="text-xs text-slate-400 ml-1 block">{t.yoy}</span>
-                        </div>
-                        {tech.predictedGrowth && (
-                            <div className="text-right">
-                                <span className="text-sm font-bold text-purple-300">+{tech.predictedGrowth}%</span>
-                                <span className="text-[10px] text-slate-400 block">Next Year (Proj)</span>
+             {isLoading ? (
+                 <div className="py-12 text-center text-white animate-fadeIn">
+                    <div className="inline-block relative">
+                         <Loader2 size={48} className="animate-spin text-blue-400 mb-6 mx-auto relative z-10" />
+                         <div className="absolute inset-0 flex items-center justify-center">
+                             <div className="w-24 h-24 bg-blue-500/20 rounded-full blur-xl animate-pulse"></div>
+                         </div>
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 text-blue-100">{loadingMessage}</h3>
+                    <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
+                        {loadingMessage.includes("X") && <Twitter size={14} className="text-blue-400" />}
+                        {loadingMessage.includes("report") && <BookOpen size={14} className="text-purple-400" />}
+                        {loadingMessage.includes("data") && <Globe size={14} className="text-emerald-400" />}
+                    </div>
+                 </div>
+             ) : (
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-slideInRight">
+                    {trendData.emergingTech?.map((tech, idx) => (
+                      <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg p-5 border border-white/5 hover:bg-white/15 transition-all group relative overflow-hidden">
+                         <div className="flex justify-between items-start mb-2">
+                            <p className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">{tech.type || t.emerging}</p>
+                            <div className="flex gap-1">
+                                {onNavigateToIdea && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onNavigateToIdea(tech.name); }}
+                                        className="text-white/40 hover:text-yellow-400 transition-colors p-1"
+                                        title="Generate Research Idea"
+                                    >
+                                        <Lightbulb size={14} />
+                                    </button>
+                                )}
+                                <button onClick={() => handleAddToPPT(`Emerging Tech: ${tech.name}`)} className="text-white/20 hover:text-white transition-colors p-1"><MonitorPlay size={14} /></button>
                             </div>
-                        )}
-                     </div>
-                     {/* Mini Sparkline Effect */}
-                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500/0 via-green-500/50 to-green-500/0 opacity-50"></div>
-                  </div>
-                ))}
-             </div>
+                         </div>
+                         <h3 className="text-lg font-bold leading-tight mb-4 pr-4">{tech.name}</h3>
+                         <div className="flex items-end justify-between">
+                            <div>
+                                <span className="text-2xl font-bold text-green-400">+{tech.growth}%</span>
+                                <span className="text-xs text-slate-400 ml-1 block">{t.yoy}</span>
+                            </div>
+                            {tech.predictedGrowth && (
+                                <div className="text-right">
+                                    <span className="text-sm font-bold text-purple-300">+{tech.predictedGrowth}%</span>
+                                    <span className="text-[10px] text-slate-400 block">Next Year (Proj)</span>
+                                </div>
+                            )}
+                         </div>
+                         {/* Mini Sparkline Effect */}
+                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500/0 via-green-500/50 to-green-500/0 opacity-50"></div>
+                      </div>
+                    ))}
+                 </div>
+             )}
          </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-         {/* Main Visualization Panel */}
-         <div className="lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-               <div className="flex items-center gap-2">
-                 <div className="flex bg-slate-100 rounded-lg p-1">
+      {!isLoading && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fadeIn">
+             {/* Main Visualization Panel */}
+             <div className="lg:col-span-8 bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
+                <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                   <div className="flex items-center gap-2">
+                     <div className="flex bg-slate-100 rounded-lg p-1">
+                        <button 
+                            onClick={() => setViewMode('cloud')}
+                            className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 transition-all ${viewMode === 'cloud' ? 'bg-white shadow text-slate-800' : 'text-slate-500'}`}
+                        >
+                            <LayoutGrid size={14} /> Cloud
+                        </button>
+                        <button 
+                            onClick={() => setViewMode('graph')}
+                            className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 transition-all ${viewMode === 'graph' ? 'bg-white shadow text-slate-800' : 'text-slate-500'}`}
+                        >
+                            <Share2 size={14} /> Network
+                        </button>
+                     </div>
+                     <h3 className="text-lg font-bold text-slate-800 ml-2">{t.hotspots}</h3>
+                   </div>
+                   
+                   <button onClick={() => handleAddToPPT('Hotspots Visualization')} className="text-xs text-slate-400 hover:text-blue-600 flex items-center gap-1">
+                      <MonitorPlay size={14} /> Add to PPT
+                   </button>
+                </div>
+                
+                <div className="flex-grow bg-slate-50/30 rounded-lg border border-slate-100 overflow-hidden relative cursor-crosshair">
+                   {/* D3 dedicated container - Separated to avoid React reconciliation issues */}
+                   <div ref={d3ContainerRef} className="w-full h-full absolute inset-0" onClick={() => setSelectedKeyword(null)}></div>
+                   
+                   {/* Overlay Legend - React Managed */}
+                   <div className="absolute bottom-4 left-4 pointer-events-none bg-white/80 backdrop-blur px-3 py-2 rounded text-xs text-slate-500 border border-slate-100">
+                      {viewMode === 'cloud' ? 'Force-Directed Word Cloud' : 'Knowledge Graph Topology'} <br/>
+                      <span className="opacity-70">Click nodes to drill down</span>
+                   </div>
+                </div>
+             </div>
+
+             {/* Right Panel: Drill Down & Details */}
+             <div className={`lg:col-span-4 bg-white rounded-xl border shadow-sm flex flex-col h-[600px] overflow-hidden transition-all ${selectedKeyword ? 'border-blue-300 ring-1 ring-blue-50' : 'border-slate-200'}`}>
+                {/* Tabs */}
+                <div className="flex border-b border-slate-100 bg-slate-50/50">
                     <button 
-                        onClick={() => setViewMode('cloud')}
-                        className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 transition-all ${viewMode === 'cloud' ? 'bg-white shadow text-slate-800' : 'text-slate-500'}`}
+                       onClick={() => setRightPanelTab('papers')}
+                       className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${rightPanelTab === 'papers' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
                     >
-                        <LayoutGrid size={14} /> Cloud
+                       {selectedKeyword ? 'Related Papers' : t.methodologies}
                     </button>
                     <button 
-                        onClick={() => setViewMode('graph')}
-                        className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1 transition-all ${viewMode === 'graph' ? 'bg-white shadow text-slate-800' : 'text-slate-500'}`}
+                       onClick={() => setRightPanelTab('gaps')}
+                       className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors flex items-center justify-center gap-1 ${rightPanelTab === 'gaps' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
                     >
-                        <Share2 size={14} /> Network
+                       <Zap size={14} className={rightPanelTab === 'gaps' ? 'text-purple-600' : 'text-slate-400'} /> Blue Ocean
                     </button>
-                 </div>
-                 <h3 className="text-lg font-bold text-slate-800 ml-2">{t.hotspots}</h3>
-               </div>
-               
-               <button onClick={() => handleAddToPPT('Hotspots Visualization')} className="text-xs text-slate-400 hover:text-blue-600 flex items-center gap-1">
-                  <MonitorPlay size={14} /> Add to PPT
-               </button>
-            </div>
-            
-            <div className="flex-grow bg-slate-50/30 rounded-lg border border-slate-100 overflow-hidden relative cursor-crosshair">
-               {/* D3 dedicated container - Separated to avoid React reconciliation issues */}
-               <div ref={d3ContainerRef} className="w-full h-full absolute inset-0" onClick={() => setSelectedKeyword(null)}></div>
-               
-               {/* Overlay Legend - React Managed */}
-               <div className="absolute bottom-4 left-4 pointer-events-none bg-white/80 backdrop-blur px-3 py-2 rounded text-xs text-slate-500 border border-slate-100">
-                  {viewMode === 'cloud' ? 'Force-Directed Word Cloud' : 'Knowledge Graph Topology'} <br/>
-                  <span className="opacity-70">Click nodes to drill down</span>
-               </div>
-            </div>
-         </div>
+                </div>
 
-         {/* Right Panel: Drill Down & Details */}
-         <div className={`lg:col-span-4 bg-white rounded-xl border shadow-sm flex flex-col h-[600px] overflow-hidden transition-all ${selectedKeyword ? 'border-blue-300 ring-1 ring-blue-50' : 'border-slate-200'}`}>
-            {/* Tabs */}
-            <div className="flex border-b border-slate-100 bg-slate-50/50">
-                <button 
-                   onClick={() => setRightPanelTab('papers')}
-                   className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors ${rightPanelTab === 'papers' ? 'border-blue-600 text-blue-700 bg-white' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
-                >
-                   {selectedKeyword ? 'Related Papers' : t.methodologies}
-                </button>
-                <button 
-                   onClick={() => setRightPanelTab('gaps')}
-                   className={`flex-1 py-3 text-sm font-bold border-b-2 transition-colors flex items-center justify-center gap-1 ${rightPanelTab === 'gaps' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-slate-500 hover:bg-slate-50'}`}
-                >
-                   <Zap size={14} className={rightPanelTab === 'gaps' ? 'text-purple-600' : 'text-slate-400'} /> Blue Ocean
-                </button>
-            </div>
-
-            <div className="flex-grow p-4 overflow-y-auto custom-scrollbar relative">
-                {rightPanelTab === 'gaps' ? (
-                    // Research Gaps View
-                    <div className="space-y-4">
-                        <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 text-xs text-purple-800 mb-2">
-                            AI-identified opportunities based on current literature saturation.
-                        </div>
-                        {trendData.researchGaps?.map((gap, i) => (
-                            <div key={i} className="border border-slate-200 rounded-lg p-4 hover:border-purple-300 transition-colors group">
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${gap.type === 'Blue Ocean' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{gap.type}</span>
-                                    <span className={`text-[10px] font-bold ${gap.difficulty === 'High' ? 'text-red-500' : gap.difficulty === 'Medium' ? 'text-amber-500' : 'text-green-500'}`}>{gap.difficulty} Difficulty</span>
+                <div className="flex-grow p-4 overflow-y-auto custom-scrollbar relative">
+                    {rightPanelTab === 'gaps' ? (
+                        // Research Gaps View
+                        <div className="space-y-4">
+                            <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 text-xs text-purple-800 mb-2">
+                                AI-identified opportunities based on current literature saturation.
+                            </div>
+                            {trendData.researchGaps?.map((gap, i) => (
+                                <div key={i} className="border border-slate-200 rounded-lg p-4 hover:border-purple-300 transition-colors group">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${gap.type === 'Blue Ocean' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{gap.type}</span>
+                                        <span className={`text-[10px] font-bold ${gap.difficulty === 'High' ? 'text-red-500' : gap.difficulty === 'Medium' ? 'text-amber-500' : 'text-green-500'}`}>{gap.difficulty} Difficulty</span>
+                                    </div>
+                                    <h4 className="font-bold text-slate-800 text-sm mb-2">{gap.problem}</h4>
+                                    <p className="text-xs text-slate-600 leading-relaxed mb-3">{gap.potential}</p>
+                                    <button className="w-full text-center py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-500 hover:bg-slate-50 group-hover:border-purple-200 group-hover:text-purple-600 transition-all">
+                                        Draft Proposal
+                                    </button>
                                 </div>
-                                <h4 className="font-bold text-slate-800 text-sm mb-2">{gap.problem}</h4>
-                                <p className="text-xs text-slate-600 leading-relaxed mb-3">{gap.potential}</p>
-                                <button className="w-full text-center py-1.5 border border-slate-200 rounded text-xs font-bold text-slate-500 hover:bg-slate-50 group-hover:border-purple-200 group-hover:text-purple-600 transition-all">
-                                    Draft Proposal
-                                </button>
-                            </div>
-                        ))}
-                         {trendData.researchGaps?.length === 0 && (
-                            <div className="text-center py-10 text-slate-400">
-                                <Zap size={32} className="mx-auto mb-2 opacity-20" />
-                                <p>Run analysis to identify gaps.</p>
-                            </div>
-                         )}
-                    </div>
-                ) : (
-                    // Papers / Methodologies View
-                    <>
-                       {selectedKeyword ? (
-                          // Drill Down: Related Papers
-                          <div className="space-y-3">
-                              <div className="flex justify-between items-center mb-2">
-                                  <h4 className="text-xs font-bold text-slate-400 uppercase">Drill-down: {selectedKeyword}</h4>
-                                  <button onClick={() => setSelectedKeyword(null)} className="text-slate-400 hover:text-slate-600"><X size={14}/></button>
-                              </div>
-                              
-                              {onNavigateToIdea && (
-                                <button 
-                                    onClick={() => onNavigateToIdea(selectedKeyword)}
-                                    className="w-full mb-3 bg-amber-500 text-white py-2 rounded-lg font-bold text-sm hover:bg-amber-600 flex items-center justify-center gap-2 shadow-sm"
-                                >
-                                    <Lightbulb size={16} /> Generate Research Idea
-                                </button>
-                              )}
-                              
-                              {loadingPapers ? (
-                                  <div className="flex justify-center py-10"><Loader2 className="animate-spin text-blue-600" /></div>
-                              ) : (
-                                  relatedPapers.map((paper) => (
-                                      <div key={paper.id} className="bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-300 transition-all group">
-                                          <h5 className="font-bold text-sm text-slate-800 leading-tight mb-2 group-hover:text-blue-700">{paper.title}</h5>
-                                          <div className="flex justify-between items-center mb-2">
-                                              <span className="text-xs text-slate-500">{paper.year} • {paper.journal}</span>
-                                              <div 
-                                                className="text-xs font-bold text-purple-600 cursor-pointer flex items-center gap-1 bg-purple-50 px-2 py-0.5 rounded hover:bg-purple-100"
-                                                onMouseEnter={() => handleTLDR(paper.id, paper.title)}
-                                              >
-                                                  <Zap size={10} /> AI TL;DR
-                                              </div>
-                                          </div>
-                                          {/* AI TL;DR Tooltip Area */}
-                                          {paperTLDRs[paper.id] && (
-                                              <div className="bg-white p-2 rounded border border-purple-100 text-[10px] text-slate-600 shadow-sm animate-fadeIn mt-1">
-                                                  {paperTLDRs[paper.id] === 'Loading...' ? <Loader2 size={10} className="animate-spin inline mr-1"/> : <span className="font-bold text-purple-700">Summary: </span>}
-                                                  {paperTLDRs[paper.id]}
-                                              </div>
-                                          )}
-                                      </div>
-                                  ))
-                              )}
-                          </div>
-                       ) : (
-                          // Default: Methodologies Ranking
-                          <div className="space-y-4">
-                             {trendData.methodologies?.length === 0 && !isLoading && (
+                            ))}
+                             {trendData.researchGaps?.length === 0 && (
                                 <div className="text-center py-10 text-slate-400">
-                                   <BarChart2 size={32} className="mx-auto mb-2 opacity-20" />
-                                   <p>Run analysis to see rankings.</p>
+                                    <Zap size={32} className="mx-auto mb-2 opacity-20" />
+                                    <p>Run analysis to identify gaps.</p>
                                 </div>
                              )}
-                             {trendData.methodologies?.map((item, idx) => (
-                                <div key={idx} className="bg-white p-3 rounded-lg border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
-                                   <div className="flex justify-between items-start mb-1 relative z-10">
-                                      <div className="flex items-center gap-2">
-                                         <span className={`w-5 h-5 flex items-center justify-center rounded text-[10px] font-bold ${idx < 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
-                                         <span className="font-bold text-sm text-slate-800">{item.name}</span>
-                                      </div>
-                                      <span className="text-xs font-bold text-green-600">+{item.growth}%</span>
-                                   </div>
-                                   
-                                   <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-2 relative z-10">
-                                      <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (item.value / 100))}%` }}></div>
-                                   </div>
+                        </div>
+                    ) : (
+                        // Papers / Methodologies View
+                        <>
+                           {selectedKeyword ? (
+                              // Drill Down: Related Papers
+                              <div className="space-y-3">
+                                  <div className="flex justify-between items-center mb-2">
+                                      <h4 className="text-xs font-bold text-slate-400 uppercase">Drill-down: {selectedKeyword}</h4>
+                                      <button onClick={() => setSelectedKeyword(null)} className="text-slate-400 hover:text-slate-600"><X size={14}/></button>
+                                  </div>
+                                  
+                                  {onNavigateToIdea && (
+                                    <button 
+                                        onClick={() => onNavigateToIdea(selectedKeyword)}
+                                        className="w-full mb-3 bg-amber-500 text-white py-2 rounded-lg font-bold text-sm hover:bg-amber-600 flex items-center justify-center gap-2 shadow-sm"
+                                    >
+                                        <Lightbulb size={16} /> Generate Research Idea
+                                    </button>
+                                  )}
+                                  
+                                  {loadingPapers ? (
+                                      <div className="flex justify-center py-10"><Loader2 className="animate-spin text-blue-600" /></div>
+                                  ) : (
+                                      relatedPapers.map((paper) => (
+                                          <div key={paper.id} className="bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-300 transition-all group">
+                                              <h5 className="font-bold text-sm text-slate-800 leading-tight mb-2 group-hover:text-blue-700">{paper.title}</h5>
+                                              <div className="flex justify-between items-center mb-2">
+                                                  <span className="text-xs text-slate-500">{paper.year} • {paper.journal}</span>
+                                                  <div 
+                                                    className="text-xs font-bold text-purple-600 cursor-pointer flex items-center gap-1 bg-purple-50 px-2 py-0.5 rounded hover:bg-purple-100"
+                                                    onMouseEnter={() => handleTLDR(paper.id, paper.title)}
+                                                  >
+                                                      <Zap size={10} /> AI TL;DR
+                                                  </div>
+                                              </div>
+                                              {/* AI TL;DR Tooltip Area */}
+                                              {paperTLDRs[paper.id] && (
+                                                  <div className="bg-white p-2 rounded border border-purple-100 text-[10px] text-slate-600 shadow-sm animate-fadeIn mt-1">
+                                                      {paperTLDRs[paper.id] === 'Loading...' ? <Loader2 size={10} className="animate-spin inline mr-1"/> : <span className="font-bold text-purple-700">Summary: </span>}
+                                                      {paperTLDRs[paper.id]}
+                                                  </div>
+                                              )}
+                                          </div>
+                                      ))
+                                  )}
+                              </div>
+                           ) : (
+                              // Default: Methodologies Ranking
+                              <div className="space-y-4">
+                                 {trendData.methodologies?.length === 0 && !isLoading && (
+                                    <div className="text-center py-10 text-slate-400">
+                                       <BarChart2 size={32} className="mx-auto mb-2 opacity-20" />
+                                       <p>Run analysis to see rankings.</p>
+                                    </div>
+                                 )}
+                                 {trendData.methodologies?.map((item, idx) => (
+                                    <div key={idx} className="bg-white p-3 rounded-lg border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
+                                       <div className="flex justify-between items-start mb-1 relative z-10">
+                                          <div className="flex items-center gap-2">
+                                             <span className={`w-5 h-5 flex items-center justify-center rounded text-[10px] font-bold ${idx < 3 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>{idx + 1}</span>
+                                             <span className="font-bold text-sm text-slate-800">{item.name}</span>
+                                          </div>
+                                          <span className="text-xs font-bold text-green-600">+{item.growth}%</span>
+                                       </div>
+                                       
+                                       <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mb-2 relative z-10">
+                                          <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (item.value / 100))}%` }}></div>
+                                       </div>
 
-                                   {/* Code Stats */}
-                                   <div className="flex gap-3 relative z-10">
-                                       {item.codeStats && (
-                                           <>
-                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
-                                                <Github size={10} /> {item.codeStats.github}
-                                            </div>
-                                            <div className="flex items-center gap-1 text-[10px] text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
-                                                <span>🤗</span> {item.codeStats.huggingface}
-                                            </div>
-                                           </>
-                                       )}
-                                   </div>
-                                </div>
-                             ))}
-                          </div>
-                       )}
-                    </>
-                )}
-            </div>
-         </div>
-      </div>
+                                       {/* Code Stats */}
+                                       <div className="flex gap-3 relative z-10">
+                                           {item.codeStats && (
+                                               <>
+                                                <div className="flex items-center gap-1 text-[10px] text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                                                    <Github size={10} /> {item.codeStats.github}
+                                                </div>
+                                                <div className="flex items-center gap-1 text-[10px] text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                                                    <span>🤗</span> {item.codeStats.huggingface}
+                                                </div>
+                                               </>
+                                           )}
+                                       </div>
+                                    </div>
+                                 ))}
+                              </div>
+                           )}
+                        </>
+                    )}
+                </div>
+             </div>
+          </div>
+      )}
     </div>
   );
 };

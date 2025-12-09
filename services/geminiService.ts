@@ -407,7 +407,69 @@ export async function generateSlideImage(description: string, style: string): Pr
 // Idea Guide
 export async function generateResearchIdeas(topic: string, language: Language, focus: string, image?: File): Promise<IdeaGuideResult | null> {
     const ai = getAiClient();
-    let contents: any[] = [{ text: `Generate research ideas for topic "${topic}". Focus: ${focus}. Return JSON with directions (angle, description, methodology, dataSources, recommendedTitles, corePapers), journals. Language: ${language}.` }];
+    
+    const promptText = `Generate research ideas for topic "${topic}". Focus: ${focus}.
+    
+    You MUST return a JSON object with the following structure:
+    {
+      "directions": [
+        {
+          "angle": "Research Direction/Angle Name",
+          "description": "Detailed description...",
+          "methodology": "Specific methodology...",
+          "dataSources": "Specific datasets...",
+          "recommendedTitles": ["Title 1", "Title 2", "Title 3"],
+          "corePapers": [
+             { "title": "Seminal Paper Title 1", "author": "Author", "year": "2023" },
+             { "title": "Seminal Paper Title 2", "author": "Author", "year": "2022" }
+          ]
+        },
+        {
+          "angle": "Direction 2",
+          "description": "...",
+          "methodology": "...",
+          "dataSources": "...",
+          "recommendedTitles": [],
+          "corePapers": []
+        },
+        {
+          "angle": "Direction 3",
+          "description": "...",
+          "methodology": "...",
+          "dataSources": "...",
+          "recommendedTitles": [],
+          "corePapers": []
+        }
+      ],
+      "journals": [
+        {
+          "name": "Journal Name",
+          "impactFactor": "IF Value",
+          "reviewCycle": "e.g. 3 months",
+          "acceptanceRate": "e.g. 15%",
+          "reason": "Why this journal fits"
+        },
+        {
+          "name": "Journal 2",
+          "impactFactor": "",
+          "reviewCycle": "",
+          "acceptanceRate": "",
+          "reason": ""
+        },
+        {
+          "name": "Journal 3",
+          "impactFactor": "",
+          "reviewCycle": "",
+          "acceptanceRate": "",
+          "reason": ""
+        }
+      ]
+    }
+    
+    Ensure 'corePapers' and 'journals' are populated with real or realistic data.
+    Language: ${language === 'ZH' ? 'Chinese' : 'English'}.`;
+
+    let contents: any[] = [{ text: promptText }];
     
     if (image) {
         contents.unshift(await fileToGenerativePart(image));
