@@ -1,6 +1,6 @@
 
 // ... existing imports
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { 
   Language, 
   Paper, 
@@ -75,6 +75,16 @@ function cleanJson(text: string | undefined): string {
     clean = clean.replace(/^```/, '').replace(/```$/, '');
   }
   return clean;
+}
+
+// Helper function to normalize AI responses that might be wrapped in objects
+// Fixes React Error #31 where API returns { value: X, reason: Y } instead of X
+function normalizeValue(value: any, fallback: any = 0): any {
+    if (value === null || value === undefined) return fallback;
+    if (typeof value === 'object') {
+        return value.score ?? value.value ?? value.level ?? value.rating ?? value.status ?? fallback;
+    }
+    return value;
 }
 
 // Search
@@ -172,19 +182,82 @@ export async function parsePaperFromImage(file: File, language: Language): Promi
 // Trends
 export async function analyzeResearchTrends(topic: string, language: Language, timeRange: TrendTimeRange, persona: TrendPersona): Promise<TrendAnalysisResult | null> {
     const ai = getAiClient();
-    const prompt = `Analyze research trends for "${topic}" over ${timeRange} from a ${persona} perspective.
-    Return JSON with:
-    - emergingTech: array of { name: string, growth: number, predictedGrowth: number, type: string }
-    - hotspots: array of { text: string, value: number, category: string, relatedTo: string[] }
-    - methodologies: array of { name: string, value: number, growth: number, relatedHotspots: string[], codeStats: { github: string, huggingface: string } }
-    - researchGaps: array of { problem: string, potential: string, difficulty: 'High'|'Medium'|'Low', type: 'Blue Ocean'|'Hard Problem' }
-    Language: ${language}.`;
+    const prompt = `Analyze research trends for "${topic}" over ${timeRange} from a ${persona} perspective. Language: ${language}.`;
+
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        emergingTech: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              growth: { type: Type.NUMBER },
+              predictedGrowth: { type: Type.NUMBER },
+              type: { type: Type.STRING },
+            },
+            required: ["name", "growth", "type"],
+          },
+        },
+        hotspots: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              text: { type: Type.STRING },
+              value: { type: Type.NUMBER },
+              category: { type: Type.STRING },
+              relatedTo: { type: Type.ARRAY, items: { type: Type.STRING } },
+            },
+            required: ["text", "value", "category"],
+          },
+        },
+        methodologies: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              value: { type: Type.NUMBER },
+              growth: { type: Type.NUMBER },
+              relatedHotspots: { type: Type.ARRAY, items: { type: Type.STRING } },
+              codeStats: {
+                type: Type.OBJECT,
+                properties: {
+                  github: { type: Type.STRING },
+                  huggingface: { type: Type.STRING },
+                },
+              },
+            },
+            required: ["name", "value", "growth"],
+          },
+        },
+        researchGaps: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              problem: { type: Type.STRING },
+              potential: { type: Type.STRING },
+              difficulty: { type: Type.STRING, enum: ["High", "Medium", "Low"] },
+              type: { type: Type.STRING, enum: ["Blue Ocean", "Hard Problem"] },
+            },
+            required: ["problem", "potential", "difficulty", "type"],
+          },
+        },
+      },
+      required: ["emergingTech", "hotspots", "methodologies", "researchGaps"],
+    };
 
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
-            config: { responseMimeType: 'application/json' }
+            config: { 
+                responseMimeType: 'application/json',
+                responseSchema: schema
+            }
         });
         return JSON.parse(cleanJson(response.text));
     } catch (e) { 
@@ -216,7 +289,22 @@ export async function performPeerReview(content: string, filename: string, targe
             contents: [{ parts: [{ text: prompt }, { text: content.substring(0, 30000) }] }], // Truncate if too long
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(cleanJson(response.text));
+        const res = JSON.parse(cleanJson(response.text));
+        
+        // Normalize nested object scores to fix React Error #31
+        if (res.reviewers) {
+            res.reviewers.forEach((r: any) => {
+                r.score = normalizeValue(r.score, 0);
+            });
+        }
+        if (res.checklist) {
+            for (const key in res.checklist) {
+                if (typeof res.checklist[key] === 'object') {
+                    res.checklist[key] = normalizeValue(res.checklist[key], "N/A");
+                }
+            }
+        }
+        return res;
     } catch (e) { return null; }
 }
 
@@ -351,6 +439,16 @@ export async function generateAdvisorReport(title: string, journal: string, abst
             config: { responseMimeType: 'application/json' }
         });
         const res = JSON.parse(cleanJson(response.text));
+        
+        // Normalize primitive values to fix React Error #31
+        res.matchScore = normalizeValue(res.matchScore, 0);
+        res.matchLevel = normalizeValue(res.matchLevel, 'Low');
+        if (res.radar) {
+            for (const key in res.radar) {
+                res.radar[key] = normalizeValue(res.radar[key], 0);
+            }
+        }
+
         res.timestamp = Date.now();
         return res;
     } catch (e) { return null; }
@@ -514,7 +612,25 @@ export async function generateOpeningReview(file: File, target: string, language
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(cleanJson(response.text));
+        const res = JSON.parse(cleanJson(response.text));
+        
+        // Normalize nested object scores
+        res.overallScore = normalizeValue(res.overallScore, 0);
+        
+        const sections = ['titleAnalysis', 'methodologyAnalysis', 'logicAnalysis', 'literatureAnalysis'];
+        sections.forEach(sec => {
+            if (res[sec]) res[sec].score = normalizeValue(res[sec].score, 0);
+        });
+        
+        if (res.journalFit) res.journalFit.score = normalizeValue(res.journalFit.score, 0);
+        
+        if (res.radarMap) {
+            for (const key in res.radarMap) {
+                res.radarMap[key] = normalizeValue(res.radarMap[key], 0);
+            }
+        }
+
+        return res;
     } catch (e) { return null; }
 }
 
@@ -573,7 +689,7 @@ export async function performCodeAssistance(
     const sdkHistory = history.map(h => ({
         role: h.role === 'ai' ? 'model' : 'user',
         parts: [{ text: h.text }]
-    }));
+    })) as any;
 
     const chat = ai.chats.create({
         model: model,
@@ -589,7 +705,7 @@ export async function performCodeAssistance(
         messageParts = [filePart, { text: input }];
     }
 
-    const result = await chat.sendMessageStream({ message: { parts: messageParts } });
+    const result = await chat.sendMessageStream({ message: messageParts });
     
     for await (const chunk of result) {
         if (signal?.aborted) break;
@@ -646,7 +762,7 @@ export async function performPDFChat(query: string, language: Language, file: Fi
     const sdkHistory = history.map(h => ({
         role: h.role === 'model' ? 'model' : 'user',
         parts: [{ text: h.text }]
-    }));
+    })) as any;
 
     let parts: any[] = [{ text: query }];
     if (history.length === 0) {
@@ -660,7 +776,7 @@ export async function performPDFChat(query: string, language: Language, file: Fi
     });
 
     let resultText = '';
-    const result = await chat.sendMessageStream({ message: { parts } });
+    const result = await chat.sendMessageStream({ message: parts });
 
     for await (const chunk of result) {
         if (signal?.aborted) break;
@@ -909,7 +1025,14 @@ export async function generateGrantReview(content: string | File, language: Lang
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(cleanJson(response.text));
+        
+        const res = JSON.parse(cleanJson(response.text));
+        // Normalize
+        res.overallScore = normalizeValue(res.overallScore, 0);
+        if (Array.isArray(res.dimensions)) {
+            res.dimensions.forEach((d: any) => d.score = normalizeValue(d.score, 0));
+        }
+        return res;
     } catch (e) { return null; }
 }
 
@@ -943,7 +1066,10 @@ export async function detectAIContent(content: string | File, language: Language
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(cleanJson(response.text));
+        const res = JSON.parse(cleanJson(response.text));
+        // Normalize
+        res.score = normalizeValue(res.score, 0);
+        return res;
     } catch (e) { return null; }
 }
 
