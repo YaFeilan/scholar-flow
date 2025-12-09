@@ -52,13 +52,13 @@ const TitlePrism: React.FC<TitlePrismProps> = ({ language }) => {
     alert(t.copy + '!');
   };
 
-  // Helper for Council Icons
+  // Helper for Council Icons using Emojis based on user request
   const getPersonaIcon = (role: string) => {
     switch(role) {
-        case 'Reviewer': return <Gavel size={32} className="text-red-500" />;
-        case 'Editor': return <Zap size={32} className="text-purple-500" />;
-        case 'Generalist': return <Users size={32} className="text-blue-500" />;
-        case 'SEO': return <Search size={32} className="text-green-500" />;
+        case 'Reviewer': return <div className="text-4xl filter drop-shadow-md">😡</div>;
+        case 'Editor': return <div className="text-4xl filter drop-shadow-md">🧐</div>;
+        case 'SEO': return <div className="text-4xl filter drop-shadow-md">🤓</div>;
+        case 'Generalist': return <div className="text-4xl filter drop-shadow-md">😎</div>;
         default: return <Gem size={32} className="text-slate-500" />;
     }
   };
@@ -173,11 +173,12 @@ const TitlePrism: React.FC<TitlePrismProps> = ({ language }) => {
                                        {getPersonaIcon(member.role)}
                                    </div>
                                    <div className={`text-xs font-bold px-2 py-0.5 rounded mb-2 ${getPersonaColor(member.role)}`}>
-                                       {getRoleLabel(member.role)}
+                                       [{getRoleLabel(member.role)}]
                                    </div>
                                    <div className="bg-slate-50 dark:bg-slate-900 p-2 rounded-lg w-full mb-1">
-                                       <p className="text-xs font-serif italic text-slate-600 dark:text-slate-400 line-clamp-3">"{member.critiqueQuote}"</p>
+                                       <p className="text-xs font-bold text-slate-700 dark:text-slate-300">"{member.critiqueQuote}"</p>
                                    </div>
+                                   <p className="text-[10px] text-slate-500 mt-1 leading-tight">{member.feedback}</p>
                                </div>
                            ))}
                        </div>

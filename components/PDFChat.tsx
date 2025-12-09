@@ -1,9 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, Send, Loader2, X, MessageSquare, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Sun, Moon, Eye, GripVertical, Minus, Maximize2, Sparkles, Languages, BookOpen, Image as ImageIcon, Link as LinkIcon, Quote, LayoutList, Crop, MousePointer2, ChevronDown, ChevronRight as ChevronRightIcon, List, Lightbulb, Rocket, Search } from 'lucide-react';
+import { Upload, FileText, Send, Loader2, X, MessageSquare, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Sun, Moon, Eye, GripVertical, Minus, Maximize2, Sparkles, Languages, BookOpen, Image as ImageIcon, Link as LinkIcon, Quote, LayoutList, Crop, MousePointer2, ChevronDown, ChevronRight as ChevronRightIcon, List, Lightbulb, Rocket, Search, Bot, Mic } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../translations';
-import { performPDFChat, explainVisualContent } from '../services/geminiService';
+import { performPDFChat, explainVisualContent, explainPaperInPlainLanguage } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -57,6 +57,9 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Mentor Loading State
+  const [loadingMessage, setLoadingMessage] = useState('');
+
   // Interaction State
   const [selectionMenu, setSelectionMenu] = useState<{x: number, y: number, text: string} | null>(null);
   const [referencePopup, setReferencePopup] = useState<{x: number, y: number, id: string, type: 'ref' | 'fig', content?: string, loading?: boolean} | null>(null);
@@ -67,6 +70,9 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
   const [boxSelection, setBoxSelection] = useState<{x: number, y: number, w: number, h: number} | null>(null);
   const [boxStart, setBoxStart] = useState<{x: number, y: number} | null>(null);
   const [showBoxMenu, setShowBoxMenu] = useState(false);
+  
+  // Drag & Drop State
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Mock Outline Data
   const mockOutline = [
@@ -82,6 +88,37 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
 
   // Insight Cards Data
   const [insightCards, setInsightCards] = useState<any[]>([]);
+
+  // Mentor Loading Messages
+  const mentorMessages = language === 'ZH' ? [
+      "导师正在查阅专业字典...",
+      "导师正在给通讯作者发邮件确认细节...",
+      "导师正在分析实验方法论...",
+      "导师正在回顾相关引用文献...",
+      "导师正在整理逻辑框架...",
+      "导师正在喝口咖啡提神..."
+  ] : [
+      "Mentor is consulting the dictionary...",
+      "Mentor is emailing the corresponding author...",
+      "Mentor is analyzing the methodology...",
+      "Mentor is reviewing citations...",
+      "Mentor is organizing the logic framework...",
+      "Mentor is grabbing a coffee..."
+  ];
+
+  // Loading Message Cycle Effect
+  useEffect(() => {
+      let interval: any;
+      if (chatLoading) {
+          let index = 0;
+          setLoadingMessage(mentorMessages[0]);
+          interval = setInterval(() => {
+              index = (index + 1) % mentorMessages.length;
+              setLoadingMessage(mentorMessages[index]);
+          }, 2500); // Change message every 2.5s
+      }
+      return () => clearInterval(interval);
+  }, [chatLoading, language]);
 
   // Effect to load initial file
   useEffect(() => {
@@ -122,29 +159,20 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
               setLoadProgress(100);
               setPdfLoading(false);
 
-              // Generate Mock Insights for UI Demo
-              setTimeout(() => {
-                  setInsightCards([
-                      {
-                          type: 'conclusion',
-                          title: language === 'ZH' ? '核心结论卡片' : 'Core Conclusion Card',
-                          icon: <Rocket size={14} />,
-                          content: language === 'ZH' 
-                              ? '确认存在倒U型曲线关系，并深入探讨了环境经济学基于程中，在环境经济的导向曲线关系。' 
-                              : 'Confirmed an inverted U-shaped relationship, exploring the directional curve relationship in environmental economics.',
-                          tags: ['#EnvironmentalEcon', '#SpatialEconometrics']
-                      },
-                      {
-                          type: 'reviewer',
-                          title: language === 'ZH' ? '审稿人视角卡片' : 'Reviewer Perspective Card',
-                          icon: <Lightbulb size={14} />,
-                          content: language === 'ZH' 
-                              ? '内生性处理建议：建议增加工具变量(IV)，内生性处理将变量审稿构建设拒稿，建议应生性出现变量的建议，并近可调预波向完全均用的问题。' 
-                              : 'Endogeneity suggestion: Add Instrumental Variables (IV). Current handling might face rejection risks. Suggest addressing variable emergence.',
-                          tags: []
+              // Auto-trigger simple explanation on load if history is empty
+              if (history.length === 0) {
+                  setChatLoading(true);
+                  // Simulate initial analysis
+                  setTimeout(async () => {
+                      try {
+                          const explanation = await explainPaperInPlainLanguage(file, language);
+                          setHistory([{ role: 'model', text: explanation }]);
+                      } catch (e) {
+                          console.error(e);
                       }
-                  ]);
-              }, 1500);
+                      setChatLoading(false);
+                  }, 1000);
+              }
 
             } catch (error) {
               console.error("Error loading PDF:", error);
@@ -242,6 +270,21 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => setIsDragOver(false);
+
+  const handleDrop = (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          processFile(e.dataTransfer.files[0]);
+      }
+  };
+
   const changePage = (delta: number) => {
       const newPage = pageNum + delta;
       if (newPage >= 1 && newPage <= numPages) setPageNum(newPage);
@@ -314,9 +357,16 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
   };
 
   const executeChat = async (msg: string) => {
-    if (!file) return;
+    // If no file is loaded, we can't really chat with PDF, but maybe chat generally?
+    // For now, require file for PDF chat context or just echo.
+    if (!file) {
+        alert("Please upload a file first.");
+        return;
+    }
+    
     setHistory(prev => [...prev, { role: 'user', text: msg }]);
     setChatLoading(true);
+    setInput('');
     
     const ac = new AbortController();
     setAbortController(ac);
@@ -411,38 +461,76 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
       }
   };
 
-  const MarkdownComponents = {
-      a: ({ node, href, children, ...props }: any) => {
-          if (href?.startsWith('source:')) {
-              const snippet = href.replace('source:', '');
-              return (
-                  <button 
-                    onClick={() => highlightSource(snippet)}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 hover:bg-blue-100 transition-colors mx-1 align-middle"
-                  >
-                      <Quote size={10} /> {children}
-                  </button>
-              );
-          }
-          return <a href={href} {...props} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{children}</a>;
-      }
-  };
-
   return (
     <div className="flex h-[calc(100vh-80px)] overflow-hidden bg-slate-50 dark:bg-slate-900 relative text-slate-800 dark:text-slate-100" onClick={() => { setSelectionMenu(null); setReferencePopup(null); }}>
       
       {!file && (
-         <div className="flex-grow flex flex-col items-center justify-center p-8 text-center animate-fadeIn w-full">
-            <div 
-               onClick={() => fileInputRef.current?.click()}
-               className="w-full max-w-xl p-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-800/50 cursor-pointer flex flex-col items-center group transition-colors"
-            >
-               <input type="file" ref={fileInputRef} className="hidden" accept="application/pdf, image/png, image/jpeg, image/jpg" onChange={handleFileChange} />
-               <div className="w-20 h-20 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <FileText size={40} />
-               </div>
-               <h3 className="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100 mb-2">{t.upload}</h3>
-               <p className="text-slate-500 dark:text-slate-400">{t.dragDrop}</p>
+         <div 
+            className={`flex-grow flex flex-col items-center justify-center p-8 text-center animate-fadeIn w-full bg-gradient-to-b from-indigo-50/50 to-white dark:from-slate-800 dark:to-slate-900 relative overflow-hidden transition-colors ${isDragOver ? 'bg-blue-100/50' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+         >
+            {/* Decorative Background Circles */}
+            <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="z-10 max-w-2xl w-full flex flex-col items-center gap-8">
+                {/* Robot & Message Bubble */}
+                <div className="relative">
+                     <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full shadow-lg flex items-center justify-center mb-6 mx-auto relative z-10">
+                         <Bot size={48} className="text-white" />
+                     </div>
+                     
+                     {/* Bubble */}
+                     <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl border border-indigo-50 dark:border-slate-700 relative text-left">
+                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white dark:bg-slate-800 border-t border-l border-indigo-50 dark:border-slate-700 transform rotate-45"></div>
+                         <p className="text-slate-700 dark:text-slate-200 text-lg leading-relaxed font-medium">
+                             {language === 'ZH' 
+                                ? "同学你好，我是你的科研导师 AI。今天想研究什么？把文献交给我，我用大白话讲给你听，复杂的术语统统‘翻译’成人话！" 
+                                : "Hello! I'm your Research Mentor AI. What are we exploring today? Hand me a paper, and I'll explain it in plain English—translating all that complex jargon into something human!"}
+                         </p>
+                     </div>
+                </div>
+
+                {/* Action Button */}
+                <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
+                >
+                    <Mic size={20} />
+                    {language === 'ZH' ? '一键通俗语音解读' : 'Plain Language Explain'}
+                </button>
+
+                {/* Spacer */}
+                <div className="h-4"></div>
+
+                {/* Bottom Input Bar (Floating) */}
+                <div className="w-full bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-2 transform transition-all hover:scale-[1.01]">
+                     <div 
+                        className="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center justify-center cursor-pointer transition-colors flex-shrink-0"
+                        onClick={() => fileInputRef.current?.click()}
+                     >
+                         <Upload className="text-white" size={24} />
+                     </div>
+                     <input type="file" ref={fileInputRef} className="hidden" accept="application/pdf, image/png, image/jpeg, image/jpg" onChange={handleFileChange} />
+                     <input 
+                        className="flex-grow bg-transparent border-none outline-none text-lg px-4 text-slate-700 dark:text-slate-200 placeholder-slate-400"
+                        placeholder={language === 'ZH' ? "与导师对话或拖入 PDF..." : "Chat with mentor or drag PDF..."}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && input.trim()) {
+                                // Since no file, we can't do RAG, but maybe basic chat? 
+                                // For now, trigger file upload if they try to chat without file
+                                if (!file) fileInputRef.current?.click();
+                            }
+                        }}
+                     />
+                     <button className="p-3 text-slate-400 hover:text-blue-600 transition-colors">
+                         <Send size={24} />
+                     </button>
+                </div>
             </div>
          </div>
       )}
@@ -553,46 +641,20 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
 
                 <div className="flex-grow overflow-y-auto p-4 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
                     <div className="space-y-4">
-                        {/* Insight Cards Area */}
-                        {insightCards.map((card, idx) => (
-                            <div key={idx} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm animate-fadeIn">
-                                <div className="flex items-center gap-2 mb-2 font-bold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                    <span className={card.type === 'conclusion' ? 'text-green-500' : 'text-amber-500'}>{card.title}</span>
-                                    {card.type === 'conclusion' && <span className="bg-green-100 text-green-700 p-0.5 rounded-full"><Check size={8} /></span>}
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className={`mt-1 p-2 rounded-lg h-fit flex-shrink-0 ${card.type === 'conclusion' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>
-                                        {card.icon}
-                                    </div>
-                                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                                        {card.content}
-                                    </p>
-                                </div>
-                                {card.tags && card.tags.length > 0 && (
-                                    <div className="mt-3 flex flex-wrap gap-2">
-                                        {card.tags.map((tag: string, tIdx: number) => (
-                                            <span key={tIdx} className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 px-2 py-1 rounded-full font-bold">
-                                                {tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-
                         {/* Chat History */}
                         {history.map((msg, i) => (
                             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[90%] rounded-2xl px-4 py-3 shadow-sm text-sm leading-relaxed ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border border-slate-200 dark:border-slate-700'}`}>
-                                    <ReactMarkdown className="prose prose-sm max-w-none">{msg.text}</ReactMarkdown>
+                                    <ReactMarkdown className="prose prose-sm max-w-none dark:prose-invert">{msg.text}</ReactMarkdown>
                                 </div>
                             </div>
                         ))}
                         
                         {chatLoading && (
                             <div className="flex justify-start">
-                                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-2 text-sm text-slate-500">
-                                    <Loader2 size={16} className="animate-spin" /> Thinking...
+                                <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-3 text-sm text-slate-500 animate-fadeIn">
+                                    <Loader2 size={16} className="animate-spin text-blue-600" /> 
+                                    <span className="font-medium animate-pulse">{loadingMessage || 'Thinking...'}</span>
                                 </div>
                             </div>
                         )}
@@ -627,12 +689,5 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
     </div>
   );
 };
-
-// Helper components for icons used in cards
-const Check = ({ size }: { size: number }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-);
 
 export default PDFChat;
