@@ -87,6 +87,17 @@ function normalizeValue(value: any, fallback: any = 0): any {
     return value;
 }
 
+// Helper function to normalize string fields that might be returned as objects
+function normalizeString(value: any, fallback: string = ''): string {
+    if (value === null || value === undefined) return fallback;
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') {
+        // Try common keys for text content or just stringify if needed, but prefer extraction
+        return value.text ?? value.content ?? value.description ?? value.reason ?? value.feedback ?? value.summary ?? value.analysis ?? value.result ?? JSON.stringify(value);
+    }
+    return String(value);
+}
+
 // Search
 export async function searchAcademicPapers(query: string, language: Language, limit: number = 10): Promise<Paper[]> {
   const ai = getAiClient();
@@ -299,11 +310,14 @@ export async function performPeerReview(content: string, filename: string, targe
         }
         if (res.checklist) {
             for (const key in res.checklist) {
+                // If it's an object, try to extract a string value, otherwise use fallback
                 if (typeof res.checklist[key] === 'object') {
-                    res.checklist[key] = normalizeValue(res.checklist[key], "N/A");
+                    res.checklist[key] = normalizeString(res.checklist[key], "N/A");
                 }
             }
         }
+        res.summary = normalizeString(res.summary);
+        
         return res;
     } catch (e) { return null; }
 }
@@ -442,12 +456,13 @@ export async function generateAdvisorReport(title: string, journal: string, abst
         
         // Normalize primitive values to fix React Error #31
         res.matchScore = normalizeValue(res.matchScore, 0);
-        res.matchLevel = normalizeValue(res.matchLevel, 'Low');
+        res.matchLevel = normalizeString(res.matchLevel, 'Low'); // Ensure string
         if (res.radar) {
             for (const key in res.radar) {
                 res.radar[key] = normalizeValue(res.radar[key], 0);
             }
         }
+        res.analysis = normalizeString(res.analysis);
 
         res.timestamp = Date.now();
         return res;
@@ -521,22 +536,6 @@ export async function generateResearchIdeas(topic: string, language: Language, f
              { "title": "Seminal Paper Title 1", "author": "Author", "year": "2023" },
              { "title": "Seminal Paper Title 2", "author": "Author", "year": "2022" }
           ]
-        },
-        {
-          "angle": "Direction 2",
-          "description": "...",
-          "methodology": "...",
-          "dataSources": "...",
-          "recommendedTitles": [],
-          "corePapers": []
-        },
-        {
-          "angle": "Direction 3",
-          "description": "...",
-          "methodology": "...",
-          "dataSources": "...",
-          "recommendedTitles": [],
-          "corePapers": []
         }
       ],
       "journals": [
@@ -546,20 +545,6 @@ export async function generateResearchIdeas(topic: string, language: Language, f
           "reviewCycle": "e.g. 3 months",
           "acceptanceRate": "e.g. 15%",
           "reason": "Why this journal fits"
-        },
-        {
-          "name": "Journal 2",
-          "impactFactor": "",
-          "reviewCycle": "",
-          "acceptanceRate": "",
-          "reason": ""
-        },
-        {
-          "name": "Journal 3",
-          "impactFactor": "",
-          "reviewCycle": "",
-          "acceptanceRate": "",
-          "reason": ""
         }
       ]
     }
@@ -629,6 +614,7 @@ export async function generateOpeningReview(file: File, target: string, language
                 res.radarMap[key] = normalizeValue(res.radarMap[key], 0);
             }
         }
+        res.executiveSummary = normalizeString(res.executiveSummary);
 
         return res;
     } catch (e) { return null; }
@@ -1029,8 +1015,12 @@ export async function generateGrantReview(content: string | File, language: Lang
         const res = JSON.parse(cleanJson(response.text));
         // Normalize
         res.overallScore = normalizeValue(res.overallScore, 0);
+        res.summary = normalizeString(res.summary);
         if (Array.isArray(res.dimensions)) {
-            res.dimensions.forEach((d: any) => d.score = normalizeValue(d.score, 0));
+            res.dimensions.forEach((d: any) => {
+                d.score = normalizeValue(d.score, 0);
+                d.comment = normalizeString(d.comment);
+            });
         }
         return res;
     } catch (e) { return null; }
@@ -1069,6 +1059,7 @@ export async function detectAIContent(content: string | File, language: Language
         const res = JSON.parse(cleanJson(response.text));
         // Normalize
         res.score = normalizeValue(res.score, 0);
+        res.analysis = normalizeString(res.analysis);
         return res;
     } catch (e) { return null; }
 }
@@ -1089,18 +1080,69 @@ export async function humanizeText(content: string, language: Language): Promise
 }
 
 // Research Discussion
-export async function generateResearchDiscussion(topic: string, language: Language): Promise<DiscussionAnalysisResult | null> {
+export async function generateResearchDiscussion(topic: string, language: Language, image?: File): Promise<DiscussionAnalysisResult | null> {
     const ai = getAiClient();
     const prompt = `Analyze research topic "${topic}".
-    Return JSON with scorecard (theory, method, application, reasons), feasibility (data, tech, ethics), initialComments (reviewer, collaborator, mentor). Language: ${language}.`;
+    Return a strict JSON object with:
+    {
+      "scorecard": {
+        "theory": number (0-10),
+        "method": number (0-10),
+        "application": number (0-10),
+        "theoryReason": string,
+        "methodReason": string,
+        "applicationReason": string
+      },
+      "feasibility": {
+        "data": string,
+        "tech": string,
+        "ethics": string
+      },
+      "initialComments": {
+        "reviewer": string,
+        "collaborator": string,
+        "mentor": string
+      }
+    }
+    Language: ${language}.`;
+
+    const parts: any[] = [{ text: prompt }];
+    if (image) {
+        parts.unshift(await fileToGenerativePart(image));
+    }
 
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
+            model: image ? 'gemini-2.5-flash-image' : 'gemini-2.5-flash',
+            contents: { parts },
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(cleanJson(response.text));
+        const res = JSON.parse(cleanJson(response.text));
+        
+        // Normalization
+        if (res.scorecard) {
+            res.scorecard.theory = normalizeValue(res.scorecard.theory, 0);
+            res.scorecard.method = normalizeValue(res.scorecard.method, 0);
+            res.scorecard.application = normalizeValue(res.scorecard.application, 0);
+            
+            res.scorecard.theoryReason = normalizeString(res.scorecard.theoryReason);
+            res.scorecard.methodReason = normalizeString(res.scorecard.methodReason);
+            res.scorecard.applicationReason = normalizeString(res.scorecard.applicationReason);
+        }
+        
+        if (res.feasibility) {
+            res.feasibility.data = normalizeString(res.feasibility.data);
+            res.feasibility.tech = normalizeString(res.feasibility.tech);
+            res.feasibility.ethics = normalizeString(res.feasibility.ethics);
+        }
+
+        if (res.initialComments) {
+            res.initialComments.reviewer = normalizeString(res.initialComments.reviewer);
+            res.initialComments.collaborator = normalizeString(res.initialComments.collaborator);
+            res.initialComments.mentor = normalizeString(res.initialComments.mentor);
+        }
+
+        return res;
     } catch (e) { return null; }
 }
 
@@ -1127,6 +1169,21 @@ export async function generateTitleOptimization(draft: string, abstract: string,
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(cleanJson(response.text));
+        const res = JSON.parse(cleanJson(response.text));
+        
+        // Normalize strings
+        if (res.council) {
+            res.council.forEach((m: any) => {
+                m.feedback = normalizeString(m.feedback);
+                m.critiqueQuote = normalizeString(m.critiqueQuote);
+            });
+        }
+        if (res.options) {
+            res.options.forEach((o: any) => {
+                o.title = normalizeString(o.title);
+                o.rationale = normalizeString(o.rationale);
+            });
+        }
+        return res;
     } catch (e) { return null; }
 }

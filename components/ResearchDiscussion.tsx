@@ -1,10 +1,6 @@
 
-
-
-
-
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, ShieldAlert, Network, Lightbulb, Send, Loader2, BarChart2, CheckCircle2, AlertTriangle, Play, RefreshCw, Zap, Plus, X, Users, Bot } from 'lucide-react';
+import { MessageSquare, ShieldAlert, Network, Lightbulb, Send, Loader2, BarChart2, CheckCircle2, AlertTriangle, Play, RefreshCw, Zap, Plus, X, Users, Bot, Image as ImageIcon } from 'lucide-react';
 import { Language, DiscussionAnalysisResult, DiscussionPersonaType } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { generateResearchDiscussion, chatWithDiscussionPersona } from '../services/geminiService';
@@ -34,8 +30,10 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
   
   // State
   const [topic, setTopic] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null); // New state for image
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DiscussionAnalysisResult | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState('');
   
   // Persona Management State
   const [personas, setPersonas] = useState<PersonaConfig[]>([
@@ -53,19 +51,40 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [chatLoading, setChatLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, result]);
 
+  // Rotating Loading Messages
+  useEffect(() => {
+    let interval: any;
+    if (loading) {
+      const messages = language === 'ZH' 
+        ? ["导师吵架中...", "中门对狙中...", "宣武门对掏中...", "正在分析课题...", "各方观点激烈碰撞中..."]
+        : ["Mentors are arguing...", "Intense debate in progress...", "Analyzing feasibility...", "Gathering perspectives..."];
+      
+      let index = 0;
+      setLoadingMessage(messages[0]);
+      
+      interval = setInterval(() => {
+        index = (index + 1) % messages.length;
+        setLoadingMessage(messages[index]);
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [loading, language]);
+
   const handleStartDiscussion = async () => {
-    if (!topic.trim()) return;
+    if (!topic.trim() && !imageFile) return;
     setLoading(true);
     setResult(null);
     setChatHistory([]);
     
-    const analysis = await generateResearchDiscussion(topic, language);
+    // Pass imageFile if present
+    const analysis = await generateResearchDiscussion(topic, language, imageFile || undefined);
     if (analysis) {
         setResult(analysis);
     }
@@ -93,6 +112,12 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
       setPersonas(prev => prev.filter(p => p.id !== id));
       if (activePersonaId === id) {
           setActivePersonaId(personas[0]?.id || '');
+      }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          setImageFile(e.target.files[0]);
       }
   };
 
@@ -124,9 +149,9 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
 
   // Radar Data
   const radarData = result ? [
-      { subject: t.scorecard.theory, A: result.scorecard.theory, fullMark: 10 },
-      { subject: t.scorecard.method, A: result.scorecard.method, fullMark: 10 },
-      { subject: t.scorecard.app, A: result.scorecard.application, fullMark: 10 },
+      { subject: t.scorecard.theory, A: Number(result.scorecard.theory) || 0, fullMark: 10 },
+      { subject: t.scorecard.method, A: Number(result.scorecard.method) || 0, fullMark: 10 },
+      { subject: t.scorecard.app, A: Number(result.scorecard.application) || 0, fullMark: 10 },
   ] : [];
 
   return (
@@ -142,12 +167,37 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
            {/* Left: Input & Analysis Dashboard */}
            <div className="lg:w-5/12 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2">
                <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-                   <textarea 
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      placeholder={t.placeholder}
-                      className="w-full h-32 p-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none bg-transparent"
-                   />
+                   <div className="relative">
+                       <textarea 
+                          value={topic}
+                          onChange={(e) => setTopic(e.target.value)}
+                          placeholder={t.placeholder}
+                          className="w-full h-32 p-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none bg-transparent"
+                       />
+                       {/* Image Upload Button inside textarea area */}
+                       <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                           {imageFile && (
+                               <div className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded flex items-center gap-1 border border-purple-200">
+                                   <ImageIcon size={10} /> {imageFile.name}
+                                   <button onClick={() => setImageFile(null)} className="hover:text-red-500"><X size={10}/></button>
+                               </div>
+                           )}
+                           <button 
+                              onClick={() => fileInputRef.current?.click()}
+                              className="text-slate-400 hover:text-purple-600 transition-colors"
+                              title="Upload Image Context"
+                           >
+                               <ImageIcon size={18} />
+                               <input 
+                                  type="file" 
+                                  ref={fileInputRef} 
+                                  className="hidden" 
+                                  accept="image/*" 
+                                  onChange={handleImageUpload}
+                               />
+                           </button>
+                       </div>
+                   </div>
                    
                    {/* Persona Configuration */}
                    <div className="mt-4 border-t border-slate-100 dark:border-slate-700 pt-4">
@@ -196,11 +246,11 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
 
                    <button 
                       onClick={handleStartDiscussion}
-                      disabled={loading || !topic.trim()}
+                      disabled={loading || (!topic.trim() && !imageFile)}
                       className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                    >
                       {loading ? <Loader2 className="animate-spin" /> : <Play size={18} />}
-                      {loading ? t.analyzing : t.btn}
+                      {loading ? loadingMessage : t.btn}
                    </button>
                </div>
 

@@ -1,7 +1,4 @@
 
-
-
-
 import { Paper, TrendItem, HotspotItem } from './types';
 
 export const MOCK_PAPERS: Paper[] = [
