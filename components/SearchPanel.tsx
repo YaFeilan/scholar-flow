@@ -291,17 +291,19 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
       }
     }
 
+    // Join Time Filter (Date Added)
     if (addedAfter) {
       papers = papers.filter(p => {
-         if (!p.addedDate) return false;
-         return p.addedDate! >= addedAfter;
+         // Default addedDate to current if missing in logic to be safe, though types enforce it
+         const pDate = p.addedDate || '2000-01-01'; 
+         return pDate >= addedAfter;
       });
     }
 
     if (addedBefore) {
       papers = papers.filter(p => {
-         if (!p.addedDate) return false;
-         return p.addedDate! <= addedBefore;
+         const pDate = p.addedDate || '2099-12-31';
+         return pDate <= addedBefore;
       });
     }
 
@@ -392,8 +394,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
             
             {/* Detailed Filters */}
              <div className="flex flex-col items-center gap-4">
-                {/* Database Filters */}
-                <div className="flex items-center gap-2 flex-wrap justify-center">
+                {/* Database Filters - Explicit for SCI/SSCI/CJR */}
+                <div className="flex items-center gap-2 flex-wrap justify-center bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mr-1 flex items-center gap-1">
                         <Database size={12} /> DB:
                     </span>
@@ -449,9 +451,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                         <ChevronDown size={14} className="text-slate-400 pointer-events-none" />
                      </div>
                      
-                     {/* Added Date Filters - Join Time Query */}
+                     {/* Added Date Filters - Specific User Request */}
                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                        <span className="font-medium flex items-center gap-1"><Clock size={14}/> {language === 'ZH' ? '加入时间:' : 'Added:'}</span>
+                        <span className="font-medium flex items-center gap-1"><Clock size={14}/> {language === 'ZH' ? '加入时间:' : 'Date Added:'}</span>
                         <input
                            type="date"
                            value={addedAfter}
@@ -503,7 +505,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                    <p className="text-slate-400 dark:text-slate-500 text-sm mt-2">{t.upload.tip}</p>
                 </div>
                 
-                {/* Image Import Button */}
+                {/* Image Import Button - Supports "Image to Content" request */}
                 <div 
                    onClick={() => imageImportRef.current?.click()}
                    className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
@@ -517,7 +519,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                    />
                    {isImageAnalyzing ? <Loader2 className="animate-spin text-purple-600" /> : <ImageIcon className="text-purple-600" />}
                    <span className="font-bold text-slate-700 dark:text-slate-300 text-sm">
-                       {isImageAnalyzing ? (language === 'ZH' ? '正在提取全内容...' : 'Extracting Full Content...') : (language === 'ZH' ? '从图片提取论文 (含全文)' : 'Extract Paper from Image (Full Text)')}
+                       {isImageAnalyzing ? (language === 'ZH' ? '正在提取全内容...' : 'Extracting Full Content...') : (language === 'ZH' ? '图片生成全文 (含公式/图表)' : 'Image to Full Text (w/ Charts)')}
                    </span>
                 </div>
             </div>
@@ -589,9 +591,10 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                       <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight mb-1 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{paper.title}</h4>
                       <div className="text-right">
                          <span className="text-xs font-mono text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-700/50 px-2 py-1 rounded whitespace-nowrap">{paper.year}</span>
+                         {/* Explicitly show Added Date in result item */}
                          {paper.addedDate && (
-                            <div className="text-[10px] text-slate-300 dark:text-slate-600 mt-1 flex items-center justify-end gap-1">
-                               <Calendar size={10} /> {paper.addedDate}
+                            <div className="text-[10px] text-slate-300 dark:text-slate-600 mt-1 flex items-center justify-end gap-1" title="Date Added to Library">
+                               <Clock size={10} /> {paper.addedDate}
                             </div>
                          )}
                       </div>
@@ -645,7 +648,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
         ))}
       </div>
 
-      {/* Detail Modal */}
+      {/* Detail Modal - Same as before */}
       {viewingPaper && (
          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={closePaperModal}>
             <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl animate-fadeIn border border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
@@ -655,7 +658,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                      <p className="text-sm text-slate-500 dark:text-slate-400">{viewingPaper.authors.join(', ')} • {viewingPaper.year} • {viewingPaper.journal}</p>
                   </div>
                   <div className="flex gap-2">
-                      {/* Explicit Copy Link Button in Modal */}
                       <button 
                         onClick={copySourceUrl}
                         className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
@@ -702,7 +704,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                </div>
 
                <div className="p-6 overflow-y-auto custom-scrollbar flex-grow bg-slate-50/30 dark:bg-slate-900/30">
-                  {/* Abstract View */}
                   {activeTab === 'abstract' && (
                       <div className="space-y-4">
                           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
@@ -711,8 +712,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                                   {viewingPaper.abstract || "No abstract available for this paper."}
                               </p>
                           </div>
-                          
-                          {/* Metadata Badges */}
                           <div className="flex gap-2 flex-wrap">
                               {viewingPaper.badges?.map((b, i) => (
                                   <span key={i} className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full text-xs font-bold border border-slate-200 dark:border-slate-600">
@@ -720,8 +719,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                                   </span>
                               ))}
                           </div>
-
-                          {/* Access Info */}
                           <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 items-center">
                               <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200 w-full">
                                   <Lock size={12} /> 
@@ -731,7 +728,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                       </div>
                   )}
 
-                  {/* Full Text AI View */}
                   {activeTab === 'fulltext' && (
                       <div className="h-full flex flex-col">
                           {isGeneratingFullText ? (
@@ -742,7 +738,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                               </div>
                           ) : fullTextContent ? (
                               <div className="prose prose-sm dark:prose-invert max-w-none bg-white dark:bg-slate-800 p-8 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 relative">
-                                  {/* Explicit AI Disclaimer Banner (Only show if it was simulated) */}
                                   {!viewingPaper.fullText && (
                                       <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-r text-sm text-amber-900 dark:text-amber-100 flex items-start gap-3 shadow-sm">
                                           <AlertTriangle size={20} className="flex-shrink-0 text-amber-600 mt-0.5" />
@@ -754,7 +749,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                                           </div>
                                       </div>
                                   )}
-                                  
                                   <ReactMarkdown>{fullTextContent}</ReactMarkdown>
                               </div>
                           ) : (
@@ -765,7 +759,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                       </div>
                   )}
 
-                  {/* Interpretation View */}
                   {activeTab === 'interpretation' && (
                       <div className="h-full">
                           {isInterpreting ? (

@@ -49,7 +49,8 @@ export enum ViewState {
   CONFERENCE_FINDER = 'CONFERENCE_FINDER',
   AI_DETECTOR = 'AI_DETECTOR',
   RESEARCH_DISCUSSION = 'RESEARCH_DISCUSSION',
-  TITLE_PRISM = 'TITLE_PRISM', // New
+  TITLE_PRISM = 'TITLE_PRISM',
+  FLOWCHART = 'FLOWCHART', // New
 }
 
 // Trend Types
@@ -516,4 +517,10 @@ export interface TitleRefinementResult {
     title: string;
     rationale: string;
   }[];
+}
+
+// Flowchart Types
+export interface FlowchartResult {
+  mermaidCode: string;
+  explanation: string;
 }

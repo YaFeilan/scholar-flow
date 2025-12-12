@@ -23,6 +23,8 @@ import ConferenceFinder from './components/ConferenceFinder';
 import AIDetector from './components/AIDetector'; 
 import ResearchDiscussion from './components/ResearchDiscussion';
 import TitlePrism from './components/TitlePrism';
+import FlowchartGenerator from './components/FlowchartGenerator';
+import VirtualAssistant from './components/VirtualAssistant';
 import { ViewState, Paper, Language, ModelProvider } from './types';
 import { generateLiteratureReview, setModelProvider } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -240,7 +242,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden relative">
       {/* Sidebar Layout */}
       <Sidebar 
         currentView={currentView} 
@@ -310,6 +312,9 @@ const App: React.FC = () => {
             {currentView === ViewState.FIGURE_GEN && (
             <FigureGenerator language={language} />
             )}
+            {currentView === ViewState.FLOWCHART && (
+            <FlowchartGenerator language={language} />
+            )}
             {currentView === ViewState.CHART_EXTRACTION && (
             <ChartExtraction 
                 language={language} 
@@ -342,6 +347,9 @@ const App: React.FC = () => {
             )}
         </div>
       </main>
+
+      {/* Virtual Assistant Overlay */}
+      <VirtualAssistant language={language} currentView={currentView} />
 
       {/* Modal for Generated Literature Review (From Search Panel) */}
       {showReviewModal && (

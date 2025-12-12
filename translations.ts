@@ -24,7 +24,8 @@ export const TRANSLATIONS = {
       conference: 'Call for Papers',
       aiDetector: 'AI Detector',
       discussion: 'Discussion',
-      titlePrism: 'Title Prism'
+      titlePrism: 'Title Prism',
+      flowchart: 'AI Flowchart'
     },
     groups: {
       planning: 'Planning',
@@ -523,6 +524,20 @@ export const TRANSLATIONS = {
       optionsTitle: 'Refined Options',
       analyzing: 'Analyzing...',
       copy: 'Copy'
+    },
+    // Flowchart Translations
+    flowchart: {
+      title: 'AI Flowchart',
+      subtitle: 'Convert text descriptions or images into editable flowcharts.',
+      inputPlaceholder: 'Describe the process, workflow, or logic...',
+      uploadImage: 'Upload Image to Convert',
+      generating: 'Generating Flowchart...',
+      btn: 'Generate',
+      resultTitle: 'Generated Flowchart',
+      copyCode: 'Copy Code',
+      download: 'Download',
+      chartType: 'Chart Type',
+      types: { flowchart: 'Flowchart', sequence: 'Sequence Diagram', gantt: 'Gantt Chart', class: 'Class Diagram' }
     }
   },
   ZH: {
@@ -549,7 +564,8 @@ export const TRANSLATIONS = {
       conference: '学术征稿',
       aiDetector: 'AI率检测',
       discussion: '科研讨论',
-      titlePrism: '标题精炼'
+      titlePrism: '标题精炼',
+      flowchart: 'AI 流程图'
     },
     groups: {
       planning: '科研规划',
@@ -1048,6 +1064,20 @@ export const TRANSLATIONS = {
       optionsTitle: '优化方案 (Refined Options)',
       analyzing: '正在分析中...',
       copy: '复制'
+    },
+    // Flowchart Translations
+    flowchart: {
+      title: 'AI 流程图',
+      subtitle: '将文本描述或图片一键转换为可编辑的流程图。',
+      inputPlaceholder: '描述流程、工作流或逻辑...',
+      uploadImage: '上传图片转换',
+      generating: '正在生成流程图...',
+      btn: '生成',
+      resultTitle: '生成结果',
+      copyCode: '复制 Mermaid 代码',
+      download: '下载',
+      chartType: '图表类型',
+      types: { flowchart: '流程图', sequence: '时序图', gantt: '甘特图', class: '类图' }
     }
   }
 };

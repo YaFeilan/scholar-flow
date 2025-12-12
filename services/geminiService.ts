@@ -1,6 +1,4 @@
 
-
-
 // ... existing imports
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
@@ -36,7 +34,8 @@ import {
   DiscussionAnalysisResult,
   TitleRefinementResult,
   ReviewPersona,
-  OpeningReviewResponse
+  OpeningReviewResponse,
+  FlowchartResult
 } from '../types';
 
 let currentModelProvider: ModelProvider = 'Gemini';
@@ -49,6 +48,7 @@ const getAiClient = () => {
   return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
+// ... existing helper functions (fileToGenerativePart, cleanJson, normalizeValue, normalizeString) ...
 // Helper for file conversion
 async function fileToGenerativePart(file: File): Promise<{ inlineData: { data: string; mimeType: string } }> {
   return new Promise((resolve, reject) => {
@@ -79,8 +79,6 @@ function cleanJson(text: string | undefined): string {
   return clean;
 }
 
-// Helper function to normalize AI responses that might be wrapped in objects
-// Fixes React Error #31 where API returns { value: X, reason: Y } instead of X
 function normalizeValue(value: any, fallback: any = 0): any {
     if (value === null || value === undefined) return fallback;
     if (typeof value === 'object') {
@@ -89,22 +87,61 @@ function normalizeValue(value: any, fallback: any = 0): any {
     return value;
 }
 
-// Helper function to normalize string fields that might be returned as objects
 function normalizeString(value: any, fallback: string = ''): string {
     if (value === null || value === undefined) return fallback;
     if (typeof value === 'string') return value;
     if (typeof value === 'object') {
-        // Try common keys for text content or just stringify if needed, but prefer extraction
         return value.text ?? value.content ?? value.description ?? value.reason ?? value.feedback ?? value.summary ?? value.analysis ?? value.result ?? JSON.stringify(value);
     }
     return String(value);
 }
 
+// ... existing services ...
+
+// Flowchart Service
+export async function generateFlowchartData(
+    input: string, 
+    chartType: string, 
+    language: Language,
+    file?: File
+): Promise<FlowchartResult | null> {
+    const ai = getAiClient();
+    const prompt = `Generate a ${chartType} using Mermaid.js syntax based on the following input. 
+    Input: "${input}". 
+    Return JSON with:
+    1. mermaidCode: The valid Mermaid.js code string (do not wrap in markdown code blocks inside the JSON string).
+    2. explanation: A brief explanation of the process flow in ${language}.
+    
+    If an image is provided, extract the process/flow logic from it and represent it as a ${chartType}.`;
+
+    try {
+        let contents: any[] = [];
+        if (file) {
+            const filePart = await fileToGenerativePart(file);
+            contents = [filePart, { text: prompt }];
+        } else {
+            contents = [{ text: prompt }];
+        }
+
+        const response = await ai.models.generateContent({
+            model: file ? 'gemini-2.5-flash-image' : 'gemini-2.5-flash',
+            contents: contents.length > 1 ? { parts: contents } : contents[0].text,
+            config: { responseMimeType: 'application/json' }
+        });
+        
+        return JSON.parse(cleanJson(response.text));
+    } catch (e) {
+        console.error("Flowchart Generation Error", e);
+        return null;
+    }
+}
+
+// ... rest of the existing functions ...
 // Search
 export async function searchAcademicPapers(query: string, language: Language, limit: number = 10): Promise<Paper[]> {
   const ai = getAiClient();
   const prompt = `Search for academic papers related to "${query}". Return ${limit} results in JSON format.
-  For each paper, include: id (string), title, authors (array), journal, year (number), citations (number), abstract, badges (array of objects with type, partition, if).
+  For each paper, include: id (string), title, authors (array), journal, year (number), citations (number), abstract, badges (array of objects with type, partition, if), addedDate (YYYY-MM-DD).
   Language: ${language}.`;
 
   try {
@@ -1192,4 +1229,35 @@ export async function generateTitleOptimization(draft: string, abstract: string,
         }
         return res;
     } catch (e) { return null; }
+}
+
+// Virtual Assistant Chat
+export async function chatWithAssistant(message: string, view: string, language: Language, history: {role: 'user'|'ai', text: string}[]): Promise<string> {
+    const ai = getAiClient();
+    
+    const sdkHistory = history.map(h => ({
+        role: h.role === 'ai' ? 'model' : 'user',
+        parts: [{ text: h.text }]
+    }));
+
+    const systemInstruction = `You are a virtual research assistant embedded in a web app.
+    Current Context/View: ${view}.
+    Language: ${language}.
+    Personality: Helpful, encouraging, concise, slightly witty.
+    Goal: Assist the user with their research tasks in this specific view, or answer general questions.
+    Keep answers relatively short (under 3 sentences) unless asked for detail.`;
+
+    const chat = ai.chats.create({
+        model: 'gemini-2.5-flash',
+        config: { systemInstruction },
+        history: sdkHistory
+    });
+
+    try {
+        const response = await chat.sendMessage({ message });
+        return response.text || '';
+    } catch (e) {
+        console.error("Chat Assistant Error", e);
+        return language === 'ZH' ? "抱歉，我现在有点累..." : "Sorry, I'm a bit tired right now...";
+    }
 }

@@ -1,8 +1,6 @@
 
-
-
 import React, { useState } from 'react';
-import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, ShieldAlert, Bot, Sparkles, MessagesSquare, Gem } from 'lucide-react';
+import { Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow } from 'lucide-react';
 import { ViewState, Language, ModelProvider } from '../types';
 import { TRANSLATIONS } from '../translations';
 
@@ -54,6 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
           title: t.groups.experiment,
           items: [
              { label: navT.experimentDesign, icon: <Beaker size={20} />, id: ViewState.EXPERIMENT_DESIGN },
+             { label: navT.flowchart, icon: <Workflow size={20} />, id: ViewState.FLOWCHART }, // New
              { label: navT.data, icon: <BarChart2 size={20} />, id: ViewState.DATA_ANALYSIS },
              { label: navT.chart, icon: <Table2 size={20} />, id: ViewState.CHART_EXTRACTION },
              { label: navT.code, icon: <Terminal size={20} />, id: ViewState.CODE_ASSISTANT },
@@ -66,7 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, language, setLa
           items: [
              { label: navT.review, icon: <FileText size={20} />, id: ViewState.REVIEW_GENERATION },
              { label: navT.polish, icon: <PenTool size={20} />, id: ViewState.POLISH },
-             { label: navT.titlePrism, icon: <Gem size={20} />, id: ViewState.TITLE_PRISM }, // New
+             { label: navT.titlePrism, icon: <Gem size={20} />, id: ViewState.TITLE_PRISM },
              { label: navT.figure, icon: <ImageIcon size={20} />, id: ViewState.FIGURE_GEN },
              { label: navT.ppt, icon: <MonitorPlay size={20} />, id: ViewState.PPT_GENERATION },
           ]
