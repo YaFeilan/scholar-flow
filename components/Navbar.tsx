@@ -1,9 +1,11 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { 
   Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, 
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, MessagesSquare, 
   Briefcase, BarChart2, Terminal, Beaker, Table2, Network, Gem, Image as ImageIcon, 
-  Calendar, ShieldAlert, Workflow, MessageSquare, Zap 
+  Calendar, ShieldAlert, Workflow, Zap, Compass, Layers, PenLine, Wrench, Layout,
+  MessageSquare
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -24,6 +26,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
     {
       id: 'discovery',
       title: groupT.discovery,
+      icon: Compass,
       items: [
         { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={16} /> },
         { id: ViewState.SEARCH, label: t.search, icon: <Search size={16} /> },
@@ -35,6 +38,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
     {
       id: 'planning',
       title: groupT.planning,
+      icon: Layers,
       items: [
         { id: ViewState.IDEA_GUIDE, label: t.idea, icon: <Lightbulb size={16} /> },
         { id: ViewState.RESEARCH_DISCUSSION, label: t.discussion, icon: <MessagesSquare size={16} /> },
@@ -46,6 +50,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
     {
       id: 'execution',
       title: groupT.execution,
+      icon: Wrench,
       items: [
         { id: ViewState.EXPERIMENT_DESIGN, label: t.experimentDesign, icon: <Beaker size={16} /> },
         { id: ViewState.DATA_ANALYSIS, label: t.data, icon: <BarChart2 size={16} /> },
@@ -58,6 +63,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
     {
       id: 'writing',
       title: groupT.writing,
+      icon: PenLine,
       items: [
         { id: ViewState.REVIEW_GENERATION, label: t.review, icon: <FileText size={16} /> },
         { id: ViewState.POLISH, label: t.polish, icon: <PenTool size={16} /> },
@@ -69,6 +75,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
     {
       id: 'utility',
       title: groupT.utility,
+      icon: Layout,
       items: [
         { id: ViewState.PDF_CHAT, label: t.pdfChat, icon: <MessageSquare size={16} /> },
         { id: ViewState.KNOWLEDGE_GRAPH, label: t.knowledge, icon: <Network size={16} /> },
@@ -77,38 +84,95 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
     }
   ];
 
+  const [activeGroup, setActiveGroup] = useState<string>('discovery');
+
+  // Sync active group with currentView
+  useEffect(() => {
+    const group = navGroups.find(g => g.items.some(item => item.id === currentView));
+    if (group) {
+      setActiveGroup(group.id);
+    }
+  }, [currentView]);
+
   return (
-    <div className="h-16 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-6 z-30 transition-colors">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
-          <Workflow className="text-white" size={20} />
+    <div className="flex flex-col bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm z-30 transition-colors">
+      {/* Level 1: Main Categories */}
+      <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 dark:border-slate-700">
+        <div className="flex items-center gap-8">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <Workflow className="text-white" size={20} />
+            </div>
+            <h1 className="text-xl font-serif font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent hidden md:block">
+              {TRANSLATIONS[language].appName}
+            </h1>
+          </div>
+
+          {/* Level 1 Tabs */}
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+            {navGroups.map(group => {
+              const isActive = activeGroup === group.id;
+              const Icon = group.icon;
+              return (
+                <button
+                  key={group.id}
+                  onClick={() => setActiveGroup(group.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 whitespace-nowrap
+                    ${isActive 
+                      ? 'bg-slate-100 dark:bg-slate-700 text-blue-600 dark:text-blue-400' 
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:hover:text-slate-200'}
+                  `}
+                >
+                  <Icon size={18} className={isActive ? 'text-blue-500' : 'text-slate-400'} />
+                  {group.title}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <h1 className="text-xl font-serif font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent">
-          {TRANSLATIONS[language].appName}
-        </h1>
+
+        {/* Controls */}
+        <div className="flex items-center gap-4 pl-4 border-l border-slate-200 dark:border-slate-700">
+          <button
+            onClick={() => setLanguage(language === 'EN' ? 'ZH' : 'EN')}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-2 text-sm font-bold"
+          >
+            <Globe size={18} />
+            <span>{language}</span>
+          </button>
+
+          <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors">
+            <Moon size={18} className="hidden dark:block" />
+            <Sun size={18} className="block dark:hidden" />
+          </button>
+          
+          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
+              <User size={16} className="text-slate-500 dark:text-slate-300" />
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* Language Toggle */}
-        <button
-          onClick={() => setLanguage(language === 'EN' ? 'ZH' : 'EN')}
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-2 text-sm font-bold"
-        >
-          <Globe size={18} />
-          <span>{language}</span>
-        </button>
-
-        {/* Theme Toggle (Mock for now, could act as real toggle if state lifted) */}
-        <button
-          className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
-        >
-          <Moon size={18} className="hidden dark:block" />
-          <Sun size={18} className="block dark:hidden" />
-        </button>
-        
-        {/* User Profile (Mock) */}
-        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all">
-            <User size={16} className="text-slate-500 dark:text-slate-300" />
+      {/* Level 2: Sub-items */}
+      <div className="h-12 bg-slate-50 dark:bg-slate-900/50 flex items-center px-6 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-2">
+          {navGroups.find(g => g.id === activeGroup)?.items.map(item => {
+            const isActive = currentView === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.id)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all duration-200 whitespace-nowrap
+                  ${isActive 
+                    ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200 dark:border-slate-700' 
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800/50'}
+                `}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -17,14 +17,12 @@ if (pdfjs && typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerS
 
 interface PDFChatProps {
   language: Language;
-  sidebarCollapsed: boolean;
-  setSidebarCollapsed: (collapsed: boolean) => void;
   initialFile?: File | null;
 }
 
 type ReadingTheme = 'light' | 'dark' | 'sepia';
 
-const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSidebarCollapsed, initialFile }) => {
+const PDFChat: React.FC<PDFChatProps> = ({ language, initialFile }) => {
   const t = TRANSLATIONS[language].pdfChat;
   
   // File State
@@ -261,7 +259,6 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
       setInsightCards([]);
       setStreamingText('');
       setPdfDoc(null);
-      setSidebarCollapsed(true);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -573,11 +570,6 @@ const PDFChat: React.FC<PDFChatProps> = ({ language, sidebarCollapsed, setSideba
                       {!outlineOpen && (
                           <button onClick={() => setOutlineOpen(true)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-500">
                              <PanelLeftOpen size={18} />
-                          </button>
-                      )}
-                      {!sidebarCollapsed && (
-                          <button onClick={() => setSidebarCollapsed(true)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-500">
-                             <PanelLeftClose size={18} />
                           </button>
                       )}
                       <span className="font-bold text-sm truncate max-w-[200px]">{file.name}</span>
