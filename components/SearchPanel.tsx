@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef } from 'react';
-import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database, Lock, Copy, Check, ExternalLink, AlertTriangle, MessageCircle, Image as ImageIcon } from 'lucide-react';
+import { Search, Filter, Bookmark, ArrowUpDown, X, FileText, Download, Sparkles, Loader2, Globe, Cloud, FolderOpen, UploadCloud, ChevronDown, Layers, Calendar, Clock, Database, Lock, Copy, Check, ExternalLink, AlertTriangle, MessageCircle, Image as ImageIcon, Plus, BookOpen } from 'lucide-react';
 import { SearchFilters, Paper, Language } from '../types';
 import { MOCK_PAPERS } from '../constants';
 import { TRANSLATIONS } from '../translations';
@@ -344,11 +344,15 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
   const partitionOptions = ['Q1', 'Q2', 'Q3', 'Q4'];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-6 transition-colors">
-        <h2 className="text-2xl font-serif font-bold text-center text-slate-800 dark:text-slate-100 mb-2">{t.title} <span className="text-red-500 text-sm align-super">(Test)</span></h2>
-        <p className="text-center text-slate-500 dark:text-slate-400 mb-6 text-sm">{t.subtitle}</p>
-        
+    <div className="max-w-[1600px] mx-auto px-6 py-8 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
+      <div className="flex-shrink-0 mb-6">
+        <h2 className="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <BookOpen className="text-blue-600" /> {t.title}
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400 text-sm">{t.subtitle}</p>
+      </div>
+
+      <div className="flex-shrink-0 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 mb-6 transition-colors">
         {/* Source Toggle */}
         <div className="flex justify-center mb-6">
            <div className="bg-slate-100 dark:bg-slate-700 p-1 rounded-lg inline-flex">
@@ -487,9 +491,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
              </div>
           </>
         ) : (
-            <div className="flex flex-col gap-4 max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
                 <div 
-                   className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-10 text-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer relative"
+                   className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer relative flex flex-col items-center justify-center h-48"
                    onClick={() => fileInputRef.current?.click()}
                 >
                    <input 
@@ -498,17 +502,17 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                      multiple 
                      className="hidden" 
                      onChange={handleLocalUpload}
-                     accept=".pdf,.doc,.docx,.txt,.md,.jpg,.jpeg,.png,.webp"
+                     accept=".pdf,.doc,.docx,.txt,.md"
                    />
-                   <UploadCloud size={48} className="mx-auto text-blue-400 mb-4" />
-                   <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">{t.upload.btn}</h3>
-                   <p className="text-slate-400 dark:text-slate-500 text-sm mt-2">{t.upload.tip}</p>
+                   <UploadCloud size={40} className="text-blue-400 mb-3" />
+                   <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">{t.upload.btn}</h3>
+                   <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{t.upload.tip}</p>
                 </div>
                 
                 {/* Image Import Button - Supports "Image to Content" request */}
                 <div 
                    onClick={() => imageImportRef.current?.click()}
-                   className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex items-center justify-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                   className={`border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-xl p-8 text-center hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors cursor-pointer relative flex flex-col items-center justify-center h-48 ${isImageAnalyzing ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}
                 >
                    <input 
                      type="file" 
@@ -517,18 +521,24 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                      accept="image/*"
                      onChange={handleImageImport}
                    />
-                   {isImageAnalyzing ? <Loader2 className="animate-spin text-purple-600" /> : <ImageIcon className="text-purple-600" />}
-                   <span className="font-bold text-slate-700 dark:text-slate-300 text-sm">
-                       {isImageAnalyzing ? (language === 'ZH' ? '正在提取全内容...' : 'Extracting Full Content...') : (language === 'ZH' ? '图片生成全文 (含公式/图表)' : 'Image to Full Text (w/ Charts)')}
-                   </span>
+                   {isImageAnalyzing ? (
+                       <Loader2 className="animate-spin text-purple-600 w-10 h-10 mb-3" /> 
+                   ) : (
+                       <ImageIcon className="text-purple-500 w-10 h-10 mb-3" />
+                   )}
+                   <h3 className="text-base font-bold text-purple-700 dark:text-purple-300">
+                       {isImageAnalyzing ? (language === 'ZH' ? '正在提取全内容...' : 'Extracting Full Content...') : (language === 'ZH' ? '图片转全文 (OCR)' : 'Image to Full Text')}
+                   </h3>
+                   <p className="text-purple-400 dark:text-purple-500 text-xs mt-1">{language === 'ZH' ? '识别图片中的公式与图表' : 'Parses formulas & charts'}</p>
                 </div>
             </div>
         )}
       </div>
 
       {/* Results Area */}
+      <div className="flex-grow flex flex-col overflow-hidden">
       {sortedPapers.length > 0 && (
-         <div className="flex justify-between items-center mb-4">
+         <div className="flex justify-between items-center mb-4 flex-shrink-0">
             <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                <FileText size={20} className="text-blue-600" /> 
                {searchSource === 'online' ? t.results : t.source.local} 
@@ -564,6 +574,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
       )}
 
       {/* Papers Grid */}
+      <div className="flex-grow overflow-y-auto custom-scrollbar pr-2">
       <div className="grid grid-cols-1 gap-4">
         {sortedPapers.length === 0 && hasSearched && (
            <div className="text-center py-20 text-slate-400">
@@ -583,7 +594,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                   className={`mt-1 w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selectedPapers.has(paper.id) ? 'bg-blue-600 border-blue-600' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-blue-400'}`}
                   onClick={(e) => togglePaperSelection(e, paper.id)}
                 >
-                   {selectedPapers.has(paper.id) && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                   {selectedPapers.has(paper.id) && <Check size={12} className="text-white" />}
                 </div>
                 
                 <div className="flex-grow">
@@ -647,8 +658,10 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
           </div>
         ))}
       </div>
+      </div>
+      </div>
 
-      {/* Detail Modal - Same as before */}
+      {/* Detail Modal */}
       {viewingPaper && (
          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={closePaperModal}>
             <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl animate-fadeIn border border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>

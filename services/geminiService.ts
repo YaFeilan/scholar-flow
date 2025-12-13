@@ -206,8 +206,11 @@ export async function extractChartData(file: File, language: Language): Promise<
 export async function parsePaperFromImage(file: File, language: Language): Promise<Paper | null> {
   const ai = getAiClient();
   const imagePart = await fileToGenerativePart(file);
-  const prompt = `Parse this image of a paper first page. Extract detailed metadata in JSON.
-  Fields: title, authors (array), journal, year (number), abstract (full text if available), fullText (if the image contains body text, extract it all).
+  const prompt = `Parse this image of a paper first page or full page. 
+  Extract detailed metadata in JSON format with fields:
+  title, authors (array of strings), journal, year (number, if not found use current year), abstract (full text if available), fullText (if the image contains body text, extract it all including formulas as latex).
+  
+  If explicit metadata is missing, infer it from the text content.
   Language: ${language}.`;
 
   try {
@@ -218,15 +221,18 @@ export async function parsePaperFromImage(file: File, language: Language): Promi
     });
     const data = JSON.parse(cleanJson(response.text));
     return {
-        id: Date.now().toString(),
+        id: `img-${Date.now()}`,
         citations: 0,
-        badges: [],
+        badges: [{ type: 'LOCAL' }],
         source: 'local',
         file: file,
         addedDate: new Date().toISOString().split('T')[0],
         ...data
     };
-  } catch (e) { return null; }
+  } catch (e) { 
+      console.error("Parse Paper Error", e);
+      return null; 
+  }
 }
 
 // Trends
@@ -1144,7 +1150,7 @@ export async function generateResearchDiscussion(topic: string, language: Langua
       "initialComments": {
         "reviewer": string,
         "collaborator": string,
-        "mentor": string
+        "mentor": string;
       }
     }
     Language: ${language}.`;

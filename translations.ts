@@ -28,10 +28,10 @@ export const TRANSLATIONS = {
       flowchart: 'AI Flowchart'
     },
     groups: {
-      planning: 'Planning',
-      experiment: 'Experiment',
+      discovery: 'Discovery',
+      experiment: 'Analysis',
       writing: 'Writing',
-      publish: 'Publish'
+      publish: 'Evaluation'
     },
     // ... existing search translations ...
     search: {
@@ -568,9 +568,9 @@ export const TRANSLATIONS = {
       flowchart: 'AI 流程图'
     },
     groups: {
-      planning: '科研规划',
-      experiment: '实验与数据',
-      writing: '论文写作',
+      discovery: '发现与追踪',
+      experiment: '实验与分析',
+      writing: '写作与绘图',
       publish: '投稿与发表'
     },
     // ... existing search translations ...

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from './components/Sidebar';
+import Navbar from './components/Navbar';
 import SearchPanel from './components/SearchPanel';
 import TrendDashboard from './components/TrendDashboard';
 import PeerReview from './components/PeerReview';
@@ -31,7 +31,7 @@ import ReactMarkdown from 'react-markdown';
 import { X, BookOpen, Key, ArrowRight, Github, Star, Heart, ShieldCheck, Zap, Sparkles } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ViewState>(ViewState.IDEA_GUIDE);
+  const [currentView, setCurrentView] = useState<ViewState>(ViewState.SEARCH);
   const [language, setLanguage] = useState<Language>('EN');
   const [modelProvider, setModelProviderState] = useState<ModelProvider>('Gemini');
   const [generatedReview, setGeneratedReview] = useState<string | null>(null);
@@ -44,7 +44,7 @@ const App: React.FC = () => {
   const [hasKey, setHasKey] = useState(false);
   const [keyCheckLoading, setKeyCheckLoading] = useState(true);
 
-  // Sidebar State
+  // Sidebar State (Legacy, keeping for PDFChat prop compatibility but always false/unused in layout)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Dark Mode State
@@ -242,19 +242,15 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden relative">
-      {/* Sidebar Layout */}
-      <Sidebar 
+    <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden relative">
+      {/* 2-Level Horizontal Navigation */}
+      <Navbar 
         currentView={currentView} 
         setView={setCurrentView} 
         language={language} 
         setLanguage={setLanguage}
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
-        collapsed={sidebarCollapsed}
-        toggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        modelProvider={modelProvider}
-        setModelProvider={handleSetModelProvider}
       />
       
       {/* Main Content Area */}
