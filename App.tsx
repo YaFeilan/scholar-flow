@@ -26,6 +26,7 @@ import AIWorkflow from './components/AIWorkflow';
 import ResearchTraining from './components/ResearchTraining';
 import PDFChat from './components/PDFChat';
 import ScientificPlotting from './components/ScientificPlotting';
+import WelcomeModal from './components/WelcomeModal';
 import { ViewState, Paper, Language } from './types';
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white font-sans transition-colors duration-200">
+      <WelcomeModal language={language} />
       <Navbar 
         language={language} 
         setLanguage={setLanguage} 

@@ -110,7 +110,7 @@ const VirtualAssistant: React.FC<VirtualAssistantProps> = ({ language, currentVi
       }
   };
 
-  // Improved Character SVG: Natural, Cute, Professional
+  // Improved Character SVG based on prompt
   const CharacterSVG = () => (
     <svg 
       viewBox="0 0 200 220" 
@@ -121,102 +121,106 @@ const VirtualAssistant: React.FC<VirtualAssistantProps> = ({ language, currentVi
       style={{ overflow: 'visible' }}
     >
       <defs>
-        <linearGradient id="hairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8B5E3C" /> {/* Warm Brown */}
-          <stop offset="100%" stopColor="#5D4037" /> {/* Darker Brown */}
+        <linearGradient id="purpleHairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#9333EA" /> 
+          <stop offset="100%" stopColor="#7E22CE" />
         </linearGradient>
         <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="3" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
+        <linearGradient id="moonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#60A5FA" />
+            <stop offset="100%" stopColor="#3B82F6" />
+        </linearGradient>
       </defs>
 
-      {/* --- BACK HAIR (Long Natural Flow) --- */}
-      <path d="M60,80 C40,120 30,180 40,200 C50,210 150,210 160,200 C170,180 160,120 140,80" fill="#5D4037" />
+      {/* --- BACK HAIR (Bun & Flow) --- */}
+      <circle cx="50" cy="50" r="25" fill="#7E22CE" stroke="#581C87" strokeWidth="2" /> {/* Left Bun */}
+      <circle cx="150" cy="50" r="25" fill="#7E22CE" stroke="#581C87" strokeWidth="2" /> {/* Right Bun */}
+      {/* Hair Sticks */}
+      <line x1="20" y1="70" x2="60" y2="40" stroke="#E9D5FF" strokeWidth="4" strokeLinecap="round" />
+      <circle cx="20" cy="70" r="4" fill="#C084FC" />
+      <line x1="180" y1="70" x2="140" y2="40" stroke="#E9D5FF" strokeWidth="4" strokeLinecap="round" />
+      <circle cx="180" cy="70" r="4" fill="#C084FC" />
 
-      {/* --- BODY (Professional Coat) --- */}
+      {/* --- BODY (Purple Outfit) --- */}
       <g transform="translate(0, 10)">
-          <path d="M70,140 L60,210 C60,210 140,210 140,210 L130,140 Z" fill="#F8FAFC" stroke="#E2E8F0" strokeWidth="1"/>
-          {/* Collar */}
-          <path d="M70,140 L90,160 L90,210" fill="none" stroke="#CBD5E1" strokeWidth="2" />
-          <path d="M130,140 L110,160 L110,210" fill="none" stroke="#CBD5E1" strokeWidth="2" />
-          {/* Inner Shirt */}
-          <path d="M90,140 L100,155 L110,140" fill="#E0F2FE" />
-          <circle cx="100" cy="150" r="2" fill="#0EA5E9" />
+          {/* Dress Base */}
+          <path d="M60,140 L50,210 C50,210 150,210 150,210 L140,140 Z" fill="#8B5CF6" stroke="#7C3AED" strokeWidth="2"/>
+          {/* Frilly Collar */}
+          <path d="M65,140 Q80,155 100,145 Q120,155 135,140" fill="#E9D5FF" stroke="#C084FC" strokeWidth="2" />
+          {/* Bow Tie */}
+          <path d="M90,155 L80,165 L90,175 L100,165 Z" fill="#7C3AED" />
+          <path d="M110,155 L120,165 L110,175 L100,165 Z" fill="#7C3AED" />
+          <circle cx="100" cy="165" r="5" fill="#6D28D9" />
+          {/* Sleeves */}
+          <path d="M50,150 Q40,170 55,185" fill="#A78BFA" stroke="#8B5CF6" strokeWidth="2" />
+          <path d="M150,150 Q160,170 145,185" fill="#A78BFA" stroke="#8B5CF6" strokeWidth="2" />
       </g>
 
       {/* --- HEAD --- */}
       <g>
-          {/* Face Shape - Softer */}
+          {/* Face */}
           <path d="M60,90 C60,50 140,50 140,90 C140,130 120,145 100,145 C80,145 60,130 60,90" fill="#FFF1F2" />
-          {/* Blush - Subtle */}
-          <ellipse cx="70" cy="105" rx="5" ry="3" fill="#FDA4AF" opacity="0.4" />
-          <ellipse cx="130" cy="105" rx="5" ry="3" fill="#FDA4AF" opacity="0.4" />
+          {/* Blush */}
+          <ellipse cx="75" cy="110" rx="6" ry="4" fill="#FDA4AF" opacity="0.5" />
+          <ellipse cx="125" cy="110" rx="6" ry="4" fill="#FDA4AF" opacity="0.5" />
       </g>
 
-      {/* --- EYES (Simpler, Friendly) --- */}
-      <g transform="translate(0, 2)">
-          {expression !== 'wink' && expression !== 'happy' && (
+      {/* --- HAIR BANGS --- */}
+      <path d="M60,90 C60,60 100,50 140,90" fill="none" stroke="#7E22CE" strokeWidth="0" /> 
+      <path d="M60,85 Q80,50 100,60 Q120,50 140,85 Q140,110 135,120 Q120,80 100,90 Q80,80 65,120 Q60,110 60,85" fill="url(#purpleHairGrad)" />
+
+      {/* --- EYES --- */}
+      <g transform="translate(0, 5)">
+          {expression !== 'wink' ? (
               <>
-                  {/* Left */}
                   <g transform="translate(75, 95)">
-                      <ellipse cx="0" cy="0" rx="6" ry="8" fill="#334155" />
-                      <circle cx="-2" cy="-3" r="2.5" fill="white" />
-                      <path d="M-6,-4 Q-3,-8 6,-4" fill="none" stroke="#334155" strokeWidth="1.5" opacity="0.8"/>
+                      <ellipse cx="0" cy="0" rx="7" ry="9" fill="#4C1D95" />
+                      <circle cx="-2" cy="-3" r="3" fill="white" />
+                      <path d="M-7,-5 Q0,-9 7,-5" fill="none" stroke="#4C1D95" strokeWidth="1.5" />
                   </g>
-                  {/* Right */}
                   <g transform="translate(125, 95)">
-                      <ellipse cx="0" cy="0" rx="6" ry="8" fill="#334155" />
-                      <circle cx="-2" cy="-3" r="2.5" fill="white" />
-                      <path d="M-6,-4 Q-3,-8 6,-4" fill="none" stroke="#334155" strokeWidth="1.5" opacity="0.8"/>
+                      <ellipse cx="0" cy="0" rx="7" ry="9" fill="#4C1D95" />
+                      <circle cx="-2" cy="-3" r="3" fill="white" />
+                      <path d="M-7,-5 Q0,-9 7,-5" fill="none" stroke="#4C1D95" strokeWidth="1.5" />
                   </g>
               </>
-          )}
-          {expression === 'happy' && (
+          ) : (
               <>
-                  <path d="M68,95 Q75,90 82,95" fill="none" stroke="#334155" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M118,95 Q125,90 132,95" fill="none" stroke="#334155" strokeWidth="2.5" strokeLinecap="round" />
+                  <g transform="translate(75, 95)">
+                      <ellipse cx="0" cy="0" rx="7" ry="9" fill="#4C1D95" />
+                      <circle cx="-2" cy="-3" r="3" fill="white" />
+                  </g>
+                  <path d="M118,95 Q125,90 132,95" fill="none" stroke="#4C1D95" strokeWidth="3" strokeLinecap="round" />
               </>
           )}
-          
-          {/* Glasses (Optional based on state) */}
-          {(expression === 'focused' || animation === 'scan') && (
-              <g opacity="0.9">
-                  <circle cx="75" cy="95" r="11" fill="rgba(255,255,255,0.1)" stroke="#1E293B" strokeWidth="1" />
-                  <circle cx="125" cy="95" r="11" fill="rgba(255,255,255,0.1)" stroke="#1E293B" strokeWidth="1" />
-                  <line x1="86" y1="95" x2="114" y2="95" stroke="#1E293B" strokeWidth="1" />
-              </g>
-          )}
-      </g>
-
-      {/* --- FRONT HAIR (Natural Bangs) --- */}
-      <g>
-          <path d="M60,90 C60,60 80,50 100,50 C120,50 140,60 140,90" fill="none" /> 
-          <path d="M60,90 C50,55 90,40 100,60 C110,40 150,55 140,90 L135,85 Q120,60 100,70 Q80,60 65,85 Z" fill="url(#hairGrad)" />
-          {/* Hair Clip */}
-          <rect x="125" y="65" width="10" height="3" rx="1" fill="#3B82F6" transform="rotate(10 130 66)" />
       </g>
 
       {/* --- MOUTH --- */}
-      <path d="M96,120 Q100,123 104,120" fill="none" stroke="#9F1239" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M96,125 Q100,128 104,125" fill="none" stroke="#9F1239" strokeWidth="1.5" strokeLinecap="round" />
 
-      {/* --- ARMS (Subtle) --- */}
-      {animation === 'write' ? (
-          <g className="animate-write-hand">
-             <path d="M130,160 L120,180" stroke="#F8FAFC" strokeWidth="8" strokeLinecap="round" />
-             <line x1="120" y1="180" x2="115" y2="190" stroke="#334155" strokeWidth="2" /> {/* Pen */}
-          </g>
-      ) : (
-          <g>
-             <path d="M70,160 Q65,180 80,185" fill="none" stroke="#F8FAFC" strokeWidth="8" strokeLinecap="round" />
-             <path d="M130,160 Q135,180 120,185" fill="none" stroke="#F8FAFC" strokeWidth="8" strokeLinecap="round" />
-          </g>
-      )}
+      {/* --- MOON PROP --- */}
+      <g transform="translate(100, 175) scale(0.8)">
+          <path d="M-20,0 A20,20 0 1,1 20,0 A15,15 0 1,0 -20,0 Z" fill="url(#moonGrad)" stroke="#3B82F6" strokeWidth="1" filter="url(#softGlow)" transform="rotate(-30)" />
+      </g>
+      
+      {/* --- HANDS HOLDING MOON --- */}
+      <circle cx="85" cy="175" r="6" fill="#FFF1F2" />
+      <circle cx="115" cy="175" r="6" fill="#FFF1F2" />
 
       {/* --- EMOTES --- */}
       {expression === 'thinking' && (
           <g className="animate-bounce" style={{animationDuration: '2s'}}>
-              <text x="150" y="60" fontSize="20" fill="#F59E0B">?</text>
+              <text x="150" y="60" fontSize="24" fill="#F59E0B">?</text>
+          </g>
+      )}
+      {expression === 'focused' && (
+          <g transform="translate(100, 85) scale(0.8)">
+               <circle cx="-25" cy="10" r="12" fill="none" stroke="#1E293B" strokeWidth="2" opacity="0.5"/>
+               <circle cx="25" cy="10" r="12" fill="none" stroke="#1E293B" strokeWidth="2" opacity="0.5"/>
+               <line x1="-13" y1="10" x2="13" y2="10" stroke="#1E293B" strokeWidth="2" opacity="0.5"/>
           </g>
       )}
     </svg>
