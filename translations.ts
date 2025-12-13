@@ -29,11 +29,10 @@ export const TRANSLATIONS = {
       plotting: 'Sci. Plotting'
     },
     groups: {
-      discovery: 'Discovery',
-      planning: 'Planning',
-      execution: 'Execution',
-      writing: 'Writing & Review',
-      utility: 'Utilities'
+      input: 'Literature & Topic',
+      process: 'Experiment & Data',
+      output: 'Writing & Submission',
+      utils: 'Tools & Utilities'
     },
     scientific: {
       title: 'Scientific Plotting',
@@ -608,11 +607,10 @@ export const TRANSLATIONS = {
       plotting: '科研绘图'
     },
     groups: {
-      discovery: '发现',
-      planning: '规划',
-      execution: '执行',
-      writing: '写作与评审',
-      utility: '工具'
+      input: '文献与选题',
+      process: '实验与数据',
+      output: '写作与投稿',
+      utils: '常用工具/其他'
     },
     scientific: {
       title: '科研绘图',

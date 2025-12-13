@@ -24,68 +24,61 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
   // Define Group Structure mapping ViewStates to Categories
   const navGroups = [
     {
-      id: 'discovery',
-      title: groupT.discovery,
-      icon: Compass,
+      id: 'input',
+      title: groupT.input,
+      icon: BookOpen,
       items: [
-        { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={16} /> },
-        { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={16} /> },
         { id: ViewState.SEARCH, label: t.search, icon: <Search size={16} /> },
-        { id: ViewState.PDF_CHAT, label: TRANSLATIONS[language].pdfChat.title, icon: <Book size={16} /> }, 
-        { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={16} /> },
         { id: ViewState.TRACK, label: t.track, icon: <BookOpen size={16} /> },
-        { id: ViewState.CONFERENCE_FINDER, label: t.conference, icon: <Calendar size={16} /> },
-      ]
-    },
-    {
-      id: 'planning',
-      title: groupT.planning,
-      icon: Layers,
-      items: [
+        { id: ViewState.PDF_CHAT, label: TRANSLATIONS[language].pdfChat.title, icon: <Book size={16} /> },
         { id: ViewState.IDEA_GUIDE, label: t.idea, icon: <Lightbulb size={16} /> },
-        { id: ViewState.RESEARCH_DISCUSSION, label: t.discussion, icon: <MessagesSquare size={16} /> },
-        { id: ViewState.OPENING_REVIEW, label: t.opening, icon: <ClipboardCheck size={16} /> },
-        { id: ViewState.GRANT_APPLICATION, label: t.grant, icon: <Briefcase size={16} /> },
-        { id: ViewState.TITLE_PRISM, label: t.titlePrism, icon: <Gem size={16} /> },
+        { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={16} /> },
       ]
     },
     {
-      id: 'execution',
-      title: groupT.execution,
-      icon: Wrench,
+      id: 'process',
+      title: groupT.process,
+      icon: Beaker,
       items: [
         { id: ViewState.EXPERIMENT_DESIGN, label: t.experimentDesign, icon: <Beaker size={16} /> },
         { id: ViewState.DATA_ANALYSIS, label: t.data, icon: <BarChart2 size={16} /> },
-        { id: ViewState.SCIENTIFIC_PLOTTING, label: t.plotting, icon: <Activity size={16} /> }, // New
         { id: ViewState.CODE_ASSISTANT, label: t.code, icon: <Terminal size={16} /> },
+        { id: ViewState.SCIENTIFIC_PLOTTING, label: t.plotting, icon: <Activity size={16} /> },
+        { id: ViewState.KNOWLEDGE_GRAPH, label: t.knowledge, icon: <Network size={16} /> },
         { id: ViewState.CHART_EXTRACTION, label: t.chart, icon: <Table2 size={16} /> },
-        { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={16} /> },
       ]
     },
     {
-      id: 'writing',
-      title: groupT.writing,
-      icon: PenLine,
+      id: 'output',
+      title: groupT.output,
+      icon: PenTool,
       items: [
         { id: ViewState.REVIEW_GENERATION, label: t.review, icon: <FileText size={16} /> },
         { id: ViewState.POLISH, label: t.polish, icon: <PenTool size={16} /> },
-        { id: ViewState.ADVISOR, label: t.advisor, icon: <User size={16} /> },
+        { id: ViewState.TITLE_PRISM, label: t.titlePrism, icon: <Gem size={16} /> },
         { id: ViewState.PEER_REVIEW, label: t.peer, icon: <CheckSquare size={16} /> },
-        { id: ViewState.PPT_GENERATION, label: t.ppt, icon: <MonitorPlay size={16} /> },
+        { id: ViewState.ADVISOR, label: t.advisor, icon: <User size={16} /> },
+        { id: ViewState.AI_DETECTOR, label: t.aiDetector, icon: <ShieldAlert size={16} /> },
+        { id: ViewState.OPENING_REVIEW, label: t.opening, icon: <ClipboardCheck size={16} /> },
+        { id: ViewState.CONFERENCE_FINDER, label: t.conference, icon: <Calendar size={16} /> },
+        { id: ViewState.GRANT_APPLICATION, label: t.grant, icon: <Briefcase size={16} /> },
+        { id: ViewState.RESEARCH_DISCUSSION, label: t.discussion, icon: <MessagesSquare size={16} /> },
       ]
     },
     {
-      id: 'utility',
-      title: groupT.utility,
+      id: 'utils',
+      title: groupT.utils,
       icon: Layout,
       items: [
-        { id: ViewState.KNOWLEDGE_GRAPH, label: t.knowledge, icon: <Network size={16} /> },
-        { id: ViewState.AI_DETECTOR, label: t.aiDetector, icon: <ShieldAlert size={16} /> },
+        { id: ViewState.PPT_GENERATION, label: t.ppt, icon: <MonitorPlay size={16} /> },
+        { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={16} /> },
+        { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={16} /> },
+        { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={16} /> },
       ]
     }
   ];
 
-  const [activeGroup, setActiveGroup] = useState<string>('discovery');
+  const [activeGroup, setActiveGroup] = useState<string>('input');
 
   // Sync active group with currentView
   useEffect(() => {

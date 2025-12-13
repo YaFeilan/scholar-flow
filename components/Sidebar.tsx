@@ -5,7 +5,7 @@ import {
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, 
   ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, 
   PanelLeftOpen, Network, Table2, Briefcase, Calendar, 
-  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell, Activity 
+  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell, Activity, Book, Layout
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -24,57 +24,52 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, collapse
 
   const navGroups = [
     {
-      id: 'discovery',
-      title: groupT.discovery,
+      id: 'input',
+      title: groupT.input,
       items: [
-        { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={20} /> },
-        { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={20} /> },
         { id: ViewState.SEARCH, label: t.search, icon: <Search size={20} /> },
-        { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={20} /> },
         { id: ViewState.TRACK, label: t.track, icon: <BookOpen size={20} /> },
-        { id: ViewState.CONFERENCE_FINDER, label: t.conference, icon: <Calendar size={20} /> },
-      ]
-    },
-    {
-      id: 'planning',
-      title: groupT.planning,
-      items: [
+        { id: ViewState.PDF_CHAT, label: TRANSLATIONS[language].pdfChat.title, icon: <Book size={20} /> },
         { id: ViewState.IDEA_GUIDE, label: t.idea, icon: <Lightbulb size={20} /> },
-        { id: ViewState.RESEARCH_DISCUSSION, label: t.discussion, icon: <MessagesSquare size={20} /> },
-        { id: ViewState.OPENING_REVIEW, label: t.opening, icon: <ClipboardCheck size={20} /> },
-        { id: ViewState.GRANT_APPLICATION, label: t.grant, icon: <Briefcase size={20} /> },
-        { id: ViewState.TITLE_PRISM, label: t.titlePrism, icon: <Gem size={20} /> },
+        { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={20} /> },
       ]
     },
     {
-      id: 'execution',
-      title: groupT.execution,
+      id: 'process',
+      title: groupT.process,
       items: [
         { id: ViewState.EXPERIMENT_DESIGN, label: t.experimentDesign, icon: <Beaker size={20} /> },
         { id: ViewState.DATA_ANALYSIS, label: t.data, icon: <BarChart2 size={20} /> },
-        { id: ViewState.SCIENTIFIC_PLOTTING, label: t.plotting, icon: <Activity size={20} /> },
         { id: ViewState.CODE_ASSISTANT, label: t.code, icon: <Terminal size={20} /> },
+        { id: ViewState.SCIENTIFIC_PLOTTING, label: t.plotting, icon: <Activity size={20} /> },
+        { id: ViewState.KNOWLEDGE_GRAPH, label: t.knowledge, icon: <Network size={20} /> },
         { id: ViewState.CHART_EXTRACTION, label: t.chart, icon: <Table2 size={20} /> },
-        { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={20} /> },
       ]
     },
     {
-      id: 'writing',
-      title: groupT.writing,
+      id: 'output',
+      title: groupT.output,
       items: [
         { id: ViewState.REVIEW_GENERATION, label: t.review, icon: <FileText size={20} /> },
         { id: ViewState.POLISH, label: t.polish, icon: <PenTool size={20} /> },
-        { id: ViewState.ADVISOR, label: t.advisor, icon: <User size={20} /> },
+        { id: ViewState.TITLE_PRISM, label: t.titlePrism, icon: <Gem size={20} /> },
         { id: ViewState.PEER_REVIEW, label: t.peer, icon: <CheckSquare size={20} /> },
-        { id: ViewState.PPT_GENERATION, label: t.ppt, icon: <MonitorPlay size={20} /> },
+        { id: ViewState.ADVISOR, label: t.advisor, icon: <User size={20} /> },
+        { id: ViewState.AI_DETECTOR, label: t.aiDetector, icon: <ShieldAlert size={20} /> },
+        { id: ViewState.OPENING_REVIEW, label: t.opening, icon: <ClipboardCheck size={20} /> },
+        { id: ViewState.CONFERENCE_FINDER, label: t.conference, icon: <Calendar size={20} /> },
+        { id: ViewState.GRANT_APPLICATION, label: t.grant, icon: <Briefcase size={20} /> },
+        { id: ViewState.RESEARCH_DISCUSSION, label: t.discussion, icon: <MessagesSquare size={20} /> },
       ]
     },
     {
-      id: 'utility',
-      title: groupT.utility,
+      id: 'utils',
+      title: groupT.utils,
       items: [
-        { id: ViewState.KNOWLEDGE_GRAPH, label: t.knowledge, icon: <Network size={20} /> },
-        { id: ViewState.AI_DETECTOR, label: t.aiDetector, icon: <ShieldAlert size={20} /> },
+        { id: ViewState.PPT_GENERATION, label: t.ppt, icon: <MonitorPlay size={20} /> },
+        { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={20} /> },
+        { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={20} /> },
+        { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={20} /> },
       ]
     }
   ];
