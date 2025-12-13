@@ -36,30 +36,43 @@ export const TRANSLATIONS = {
       utility: 'Utilities'
     },
     training: {
-      title: 'Research Capability Training',
-      subtitle: 'Simulate a proposal defense to identify research gaps.',
-      step1: {
-        label: 'Research Direction',
+      title: 'Defense Simulator',
+      subtitle: 'Real-time defense battle to identify research gaps.',
+      setup: {
+        topicLabel: 'Research Direction / Topic',
+        uploadLabel: 'Upload Paper/Proposal (Optional)',
         placeholder: 'e.g. Deep Learning in Genomics',
-        btn: 'Start Training'
+        personaLabel: 'Select Opponent',
+        personas: {
+          method: 'Methodology Critic',
+          methodDesc: 'Focuses on model architecture, data, and baselines.',
+          innov: 'Innovation Hunter',
+          innovDesc: 'Challenges novelty and contribution.',
+          prac: 'Practical Reviewer',
+          pracDesc: 'Focuses on feasibility and application.'
+        },
+        btn: 'Start Defense Battle'
       },
-      step2: {
-        title: 'Supervisor Challenge',
-        topic: 'Assigned Topic',
-        instruction: 'Please answer these critical questions to defend your proposal.',
-        submitBtn: 'Submit Defense'
+      battle: {
+        turn: 'Turn',
+        timeLeft: 'Time Left',
+        mic: 'Hold to Speak',
+        send: 'Submit Answer',
+        hint: 'Get Hint (-10 pts)',
+        aiThinking: 'Reviewer is analyzing...',
+        turnReport: 'Turn Analysis',
+        original: 'Your Answer',
+        better: 'Polished Version',
+        strengths: 'Strengths',
+        weaknesses: 'Weaknesses',
+        nextQ: 'Next Question'
       },
-      step3: {
-        title: 'Training Report',
-        score: 'Research Capability Score',
-        feedback: 'Supervisor Feedback',
-        weaknesses: 'Identified Gaps',
-        suggestions: 'Action Plan',
-        restart: 'New Training Session'
-      },
-      loading: {
-        generating: 'Supervisor is reviewing your direction...',
-        analyzing: 'Evaluating your answers...'
+      report: {
+        title: 'Defense Report',
+        score: 'Capability Score',
+        feedback: 'Final Feedback',
+        actionPlan: 'Action Plan',
+        restart: 'New Training'
       }
     },
     pdfChat: {
@@ -632,30 +645,43 @@ export const TRANSLATIONS = {
       utility: '工具'
     },
     training: {
-      title: '科研能力训练',
-      subtitle: '模拟开题答辩，发现研究漏洞。',
-      step1: {
-        label: '研究方向',
+      title: '答辩模拟器',
+      subtitle: '真实对战模式，提升科研防御能力。',
+      setup: {
+        topicLabel: '研究方向 / 课题',
+        uploadLabel: '上传论文/开题报告 (可选)',
         placeholder: '例如：基因组学中的深度学习',
-        btn: '开始训练'
+        personaLabel: '选择对手',
+        personas: {
+          method: '方法论控',
+          methodDesc: '专注于模型架构、数据来源和基线对比。',
+          innov: '创新控',
+          innovDesc: '挑战新颖性和贡献，排斥增量工作。',
+          prac: '实务派',
+          pracDesc: '关注可行性、实施成本和实际应用。'
+        },
+        btn: '开始答辩对战'
       },
-      step2: {
-        title: '导师挑战',
-        topic: '指定课题',
-        instruction: '请回答以下关键问题以通过答辩。',
-        submitBtn: '提交答辩'
+      battle: {
+        turn: '轮次',
+        timeLeft: '剩余时间',
+        mic: '按住说话',
+        send: '提交回答',
+        hint: '获取提示 (-10分)',
+        aiThinking: '评审正在分析...',
+        turnReport: '本轮分析',
+        original: '你的回答',
+        better: '润色版本',
+        strengths: '亮点',
+        weaknesses: '漏洞',
+        nextQ: '下一题'
       },
-      step3: {
+      report: {
         title: '训练报告',
-        score: '科研能力评分',
-        feedback: '导师反馈',
-        weaknesses: '发现的漏洞',
-        suggestions: '行动计划',
+        score: '能力评分',
+        feedback: '最终反馈',
+        actionPlan: '行动计划',
         restart: '开始新训练'
-      },
-      loading: {
-        generating: '导师正在评估您的方向...',
-        analyzing: '正在评估您的回答...'
       }
     },
     pdfChat: {

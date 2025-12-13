@@ -38,6 +38,8 @@ import {
   WorkflowFramework,
   TrainingSession,
   TrainingAnalysis,
+  BattleMessage,
+  TrainingPersonaStyle,
   Quiz
 } from '../types';
 import { MOCK_PAPERS } from '../constants';
@@ -214,37 +216,197 @@ export async function generatePaperInterpretation(paper: Paper, language: Langua
     } catch (e) { return ""; }
 }
 
-// 4. Research Training Services
-export async function generateTrainingTopic(direction: string, language: Language): Promise<TrainingSession | null> {
+// 4. Research Training Services (BATTLE MODE UPGRADE)
+
+// Init Session
+export async function initiateTrainingSession(
+    topic: string, 
+    persona: TrainingPersonaStyle, 
+    language: Language,
+    file?: File
+): Promise<TrainingSession | null> {
     const ai = getAiClient();
-    const prompt = `Act as a strict PhD supervisor. Field: "${direction}".
-    1. Propose a specific research topic.
-    2. Generate 3 critical defense questions.
-    Return JSON: { topic: string, questions: [{id, text}] }. Language: ${language}.`;
+    const parts: any[] = [];
+    
+    if (file) {
+        parts.push(await fileToGenerativePart(file));
+        parts.push({ text: `Document Context Provided. The topic is derived from this document.` });
+    }
+
+    const personaPrompt = persona === 'Methodology' 
+        ? "You are a methodology expert. Focus strictly on data sources, model architecture, baselines, and statistical validity. Be skeptical."
+        : persona === 'Innovation' 
+        ? "You are an innovation hunter. Focus on novelty, contribution, and difference from SOTA. Dismiss incremental work."
+        : "You are a practical reviewer. Focus on feasibility, implementation costs, and real-world application.";
+
+    const prompt = `
+    Start a Research Defense Battle.
+    Role: ${personaPrompt}
+    Topic/Direction: "${topic}"
+    Language: ${language}
+    
+    Task: 
+    1. Analyze the topic/document.
+    2. Generate the FIRST challenging question to start the defense.
+    
+    Return JSON: { 
+        sessionId: string (generate random), 
+        firstQuestion: string 
+    }
+    `;
+    
+    parts.push({ text: prompt });
+
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: prompt,
+            contents: { parts },
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(cleanJson(response.text || "{}"));
-    } catch (e) { return null; }
+        const data = JSON.parse(cleanJson(response.text || "{}"));
+        
+        return {
+            id: data.sessionId || Date.now().toString(),
+            topic: topic,
+            persona: persona,
+            history: [{
+                id: Date.now().toString(),
+                role: 'ai',
+                content: data.firstQuestion,
+                timestamp: Date.now()
+            }],
+            currentTurn: 1,
+            maxTurns: 5,
+            startTime: Date.now()
+        };
+    } catch (e) { 
+        console.error("Init Training Error", e);
+        return null; 
+    }
 }
 
-export async function analyzeTrainingAnswers(topic: string, qaPairs: {question: string, answer: string}[], language: Language): Promise<TrainingAnalysis | null> {
+// Submit Answer & Get Critique + Next Question
+export async function submitTrainingTurn(
+    session: TrainingSession,
+    userAnswer: string,
+    language: Language,
+    file?: File
+): Promise<BattleMessage[]> {
     const ai = getAiClient();
-    const qaText = qaPairs.map(p => `Q: ${p.question}\nA: ${p.answer}`).join('\n');
-    const prompt = `Evaluate this defense for topic "${topic}".
-    QA: ${qaText}
-    Return JSON: { score: number, feedback: string, weaknesses: string[], suggestions: string[] }. Language: ${language}.`;
+    const parts: any[] = [];
+    
+    if (file) {
+        parts.push(await fileToGenerativePart(file));
+    }
+
+    // Context from history (last 3 turns to save tokens)
+    const context = session.history.slice(-3).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
+
+    const prompt = `
+    Continue Research Defense Battle.
+    Topic: ${session.topic}
+    Persona: ${session.persona}
+    Language: ${language}
+    
+    Context:
+    ${context}
+    
+    User Answer: "${userAnswer}"
+    
+    Task:
+    1. Evaluate the user's answer rigorously.
+    2. Provide a 'polished' better version of the answer.
+    3. Analyze logic (Claim + Evidence).
+    4. Generate the NEXT follow-up question (harder).
+    
+    Return JSON: {
+        score: number (0-100),
+        strengths: string[],
+        weaknesses: string[],
+        optimizedVersion: string,
+        logicAnalysis: string,
+        nextQuestion: string
+    }
+    `;
+    
+    parts.push({ text: prompt });
+
     try {
         const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: { parts },
+            config: { responseMimeType: 'application/json' }
+        });
+        
+        const data = JSON.parse(cleanJson(response.text || "{}"));
+        
+        const userMessage: BattleMessage = {
+            id: `user-${Date.now()}`,
+            role: 'user',
+            content: userAnswer,
+            timestamp: Date.now(),
+            analysis: {
+                score: data.score,
+                strengths: data.strengths,
+                weaknesses: data.weaknesses,
+                optimizedVersion: data.optimizedVersion,
+                logicAnalysis: data.logicAnalysis
+            }
+        };
+
+        const aiMessage: BattleMessage = {
+            id: `ai-${Date.now()}`,
+            role: 'ai',
+            content: data.nextQuestion,
+            timestamp: Date.now() + 100,
+            isFollowUp: true
+        };
+
+        return [userMessage, aiMessage];
+
+    } catch (e) {
+        console.error("Training Turn Error", e);
+        return [];
+    }
+}
+
+// Generate Final Report
+export async function generateTrainingReport(session: TrainingSession, language: Language): Promise<TrainingAnalysis | null> {
+    const ai = getAiClient();
+    // Summarize history
+    const historyText = session.history.map(m => `${m.role}: ${m.content} ${m.role === 'user' ? `(Score: ${m.analysis?.score})` : ''}`).join('\n');
+    
+    const prompt = `
+    Generate Final Research Training Report.
+    Topic: ${session.topic}
+    History: ${historyText}
+    Language: ${language}
+    
+    Return JSON: {
+        overallScore: number,
+        radar: { theory, logic, innovation, expression, response },
+        summary: string,
+        actionPlan: string[]
+    }
+    `;
+
+    try {
+        const res = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return JSON.parse(cleanJson(response.text || "{}"));
-    } catch (e) { return null; }
+        return JSON.parse(cleanJson(res.text || "{}"));
+    } catch(e) { return null; }
+}
+
+export async function getTrainingHint(question: string, language: Language): Promise<string> {
+    const ai = getAiClient();
+    const res = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `Provide a structural hint/framework for answering this research question: "${question}". Do not give the full answer, just the logic points. Lang: ${language}`
+    });
+    return res.text || "";
 }
 
 // 5. Workflow Services

@@ -557,17 +557,54 @@ export interface WorkflowFramework {
   innovation: string;
 }
 
-// Research Training Types (New)
+// Research Training Types (New) - BATTLE MODE UPGRADE
+export type TrainingPersonaStyle = 'Methodology' | 'Innovation' | 'Practical';
+
+export interface BattleMessage {
+  id: string;
+  role: 'ai' | 'user';
+  content: string;
+  timestamp: number;
+  // Analysis for user messages (feedback from AI)
+  analysis?: {
+    score: number;
+    strengths: string[];
+    weaknesses: string[];
+    optimizedVersion: string;
+    logicAnalysis: string; // Argument + Evidence + Defense
+  };
+  // Meta for AI messages
+  isFollowUp?: boolean;
+}
+
 export interface TrainingSession {
+  id: string;
   topic: string;
-  questions: { id: string; text: string }[];
+  persona: TrainingPersonaStyle;
+  history: BattleMessage[];
+  currentTurn: number;
+  maxTurns: number;
+  startTime: number;
+  finalReport?: TrainingAnalysis;
 }
 
 export interface TrainingAnalysis {
-  score: number;
-  feedback: string;
-  weaknesses: string[];
-  suggestions: string[];
+  overallScore: number;
+  radar: {
+    theory: number;
+    logic: number;
+    innovation: number;
+    expression: number;
+    response: number;
+  };
+  summary: string;
+  actionPlan: string[];
+}
+
+export interface Hint {
+  id: string;
+  text: string;
+  cost: number;
 }
 
 // Reading Mode Types
