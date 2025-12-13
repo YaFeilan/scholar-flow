@@ -210,12 +210,20 @@ export interface PeerReviewResponse {
 }
 
 // Opening Review Types
-export type ReviewPersona = 'Gentle' | 'Critical';
+export type ReviewPersona = 'Gentle' | 'Critical'; // Deprecated in favor of multi-role
+export type ReviewRole = 'Mentor' | 'Expert' | 'Peer' | 'Committee';
 
 export interface OpeningSectionAnalysis {
     strengths: string[];
     weaknesses: { point: string; quote: string; suggestion: string }[];
     score: number;
+}
+
+export interface RoleInsight {
+  role: string; // The display name of the role
+  key: ReviewRole; // The internal key
+  summary: string; // The specific feedback summary from this role
+  icon?: string; // Optional icon identifier
 }
 
 export interface OpeningReviewResponse {
@@ -228,6 +236,7 @@ export interface OpeningReviewResponse {
     format: number;     // 格式规范
   };
   executiveSummary: string;
+  roleInsights?: RoleInsight[]; // New: Individual role perspectives
   titleAnalysis: OpeningSectionAnalysis;
   methodologyAnalysis: OpeningSectionAnalysis;
   logicAnalysis: OpeningSectionAnalysis;

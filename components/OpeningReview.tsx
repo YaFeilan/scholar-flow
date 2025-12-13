@@ -1,15 +1,8 @@
-
-
-
-
-
-
-
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Upload, FileText, Send, Download, CheckCircle, AlertTriangle, ClipboardCheck, Loader2, BarChart2, BookOpen, Target, Shield, Zap, ChevronRight, X, PenTool, ExternalLink, RefreshCw, Layout, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
+import { Upload, FileText, Send, Download, CheckCircle, AlertTriangle, ClipboardCheck, Loader2, BookOpen, Target, Shield, Zap, ChevronRight, X, PenTool, ExternalLink, RefreshCw, Layout, ChevronDown, ChevronUp, MessageSquare, UserCheck, Gavel, Users, Scale, MessageCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { generateOpeningReview, optimizeOpeningSection } from '../services/geminiService';
-import { Language, OpeningReviewResponse, ReviewPersona } from '../types';
+import { Language, OpeningReviewResponse, ReviewRole } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -29,8 +22,10 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
   const [file, setFile] = useState<File | null>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [target, setTarget] = useState('');
-  const [persona, setPersona] = useState<ReviewPersona>('Gentle');
-  const [customFocus, setCustomFocus] = useState(''); // New state for focus
+  
+  // Replaced single persona with multiple selected roles
+  const [selectedRoles, setSelectedRoles] = useState<Set<ReviewRole>>(new Set(['Mentor']));
+  const [customFocus, setCustomFocus] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<OpeningReviewResponse | null>(null);
@@ -60,24 +55,31 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const rolesConfig: { id: ReviewRole, icon: any, color: string }[] = [
+      { id: 'Mentor', icon: UserCheck, color: 'emerald' },
+      { id: 'Expert', icon: Gavel, color: 'red' },
+      { id: 'Peer', icon: Users, color: 'blue' },
+      { id: 'Committee', icon: Scale, color: 'purple' }
+  ];
+
   // Loading Message Cycle
   useEffect(() => {
     let interval: any;
     if (loading) {
       const messages = language === 'ZH' 
         ? [
-            "评审正在打架，导师在保护你...",
-            "正在深入分析开题逻辑...", 
-            "正在核查文献综述...", 
-            "AI 评审团正在激烈讨论...",
-            "别急，导师正在为你争取高分..."
+            "评审团正在集结...",
+            "导师正在补充意见...", 
+            "外审专家正在挑刺...", 
+            "学术委员正在核查规范...",
+            "多方观点正在汇总..."
           ]
         : [
-            "Reviewers are fighting, mentor is protecting you...",
-            "Analyzing proposal logic...", 
-            "Checking literature review...", 
-            "AI Review Board is debating...",
-            "Mentor is defending your proposal..."
+            "Assembling the review board...",
+            "Mentor is adding comments...", 
+            "External reviewer is critiquing...", 
+            "Committee checking compliance...",
+            "Synthesizing perspectives..."
           ];
       
       let index = 0;
@@ -175,14 +177,12 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
   const scrollToHighlight = (quote: string) => {
       if (!textLayerRef.current || !quote || quote === 'N/A') return;
       
-      // Clean up previous highlights
       const existing = textLayerRef.current.querySelectorAll('.review-highlight');
       existing.forEach(el => {
           el.classList.remove('review-highlight', 'bg-red-200', 'border-red-500', 'border-2');
           (el as HTMLElement).style.backgroundColor = '';
       });
 
-      // Find new text
       const spans = Array.from(textLayerRef.current.querySelectorAll('span')) as HTMLSpanElement[];
       const targetText = quote.trim();
       
@@ -207,13 +207,23 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
       setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const toggleRole = (role: ReviewRole) => {
+      const newRoles = new Set(selectedRoles);
+      if (newRoles.has(role)) {
+          if (newRoles.size > 1) newRoles.delete(role);
+      } else {
+          newRoles.add(role);
+      }
+      setSelectedRoles(newRoles);
+  };
+
   // --- Review Logic ---
 
   const handleReview = async () => {
     if (!file || !target) return;
     setLoading(true);
     setReport(null);
-    const result = await generateOpeningReview(file, target, language, persona, customFocus);
+    const result = await generateOpeningReview(file, target, language, Array.from(selectedRoles), customFocus);
     setReport(result);
     setLoading(false);
   };
@@ -232,7 +242,6 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
     doc.save('Opening_Review_Report.pdf');
   };
 
-  // Radar Data (Matching user request: Innovation, Logic, Method, Literature, Format)
   const radarData = useMemo(() => {
     if (!report || !report.radarMap) return [];
     const r = report.radarMap;
@@ -249,7 +258,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
     <div className="h-[calc(100vh-80px)] overflow-hidden flex flex-col bg-slate-50">
       {/* Top Bar / Configuration */}
       {!report && (
-        <div className="max-w-4xl mx-auto w-full px-4 py-8 overflow-y-auto">
+        <div className="max-w-4xl mx-auto w-full px-4 py-8 overflow-y-auto custom-scrollbar">
              <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
                 <div className="bg-emerald-600 p-6 text-white">
                    <h2 className="text-2xl font-serif font-bold flex items-center gap-2">
@@ -268,7 +277,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                                     <Shield size={32} className="text-emerald-600" />
                                 </div>
                             </div>
-                            <h3 className="text-xl font-bold text-slate-800 mb-2">{language === 'ZH' ? '评审进行中' : 'Review in Progress'}</h3>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">{language === 'ZH' ? '多角色评审进行中' : 'Multi-Role Review in Progress'}</h3>
                             <p className="text-emerald-600 font-medium animate-pulse text-lg px-4">{loadingMessage}</p>
                         </div>
                     )}
@@ -311,27 +320,45 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                             className="w-full border border-slate-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none"
                           />
                        </div>
-                       {/* Persona */}
-                       <div>
-                          <label className="block text-sm font-bold text-slate-700 mb-2">{t.personaLabel}</label>
-                          <div className="flex bg-slate-100 p-1 rounded-lg">
-                             <button
-                               onClick={() => setPersona('Gentle')}
-                               className={`flex-1 py-2 text-sm font-bold rounded-md transition-all flex items-center justify-center gap-2 ${persona === 'Gentle' ? 'bg-white shadow text-emerald-600' : 'text-slate-500 hover:text-slate-700'}`}
-                             >
-                                <Shield size={14} /> {t.personas.gentle}
-                             </button>
-                             <button
-                               onClick={() => setPersona('Critical')}
-                               className={`flex-1 py-2 text-sm font-bold rounded-md transition-all flex items-center justify-center gap-2 ${persona === 'Critical' ? 'bg-white shadow text-red-600' : 'text-slate-500 hover:text-slate-700'}`}
-                             >
-                                <Zap size={14} /> {t.personas.critical}
-                             </button>
+                       
+                       {/* Role Selection (Multi-select) */}
+                       <div className="md:col-span-2">
+                          <label className="block text-sm font-bold text-slate-700 mb-2">{t.rolesLabel}</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                             {rolesConfig.map((role) => {
+                                 const isSelected = selectedRoles.has(role.id);
+                                 const RoleIcon = role.icon;
+                                 // Safely access translation
+                                 const roleTrans = (t.roles as any)[role.id.toLowerCase()];
+                                 
+                                 return (
+                                     <div 
+                                        key={role.id}
+                                        onClick={() => toggleRole(role.id)}
+                                        className={`border rounded-xl p-3 cursor-pointer transition-all relative overflow-hidden group
+                                            ${isSelected 
+                                                ? `bg-${role.color}-50 border-${role.color}-500 shadow-md` 
+                                                : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'}
+                                        `}
+                                     >
+                                         {isSelected && (
+                                             <div className={`absolute top-2 right-2 w-4 h-4 rounded-full bg-${role.color}-500 flex items-center justify-center`}>
+                                                 <CheckCircle size={10} className="text-white" />
+                                             </div>
+                                         )}
+                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${isSelected ? `bg-${role.color}-200 text-${role.color}-700` : 'bg-slate-100 text-slate-500'}`}>
+                                             <RoleIcon size={16} />
+                                         </div>
+                                         <h4 className={`font-bold text-sm mb-1 ${isSelected ? `text-${role.color}-900` : 'text-slate-700'}`}>{roleTrans.name}</h4>
+                                         <p className={`text-[10px] ${isSelected ? `text-${role.color}-700` : 'text-slate-500'}`}>{roleTrans.desc}</p>
+                                     </div>
+                                 );
+                             })}
                           </div>
                        </div>
                     </div>
 
-                    {/* Review Focus (New Input) */}
+                    {/* Review Focus */}
                     <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
                             <MessageSquare size={16} className="text-emerald-500" /> 
@@ -358,20 +385,24 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
         </div>
       )}
 
-      {/* Split Screen View */}
+      {/* Report View */}
       {report && (
          <div className="flex flex-grow overflow-hidden relative">
             {/* Header Overlay */}
             <div className="absolute top-0 left-0 right-0 bg-white border-b border-slate-200 h-14 flex items-center justify-between px-6 z-20 shadow-sm">
                <div className="flex items-center gap-4">
                   <button onClick={() => setReport(null)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
-                  <span className="font-bold text-slate-800">{file?.name}</span>
-                  <span className={`px-2 py-0.5 rounded text-xs font-bold border ${persona === 'Gentle' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
-                     {persona} Review
-                  </span>
+                  <span className="font-bold text-slate-800 truncate max-w-[200px]">{file?.name}</span>
+                  <div className="flex gap-1">
+                      {Array.from(selectedRoles).map(role => (
+                          <span key={role} className="px-2 py-0.5 rounded text-[10px] font-bold border bg-slate-50 border-slate-200 text-slate-600">
+                              {(t.roles as any)[(role as string).toLowerCase()].name}
+                          </span>
+                      ))}
+                  </div>
                </div>
                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-slate-600">Overall Score:</span>
+                  <span className="text-sm font-bold text-slate-600">Score:</span>
                   <span className={`text-lg font-black px-3 py-1 rounded bg-slate-900 text-white ${report.overallScore >= 80 ? 'bg-emerald-600' : report.overallScore < 60 ? 'bg-red-500' : 'bg-amber-500'}`}>
                      {report.overallScore}
                   </span>
@@ -379,13 +410,12 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                </div>
             </div>
 
-            {/* Left Panel: PDF Viewer (Fixed) */}
+            {/* Left Panel: PDF Viewer */}
             <div ref={scrollContainerRef} className="w-1/2 bg-slate-100 pt-14 border-r border-slate-200 hidden lg:flex items-center justify-center overflow-auto relative">
                 {pdfDoc ? (
                     <div className="relative shadow-lg m-8">
                         <canvas ref={canvasRef} className="block bg-white" />
                         <div ref={textLayerRef} className="textLayer absolute top-0 left-0 right-0 bottom-0 overflow-hidden opacity-30 text-transparent leading-none pointer-events-none" />
-                        {/* Page Controls Overlay */}
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full flex gap-4 text-sm items-center pointer-events-auto shadow-lg backdrop-blur-sm">
                             <button onClick={() => setPageNum(p => Math.max(1, p - 1))} disabled={pageNum <= 1} className="hover:text-blue-300 disabled:opacity-50">Prev</button>
                             <span>{pageNum} / {numPages}</span>
@@ -401,8 +431,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
             </div>
 
             {/* Right Panel: Analysis Report */}
-            <div className="w-full lg:w-1/2 bg-white pt-14 overflow-y-auto relative scroll-smooth" id="report-container">
-               
+            <div className="w-full lg:w-1/2 bg-white pt-14 overflow-y-auto relative scroll-smooth custom-scrollbar" id="report-container">
                <div className="p-8 max-w-3xl mx-auto space-y-8 pb-20">
                   
                   {/* Executive Summary */}
@@ -415,7 +444,40 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                      </div>
                   </section>
 
-                  {/* 5-Dim Radar Chart */}
+                  {/* Role Insights Grid (New Feature) */}
+                  {report.roleInsights && report.roleInsights.length > 0 && (
+                      <section>
+                          <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                              <Users className="text-blue-600" /> Role Perspectives
+                          </h3>
+                          <div className="grid grid-cols-1 gap-4">
+                              {report.roleInsights.map((insight, idx) => {
+                                  // Find role config to get color/icon
+                                  // The API returns role name, we might need to map back or just trust UI state if strict
+                                  // For robustness, let's use a simple heuristic or cycle colors if mapping fails
+                                  // But `insight.key` should map to ReviewRole if we implemented the service correctly
+                                  const roleConf = rolesConfig.find(r => r.id === insight.key as ReviewRole) || rolesConfig[idx % rolesConfig.length];
+                                  const RoleIcon = roleConf.icon;
+                                  
+                                  return (
+                                      <div key={idx} className={`bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-${roleConf.color}-500`}>
+                                          <div className="flex items-center gap-2 mb-2">
+                                              <div className={`p-1.5 rounded-full bg-${roleConf.color}-100 text-${roleConf.color}-600`}>
+                                                  <RoleIcon size={14} />
+                                              </div>
+                                              <span className="font-bold text-slate-800">{insight.role}</span>
+                                          </div>
+                                          <div className="text-sm text-slate-600 leading-relaxed pl-8">
+                                              {insight.summary}
+                                          </div>
+                                      </div>
+                                  );
+                              })}
+                          </div>
+                      </section>
+                  )}
+
+                  {/* Radar Chart */}
                   <section className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-white border border-slate-100 p-4 rounded-xl shadow-sm">
                      <div className="h-64 w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -440,7 +502,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                      </div>
                   </section>
 
-                  {/* Structured Analysis Sections (Accordion) */}
+                  {/* Detailed Analysis Sections */}
                   {[
                       { key: 'title', title: 'Title Analysis', icon: FileText, data: report.titleAnalysis },
                       { key: 'method', title: 'Methodology & Logic', icon: Zap, data: report.methodologyAnalysis },
@@ -461,7 +523,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                           </button>
                           
                           {openSections[section.key] && section.data && (
-                              <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-6">
+                              <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-6 animate-fadeIn">
                                   {/* Strengths */}
                                   {section.data.strengths.length > 0 && (
                                       <div>
@@ -476,7 +538,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                                       </div>
                                   )}
 
-                                  {/* Weaknesses & Suggestions */}
+                                  {/* Weaknesses */}
                                   {section.data.weaknesses.length > 0 && (
                                       <div>
                                           <h4 className="text-xs font-bold text-red-700 uppercase tracking-wider mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Weaknesses & Fixes</h4>
@@ -485,7 +547,7 @@ const OpeningReview: React.FC<OpeningReviewProps> = ({ language }) => {
                                                   <div key={i} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-pointer hover:border-blue-400 transition-all group" onClick={() => scrollToHighlight(item.quote)}>
                                                       <div className="flex justify-between items-start mb-1">
                                                           <span className="text-sm font-bold text-slate-800">{item.point}</span>
-                                                          <span className="text-[10px] text-blue-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">Click to Locate</span>
+                                                          <span className="text-[10px] text-blue-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">Locate</span>
                                                       </div>
                                                       <div className="text-xs text-slate-500 italic bg-slate-50 p-2 rounded mb-2 border-l-2 border-slate-300">
                                                           "{item.quote}"

@@ -30,7 +30,7 @@ import {
   TrackedReference,
   DiscussionAnalysisResult,
   TitleRefinementResult,
-  ReviewPersona,
+  ReviewRole,
   OpeningReviewResponse,
   FlowchartResult,
   WorkflowProblem,
@@ -473,13 +473,51 @@ export async function generateIdeaFollowUp(topic: string, angle: string, query: 
     } catch (e) { return null; }
 }
 
-export async function generateOpeningReview(file: File, target: string, language: Language, persona: ReviewPersona, focus?: string): Promise<OpeningReviewResponse | null> {
+export async function generateOpeningReview(
+  file: File, 
+  target: string, 
+  language: Language, 
+  roles: ReviewRole[], // Updated to accept array of roles
+  focus?: string
+): Promise<OpeningReviewResponse | null> {
     const ai = getAiClient();
     const filePart = await fileToGenerativePart(file);
-    const prompt = `Review opening proposal. Target: ${target}. Persona: ${persona}. Focus: ${focus}.
-    Return JSON: { overallScore, radarMap: {innovation, logic, feasibility, literature, format}, executiveSummary, titleAnalysis: {strengths, weaknesses: [{point, quote, suggestion}], score}, methodologyAnalysis: {strengths, weaknesses: [{point, quote, suggestion}], score}, logicAnalysis: {strengths, weaknesses: [{point, quote, suggestion}], score}, literatureAnalysis: {strengths, weaknesses: [{point, quote, suggestion}], score}, journalFit: {score, analysis, alternativeJournals: [{name, reason, if}]} }. Lang: ${language}`;
+    
+    const roleDescriptions = {
+        Mentor: language === 'ZH' ? '学生导师 (侧重补充与辩护)' : 'Student Mentor (Supportive)',
+        Expert: language === 'ZH' ? '外审专家 (严肃认真，指出不足)' : 'External Reviewer (Critical)',
+        Peer: language === 'ZH' ? '同行评审 (关注创新)' : 'Peer Reviewer (Innovation)',
+        Committee: language === 'ZH' ? '学术委员 (严格审查规范)' : 'Academic Committee (Rigor)'
+    };
+
+    const rolesPrompt = roles.map(r => roleDescriptions[r]).join(', ');
+
+    const prompt = `Review opening proposal. Target: ${target}. 
+    Active Review Roles: ${rolesPrompt}.
+    Focus: ${focus}.
+    
+    1. Synthesize feedback from all selected roles for the main section analysis (Title, Methodology, Logic, Literature).
+    2. Provide an array 'roleInsights' where each selected role gives their specific, independent feedback summary.
+    
+    Return JSON: { 
+      overallScore, 
+      radarMap: {innovation, logic, feasibility, literature, format}, 
+      executiveSummary, 
+      roleInsights: [{role, key: '${roles.join("'|'")}', summary}], 
+      titleAnalysis: {strengths, weaknesses: [{point, quote, suggestion}], score}, 
+      methodologyAnalysis: {strengths, weaknesses: [{point, quote, suggestion}], score}, 
+      logicAnalysis: {strengths, weaknesses: [{point, quote, suggestion}], score}, 
+      literatureAnalysis: {strengths, weaknesses: [{point, quote, suggestion}], score}, 
+      journalFit: {score, analysis, alternativeJournals: [{name, reason, if}]} 
+    }. 
+    Lang: ${language}`;
+
     try {
-        const res = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: { parts: [filePart, { text: prompt }] }, config: { responseMimeType: 'application/json' }});
+        const res = await ai.models.generateContent({ 
+            model: 'gemini-2.5-flash', 
+            contents: { parts: [filePart, { text: prompt }] }, 
+            config: { responseMimeType: 'application/json' }
+        });
         return JSON.parse(cleanJson(res.text || "{}"));
     } catch (e) { return null; }
 }
