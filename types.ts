@@ -50,7 +50,8 @@ export enum ViewState {
   AI_DETECTOR = 'AI_DETECTOR',
   RESEARCH_DISCUSSION = 'RESEARCH_DISCUSSION',
   TITLE_PRISM = 'TITLE_PRISM',
-  FLOWCHART = 'FLOWCHART', // New
+  FLOWCHART = 'FLOWCHART',
+  AI_WORKFLOW = 'AI_WORKFLOW', // New
 }
 
 // Trend Types
@@ -523,4 +524,25 @@ export interface TitleRefinementResult {
 export interface FlowchartResult {
   mermaidCode: string;
   explanation: string;
+}
+
+// AI Workflow Types (New)
+export interface WorkflowProblem {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: string;
+}
+
+export interface WorkflowAngle {
+  id: string;
+  title: string;
+  rationale: string;
+}
+
+export interface WorkflowFramework {
+  framework: string; // Logic Flow / Steps
+  methodology: string;
+  dataSources: string;
+  innovation: string;
 }

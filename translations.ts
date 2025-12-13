@@ -1,319 +1,324 @@
-
 export const TRANSLATIONS = {
   EN: {
-    appName: 'ResearchAssistant',
+    appName: 'Research Assistant',
     nav: {
       search: 'Search',
-      opening: 'Opening',
-      idea: 'Idea',
-      review: 'Review',
-      ppt: 'PPT',
-      track: 'Tracking',
+      opening: 'Opening Review',
+      idea: 'Idea Guide',
+      review: 'Review Gen',
+      ppt: 'PPT Gen',
+      track: 'Tracker',
       trends: 'Trends',
       advisor: 'Advisor',
       peer: 'Peer Review',
-      polish: 'Polish',
+      polish: 'Polishing',
       experimentDesign: 'Exp. Design',
       data: 'Data Analysis',
-      chart: 'Chart Extraction',
-      code: 'Code',
-      pdfChat: 'Lit. Reading',
+      chart: 'Chart Extractor',
+      code: 'Code Assistant',
+      pdfChat: 'PDF Chat',
       knowledge: 'Knowledge Graph',
       figure: 'Figure Gen',
-      grant: 'Grant App',
-      conference: 'Call for Papers',
+      grant: 'Grant Application',
+      conference: 'Conf. Finder',
       aiDetector: 'AI Detector',
-      discussion: 'Discussion',
+      discussion: 'Research Discussion',
       titlePrism: 'Title Prism',
-      flowchart: 'AI Flowchart'
+      flowchart: 'Flowchart',
+      aiWorkflow: 'AI Workflow'
     },
     groups: {
       discovery: 'Discovery',
-      experiment: 'Analysis',
-      writing: 'Writing',
-      publish: 'Evaluation'
+      planning: 'Planning',
+      execution: 'Execution',
+      writing: 'Writing & Review',
+      utility: 'Utilities'
     },
-    // ... existing search translations ...
     search: {
       title: 'Academic Search',
-      subtitle: 'Find relevant papers from multiple databases.',
-      source: { online: 'Online Databases', local: 'Local Files' },
-      placeholder: 'Search for keywords, titles, or DOIs...',
+      subtitle: 'Find papers, generate reviews, and analyze trends.',
+      placeholder: 'Search for papers, topics, or keywords...',
       btn: 'Search',
-      filters: { time: 'Time Range', partition: 'Partition', resultCount: 'Results', dateAdded: 'Date Added' },
-      sort: { label: 'Sort by', relevance: 'Relevance', date: 'Pub Date', if: 'Impact Factor', added: 'Date Added' },
-      results: 'Search Results',
+      results: 'Results',
       generateBtn: 'Generate Review',
-      batchInterpret: 'Batch Interpret',
-      upload: { btn: 'Upload Files', tip: 'Support PDF, Word, TXT', drag: 'Drag & Drop files here' },
-      interpret: 'Interpret',
-      download: 'Download',
-      interpretationResult: 'AI Interpretation'
+      filters: {
+        time: 'Time Range',
+        type: 'Paper Type',
+      },
+      sort: {
+        label: 'Sort by',
+        relevance: 'Relevance',
+        date: 'Date',
+        if: 'Impact Factor',
+        added: 'Date Added'
+      },
+      source: {
+        online: 'Online Search',
+        local: 'Local Files'
+      },
+      upload: {
+        btn: 'Click to Upload Papers',
+        tip: 'Supports PDF, DOCX, TXT'
+      },
+      interpret: 'AI Interpret'
     },
-    // ... existing trends translations ...
     trends: {
       title: 'Trend Analysis',
-      subtitle: 'Analyze research trends and emerging topics.',
-      placeholder: 'Enter research field...',
-      view: { researcher: 'Researcher View', institution: 'Institution View' },
-      timeRange: 'TIME RANGE',
-      analyze: 'Analyze',
-      emerging: 'Emerging',
+      subtitle: 'Analyze research trends and identify emerging topics.',
+      placeholder: 'Enter a research field...',
+      analyze: 'Analyze Trends',
+      timeRange: 'Time Range',
+      emerging: 'Emerging Tech',
       yoy: 'YoY Growth',
       hotspots: 'Research Hotspots',
-      methodologies: 'Top Methodologies'
+      methodologies: 'Top Methodologies',
+      view: {
+        researcher: 'Researcher View',
+        institution: 'Institution View'
+      }
     },
-    // ... existing peer translations ...
-    peer: {
-      title: 'Peer Review Simulator',
-      subtitle: 'Simulate peer review feedback for your manuscript.',
-      uploadTitle: 'Upload Manuscript',
-      uploadDesc: 'Upload PDF or Word document',
+    opening: {
+      title: 'Opening Review',
+      subtitle: 'Get feedback on your opening proposal.',
+      uploadDesc: 'Upload your proposal PDF to start.',
       targetLabel: 'Target Journal / Conference',
-      journalLabel: 'Journal Name',
-      contentLabel: 'Or Paste Content',
-      startBtn: 'Start Review',
-      pending: 'Waiting for Input',
-      pendingDesc: 'Upload a file or paste content to start the simulation.',
-      rebuttalBtn: 'Generate Rebuttal',
-      coverLetterBtn: 'Generate Cover Letter'
+      targetPlaceholder: 'e.g. CVPR, Nature',
+      personaLabel: 'Reviewer Persona',
+      personas: {
+        gentle: 'Gentle',
+        critical: 'Critical'
+      },
+      focusLabel: 'Review Focus',
+      focusPlaceholder: 'e.g. Methodology, Innovation...',
+      btn: 'Start Review'
     },
-    // ... existing review translations ...
+    idea: {
+      title: 'Idea Guide',
+      subtitle: 'Brainstorm and refine research ideas.',
+      placeholder: 'Describe your research interests...',
+      focus: {
+        label: 'Focus',
+        general: 'General',
+        data: 'Data-Driven',
+        policy: 'Policy-Oriented',
+        theory: 'Theory-Heavy'
+      },
+      btn: 'Generate Ideas',
+      directions: 'Research Directions',
+      selectDirection: 'Select',
+      methodology: 'Methodology',
+      dataSources: 'Data Sources',
+      titles: 'Recommended Titles',
+      corePapers: 'Core References',
+      followUpPlaceholder: 'Ask a follow-up question...',
+      followUpBtn: 'Deep Dive',
+      logicFlow: 'Logic Flow',
+      deepDive: 'Deep Dive Analysis',
+      keywords: 'Keywords',
+      journals: 'Recommended Journals',
+      exportProposal: 'Export Proposal'
+    },
     review: {
-      steps: { 1: 'Scope', 2: 'Select', 3: 'Config', 4: 'Result' },
+      steps: {
+        1: 'Scope',
+        2: 'Select',
+        3: 'Config',
+        4: 'Result'
+      },
       scopeTitle: 'Define Review Scope',
-      topicLabel: 'Review Topic',
-      focusLabel: 'Focus / AI Instructions',
+      topicLabel: 'Research Topic',
+      focusLabel: 'Review Focus',
       dbLabel: 'Databases',
       timeLabel: 'Time Range',
       searchBtn: 'Search Papers',
       selectTitle: 'Select Papers',
-      configTitle: 'Review Configuration',
+      configTitle: 'Configuration',
       wordCount: 'Word Count',
       langLabel: 'Output Language',
       genBtn: 'Generate Review',
       complete: 'Review Generated'
     },
-    // ... existing track translations ...
-    track: {
-      title: 'Citation Tracker',
-      subtitle: 'Track citations and analyze research gaps.',
-      tabSearch: 'Search Paper',
-      tabUpload: 'Upload Paper',
-      placeholder: 'Enter paper title...',
-      btn: 'Track Network',
-      dragDrop: 'Drag & drop PDF here'
-    },
-    // ... existing polish translations ...
-    polish: {
-      title: 'Polishing Assistant',
-      subtitle: 'Improve your writing with AI.',
-      tabText: 'Text Input',
-      tabFile: 'File Upload',
-      placeholder: 'Paste text to polish...',
-      btn: 'Polish',
-      config: {
-        mode: 'Mode',
-        tone: 'Tone',
-        field: 'Field',
-        glossary: 'Glossary (Optional)',
-        modes: { EnToEn: 'English Polish', CnToEn: 'Chinese to English', EnToCn: 'English to Chinese' },
-        tones: { Academic: 'Academic', Native: 'Native', Concise: 'Concise', Paraphrase: 'Paraphrase' },
-        fields: { General: 'General', CS: 'Computer Science', Medicine: 'Medicine', Engineering: 'Engineering', SocialSciences: 'Social Sciences', Economics: 'Economics' }
-      },
-      control: {
-        version: 'Version',
-        cleanView: 'Clean',
-        diffView: 'Changes',
-        chatPlaceholder: 'Refine this result...',
-        accept: 'Accept',
-        reject: 'Reject'
-      },
-      revisionNotes: 'Revision Notes'
-    },
-    // ... existing advisor translations ...
-    advisor: {
-      title: 'Publication Advisor',
-      subtitle: 'Get advice on where to publish.',
-      paperTitle: 'Paper Title',
-      paperAbstract: 'Abstract',
-      journalTitle: 'Target Journal',
-      focusLabel: 'Review Focus (Optional)',
-      focusPlaceholder: 'e.g. Focus on statistical methods, novelty, or scope match...',
-      abstractPlaceholder: 'Paste abstract here...',
-      btn: 'Analyze Fit',
-      history: 'History',
-      radar: { topic: 'Topic', method: 'Method', novelty: 'Novelty', scope: 'Scope', style: 'Style' },
-      apply: 'Apply',
-      risks: 'Risk Assessment',
-      alternatives: 'Alternative Journals'
-    },
-    // ... existing ppt translations ...
     ppt: {
       title: 'PPT Generator',
       subtitle: 'Generate presentation slides from your paper.',
       uploadLabel: 'Upload Paper',
-      nameLabel: 'Your Name',
+      nameLabel: 'Presenter Name',
       schoolLabel: 'Affiliation',
       densityLabel: 'Content Density',
       densityLow: 'Simple',
       densityHigh: 'Rich',
       pagesLabel: 'Number of Slides',
       styleBtn: 'Analyze Style',
-      steps: { 2: 'Configuration', 3: 'Style' },
-      analyzing: 'Analyzing Style...',
-      genBtn: 'Generate Slides',
-      generating: 'Generating PPT...'
+      analyzing: 'Analyzing Paper Style...',
+      steps: {
+        2: 'Configuration',
+        3: 'Style Selection'
+      },
+      genBtn: 'Generate PPT',
+      generating: 'Generating Slides...',
+      download: 'Download PPT'
     },
-    // ... existing idea translations ...
-    idea: {
-      title: 'Research Idea Guide',
-      subtitle: 'Generate research ideas based on a topic.',
-      placeholder: 'Enter your research area...',
-      focus: { label: 'Focus', general: 'General', data: 'Data-Driven', policy: 'Policy', theory: 'Theoretical' },
-      btn: 'Generate Ideas',
-      generating: 'Generating Ideas...',
-      directions: 'Research Directions',
-      selectDirection: 'Deep Dive',
-      methodology: 'Methodology',
-      dataSources: 'Data Sources',
-      titles: 'Suggested Titles',
-      corePapers: 'Core References',
-      followUpPlaceholder: 'Ask a follow-up question...',
-      followUpBtn: 'Ask',
-      logicFlow: 'Logic Flow',
-      deepDive: 'Deep Dive Analysis',
-      keywords: 'Keywords',
-      journals: 'Target Journals',
-      exportProposal: 'Download Results'
+    track: {
+      title: 'Reference Tracker',
+      subtitle: 'Track citations and analyze research gaps.',
+      tabSearch: 'Search Topic',
+      tabUpload: 'Upload PDF',
+      placeholder: 'Enter topic or paper title...',
+      btn: 'Track Network',
+      dragDrop: 'Drag & Drop PDF Here'
     },
-    // ... existing opening translations ...
-    opening: {
-      title: 'Opening Review',
-      subtitle: 'Evaluate the opening section of your paper.',
-      uploadDesc: 'Upload PDF',
-      targetLabel: 'Target',
-      targetPlaceholder: 'Journal / Conference / Thesis (Bachelor/Master/PhD)',
-      focusLabel: 'Review Focus (Optional)',
-      focusPlaceholder: 'e.g. Focus on innovation and methodology...',
-      btn: 'Review Opening',
-      personaLabel: 'Reviewer Persona',
-      personas: { gentle: 'Gentle Mentor', critical: 'Critical Reviewer' }
-    },
-    // ... existing data translations ...
-    data: {
-      title: 'Data Analysis',
-      subtitle: 'Analyze your data with AI.',
-      upload: 'Upload Data',
-      downloadTemplate: 'Download Template',
-      setupTitle: 'Data Setup',
-      useHeader: 'Use First Row as Header',
-      targetVar: 'Target Variable',
-      noTarget: 'None',
-      cleaning: 'Cleaning Strategy',
-      cleaningStrategies: { auto: 'Auto', drop: 'Drop Missing', mean: 'Fill Mean', zero: 'Fill Zero' },
-      dataScope: 'Data Scope',
-      rows50: 'Random Sample 50 Rows (Fast)',
-      rowsAll: 'All Rows (Full Analysis)',
-      limitWarning: 'Warning: Analyzing all rows may consume high API quota.',
-      fastModeTip: '✅ Fast Mode Active: Consumes very few tokens.',
-      colName: 'Column Name',
-      colType: 'Type',
-      limitBanner: 'Data preview limited to first 20 rows.',
-      reupload: 'Re-upload',
-      quickAnalysisBtn: 'Analyze',
-      progress: { loading: 'Loading', cleaning: 'Cleaning', stats: 'Stats', ai: 'AI Modeling' },
-      limitNotice: 'Processing limited sample for speed.',
-      exportReport: 'Export Report',
-      chatData: 'Chat Data',
-      resultDisclaimer: 'AI analysis is based on statistical summary of the uploaded data sample.',
-      summary: 'Summary',
-      featureImportance: 'Feature Importance',
-      correlations: 'Correlations',
-      models: 'Recommended Models',
-      selectAll: 'All',
-      deselectAll: 'None'
-    },
-    // ... existing code translations ...
-    code: {
-      title: 'Code Assistant',
-      newSession: 'New Session',
+    advisor: {
+      title: 'Submission Advisor',
+      subtitle: 'Get advice on where to submit your paper.',
+      paperTitle: 'Paper Title',
+      paperAbstract: 'Abstract',
+      abstractPlaceholder: 'Paste abstract here...',
+      journalTitle: 'Target Journal',
+      focusLabel: 'Review Focus',
+      focusPlaceholder: 'e.g. Methodology, Innovation...',
+      btn: 'Analyze Match',
       history: 'History',
-      inputPlaceholder: { generate: 'Describe what you want to code...', debug: 'Paste code to debug...', explain: 'Paste code to explain...' },
-      upload: 'Upload Code File',
-      stopBtn: 'Stop',
-      btn: 'Run',
-      shortcut: 'Ctrl+Enter to Run',
-      followUpPlaceholder: 'Follow up...'
+      risks: 'Risk Assessment',
+      alternatives: 'Alternative Journals',
+      apply: 'Apply'
     },
-    // ... existing experimentDesign translations ...
+    peer: {
+      title: 'Peer Review Simulator',
+      subtitle: 'Simulate a peer review for your paper.',
+      uploadTitle: 'Upload Manuscript',
+      uploadDesc: 'PDF, DOCX supported',
+      targetLabel: 'Target Venue',
+      journalLabel: 'Journal Name',
+      startBtn: 'Start Simulation',
+      pending: 'Waiting for File',
+      pendingDesc: 'Upload a file to begin the review process.',
+      rebuttalBtn: 'Draft Rebuttal',
+      coverLetterBtn: 'Draft Cover Letter'
+    },
+    polish: {
+      title: 'Polish Assistant',
+      subtitle: 'Improve your academic writing.',
+      tabText: 'Text Input',
+      tabFile: 'File Upload',
+      placeholder: 'Paste text to polish...',
+      config: {
+        mode: 'Mode',
+        modes: { EnToEn: 'English Polish', CnToEn: 'Translate to English', EnToCn: 'Translate to Chinese' },
+        tone: 'Tone',
+        tones: { Academic: 'Academic', Native: 'Native', Concise: 'Concise', Paraphrase: 'Paraphrase' },
+        field: 'Field',
+        fields: { General: 'General', CS: 'Computer Science', Medicine: 'Medicine', Engineering: 'Engineering', SocialSciences: 'Social Sciences', Economics: 'Economics' },
+        glossary: 'Glossary (Optional)'
+      },
+      btn: 'Polish',
+      revisionNotes: 'Revision Notes',
+      control: {
+        cleanView: 'Clean',
+        diffView: 'Diff',
+        version: 'Version',
+        chatPlaceholder: 'Refine this result...',
+        accept: 'Accept',
+        reject: 'Reject'
+      }
+    },
     experimentDesign: {
       title: 'Experiment Design',
-      subtitle: 'Design your research experiments.',
-      hypothesisLabel: 'Hypothesis',
-      hypothesisPlaceholder: 'e.g. Sleep deprivation affects cognitive performance.',
-      optimizeBtn: 'Optimize',
-      optimizing: 'Optimizing...',
+      subtitle: 'Design rigorous experiments for your research.',
+      hypothesisLabel: 'Research Hypothesis',
+      hypothesisPlaceholder: 'e.g. Drug X reduces blood pressure...',
       ivLabel: 'Independent Variable',
       dvLabel: 'Dependent Variable',
       fieldLabel: 'Field',
-      fields: { Psychology: 'Psychology', Medicine: 'Medicine', UX: 'UX Research', Biology: 'Biology' },
       methodologyLabel: 'Methodology',
-      methodologies: { Auto: 'Auto-Select', RCT: 'RCT', Survey: 'Survey', Lab: 'Lab Experiment' },
       structureLabel: 'Structure',
+      fields: { Psychology: 'Psychology', Medicine: 'Medicine', Biology: 'Biology', CS: 'Computer Science' },
+      methodologies: { Auto: 'Auto-Detect', RCT: 'Randomized Controlled Trial', Survey: 'Survey', Lab: 'Lab Experiment' },
       structures: { Between: 'Between-Subjects', Within: 'Within-Subjects', Mixed: 'Mixed Design' },
       advancedSettings: 'Advanced Settings',
       alpha: 'Alpha',
       power: 'Power',
       effectSize: 'Effect Size',
       effectSizes: { small: 'Small', medium: 'Medium', large: 'Large', custom: 'Custom' },
+      optimizeBtn: 'Optimize',
+      optimizing: 'Optimizing...',
       btn: 'Generate Design',
+      generating: 'Designing Experiment...',
       sampleSize: 'Sample Size',
       variables: 'Variables',
       analysis: 'Analysis Plan',
-      flow: 'Procedure Flow',
-      generating: 'Generating Design...',
+      flow: 'Experiment Flow',
       templates: {
         title: 'Quick Templates',
-        subtitle: 'Start with a common design',
-        rct: 'RCT (Medicine)',
+        subtitle: 'Start with a standard design',
+        rct: 'RCT',
         rctDesc: 'Randomized Controlled Trial',
-        ab: 'A/B Test (UX)',
-        abDesc: 'User Experience Testing',
-        memory: 'Memory (Psych)',
+        ab: 'A/B Test',
+        abDesc: 'Simple Comparison',
+        memory: 'Memory Task',
         memoryDesc: 'Cognitive Psychology'
       }
     },
-    // ... existing pdfChat translations ...
-    pdfChat: {
-      title: 'Lit. Reading',
-      upload: 'Upload PDF',
-      dragDrop: 'Drag & Drop PDF here',
-      welcome: 'Welcome to Literature Intensive Reading',
-      placeholder: 'Ask questions about the document...'
+    data: {
+      title: 'Data Analysis',
+      subtitle: 'Analyze your data with AI.',
+      upload: 'Upload Data File'
     },
-    // ... existing knowledge translations ...
+    chart: {
+      title: 'Chart Extraction',
+      subtitle: 'Extract data from chart images.',
+      upload: 'Upload Image',
+      extracting: 'Extracting...'
+    },
+    code: {
+      title: 'Code Assistant',
+      newSession: 'New Session',
+      history: 'History',
+      inputPlaceholder: {
+        generate: 'Describe the code you need...',
+        debug: 'Paste code to debug...',
+        explain: 'Paste code to explain...'
+      },
+      upload: 'Upload Code File',
+      stopBtn: 'Stop',
+      btn: 'Run',
+      shortcut: 'Ctrl + Enter to Run',
+      followUpPlaceholder: 'Follow up...'
+    },
+    pdfChat: {
+      title: 'PDF Chat',
+      subtitle: 'Chat with your PDF documents.',
+      uploadDesc: 'Upload a PDF to start chatting.',
+      chatTitle: 'Chat',
+      chatWelcome: 'Ask me anything about the document.',
+      chatPlaceholder: 'Type your question...'
+    },
     knowledge: {
       title: 'Knowledge Graph',
       subtitle: 'Visualize research connections.',
-      connect: 'Connect Nodes',
+      connect: 'Connect',
       connecting: 'Connecting...',
-      suggestions: 'Get Suggestions',
+      suggestions: 'Suggestions',
       gettingSuggestions: 'Thinking...',
       imageNote: 'Image Note',
       analyzingImage: 'Analyzing...',
-      empty: 'Add papers or notes to visualize connections.',
-      acceptNode: 'Add to Graph',
+      empty: 'Add nodes to start.',
       chatTitle: 'Chat with Graph',
-      chatWelcome: 'Ask questions about the connected papers.',
-      chatPlaceholder: 'Ask a question...'
+      chatWelcome: 'Ask about the connections...',
+      chatPlaceholder: 'Type your question...',
+      acceptNode: 'Add to Graph'
     },
-    // ... existing figure translations ...
     figure: {
       title: 'Figure Generator',
-      subtitle: 'Create scientific figures.',
-      mode: { generate: 'Generate', polish: 'Refine' },
-      polishTasks: { general: 'General', sketchTo3D: 'Sketch to 3D', chartBeautify: 'Beautify Chart' },
+      subtitle: 'Generate scientific figures.',
+      mode: {
+        generate: 'Generate',
+        polish: 'Polish'
+      },
+      polishTasks: {
+        general: 'General',
+        sketchTo3D: 'Sketch to 3D',
+        chartBeautify: 'Beautify Chart'
+      },
       input: {
         referenceLabel: 'Reference Image (Optional)',
         sourceLabel: 'Source Image',
@@ -326,188 +331,135 @@ export const TRANSLATIONS = {
         dpiLabel: 'DPI'
       },
       template: {
-        title: 'Prompt Template',
+        title: 'Template',
         subject: 'Subject',
-        subjectPh: 'e.g. Neural Network',
+        subjectPh: 'e.g. Cell',
         action: 'Action',
-        actionPh: 'e.g. Processing data',
+        actionPh: 'e.g. Dividing',
         environment: 'Environment',
-        environmentPh: 'e.g. Abstract digital space',
+        environmentPh: 'e.g. Petri Dish',
         perspective: 'Perspective',
-        perspectivePh: 'e.g. Isometric',
+        perspectivePh: 'e.g. Top-down',
         apply: 'Apply Template'
       },
-      chartTypes: { Mechanism: 'Mechanism', Flowchart: 'Flowchart', Bar: 'Bar Chart', Line: 'Line Chart', Scatter: 'Scatter Plot' },
-      colorPalettes: { Default: 'Default', Nature: 'Nature Style', Science: 'Science Style', Grayscale: 'Grayscale' },
-      btn: 'Generate',
-      result: 'Result',
-      tools: { addLabel: 'Add Label', saveWithLabels: 'Save with Labels' },
-      download: 'Download',
+      chartTypes: { Mechanism: 'Mechanism', Flowchart: 'Flowchart', Data: 'Data Plot' },
+      colorPalettes: { Default: 'Default', Nature: 'Nature', Science: 'Science', Grayscale: 'Grayscale' },
+      btn: 'Generate Figure',
       generating: 'Generating...',
-      history: 'History',
-      refinePlaceholder: 'Refine this figure...'
+      result: 'Result',
+      tools: {
+        addLabel: 'Add Label',
+        saveWithLabels: 'Save with Labels'
+      },
+      download: 'Download',
+      refinePlaceholder: 'Refine this figure...',
+      history: 'History'
     },
-    // ... existing chart translations ...
-    chart: {
-      title: 'Chart Extraction',
-      subtitle: 'Extract data from charts.',
-      upload: 'Upload Chart',
-      downloadTemplate: 'Download Template',
-      extracting: 'Extracting...',
-      resultTitle: 'Extraction Result',
-      exportReport: 'Export Report',
-      chatData: 'Chat Data',
-      summary: 'Summary',
-      featureImportance: 'Feature Importance',
-      correlations: 'Correlations',
-      models: 'Recommended Models',
-      daysLeft: 'days left',
-      website: 'Website',
-      conferences: 'Conferences',
-      journals: 'Journals'
-    },
-    // ... existing grant translations ...
     grant: {
-      title: 'Grant Application Assistant',
-      subtitle: 'Specialized tools for grant writing (NSFC, etc.): Rationale Generation, Proposal Polishing, and Format Review.',
+      title: 'Grant Application',
+      subtitle: 'Assistance for grant proposals.',
       tabs: {
         rationale: 'Rationale',
-        polish: 'Proposal Polish',
+        polish: 'Polish',
         check: 'Format Check',
-        review: 'Expert Review'
+        review: 'Review'
       },
       rationale: {
-        title: 'Project Rationale',
-        topic: 'Project Topic',
-        keywords: 'Key Keywords',
-        btn: 'Generate Rationale',
-        placeholder: 'e.g. Mechanisms of drug resistance in lung cancer...',
-        references: 'References / Library',
-        refUpload: 'Upload Core References (PDF)',
-        imgUpload: 'Upload Structure/Image (Optional)',
-        refDoi: 'Enter DOIs (One per line)',
-        refHint: 'AI will generate the rationale based on these specific documents and cite them as [1], [2].',
-        fileLimit: 'Max 10 PDFs',
+        title: 'Rationale Generation',
+        references: 'References',
+        refUpload: 'Upload PDFs',
+        fileLimit: 'files',
+        imgUpload: 'Upload Image',
+        refDoi: 'Enter DOIs (one per line)',
         modeLabel: 'Generation Mode',
-        modes: {
-          full: 'Full Outline',
-          status: 'Research Status',
-          significance: 'Scientific Significance'
-        }
+        modes: { full: 'Full Rationale', status: 'Research Status', significance: 'Significance' }
       },
       polish: {
-        title: 'Grant Proposal Polishing',
-        section: 'Section Type',
+        title: 'Proposal Polish',
+        section: 'Section',
+        sections: { significance: 'Significance', innovation: 'Innovation', feasibility: 'Feasibility' },
         content: 'Content',
-        btn: 'Polish Tone',
-        sections: {
-          abstract: 'Abstract',
-          significance: 'Scientific Significance',
-          innovation: 'Innovation Points',
-          plan: 'Research Plan',
-          feasibility: 'Feasibility Analysis'
-        },
-        placeholder: 'Paste your draft text here...'
+        placeholder: 'Paste text here...'
       },
       check: {
-        title: 'Format & Logic Review',
-        upload: 'Upload Proposal (PDF/Text)',
-        btn: 'Start Review',
-        issues: 'Detected Issues',
-        suggestions: 'Suggestions',
-        score: 'Compliance Score',
-        dash: {
-            hard: 'Hard Errors',
-            logic: 'Logic Check',
-            format: 'Format Check',
-            anon: 'Anonymity Check'
-        }
+        title: 'Format Check',
+        upload: 'Upload Proposal',
+        btn: 'Check Format',
+        dash: { hard: 'Hard Rules', logic: 'Logic Flow' }
       },
       review: {
-        title: 'Grant AI Expert Review',
+        title: 'Pre-Review',
         roleLabel: 'Reviewer Role',
-        frameworkLabel: 'Analysis Framework / Focus',
-        frameworkPlaceholder: 'e.g. Focus on innovation and feasibility...',
+        frameworkLabel: 'Review Framework',
+        frameworkPlaceholder: 'Enter review criteria...',
         upload: 'Upload Proposal',
-        startBtn: 'Start AI Review',
+        startBtn: 'Start Review',
         reportTitle: 'Review Report',
-        downloadPdf: 'Download PDF',
+        downloadPdf: 'Download Report',
         verdict: 'Verdict'
       }
     },
-    // ... existing conference translations ...
-    conference: { 
-      title: 'Call for Papers Calendar',
-      subtitle: 'Track upcoming academic deadlines for conferences (e.g. CVPR, AAAI) and journal special issues.',
-      topicLabel: 'Research Area / Acronym',
-      rankLabel: 'Rank',
-      searchBtn: 'Find Deadlines',
+    conference: {
+      title: 'Conference Finder',
+      subtitle: 'Find relevant conferences.',
+      topicLabel: 'Topic',
+      searchBtn: 'Search',
       searching: 'Searching...',
+      rankLabel: 'Rank',
+      filters: {
+        type: 'Type',
+        typeOpts: { all: 'All', conf: 'Conference', journal: 'Journal' },
+        status: 'Status',
+        statusOpts: { all: 'All', upcoming: 'Upcoming', passed: 'Passed', tba: 'TBA' },
+        metrics: 'Metrics (H5)',
+        h5Opts: { all: 'All', gt20: '> 20', gt50: '> 50', gt100: '> 100' },
+        location: 'Location',
+        locationOpts: { all: 'All', asia: 'Asia', europe: 'Europe', na: 'North America', online: 'Online' }
+      },
       conferences: 'Conferences',
-      journals: 'Special Issues',
-      deadline: 'Deadline',
-      location: 'Location',
+      journals: 'Journals',
       website: 'Website',
       daysLeft: 'days left',
-      sort: { label: 'Sort', deadline: 'Urgency', rank: 'Rank', h5: 'Impact (H5)' },
-      filters: {
-          type: 'Type',
-          typeOpts: { all: 'All', conf: 'Conference', journal: 'Journal' },
-          status: 'Status',
-          statusOpts: { all: 'All', upcoming: 'Upcoming', passed: 'Passed', tba: 'TBA' },
-          location: 'Region',
-          locationOpts: { all: 'All Regions', asia: 'Asia', europe: 'Europe', na: 'N. America', online: 'Online' },
-          metrics: 'H5 Index',
-          h5Opts: { all: 'All', gt20: '> 20', gt50: '> 50', gt100: '> 100' },
-          partition: 'JCR Partition'
+      sort: {
+        deadline: 'Deadline',
+        rank: 'Rank',
+        h5: 'H5 Index'
       }
     },
-    // ... existing aiDetector translations ...
     aiDetector: {
-      title: 'AI Detection & Humanizer',
-      subtitle: 'Detect AI-generated text and rewrite it to lower AI probability scores.',
-      inputPlaceholder: 'Paste text here (min 100 words)...',
-      upload: 'Upload File',
-      checkBtn: 'Check AI Score',
-      humanizeBtn: 'Humanize / Reduce AI',
-      score: 'AI Probability Score',
-      analysis: 'Analysis Report',
-      highlights: 'High Risk Sentences',
-      original: 'Original',
-      humanized: 'Humanized',
-      detecting: 'Analyzing...',
-      humanizing: 'Rewriting...',
-      copy: 'Copy',
-      files: 'Supported: PDF, DOCX, TXT'
+      title: 'AI Detector',
+      subtitle: 'Detect AI-generated content.',
+      checkBtn: 'Check Text',
+      humanizeBtn: 'Humanize',
+      highlights: 'Highlights',
+      humanized: 'Humanized Text',
+      copy: 'Copy'
     },
-    // ... existing discussion translations ...
     discussion: {
       title: 'Research Discussion',
-      subtitle: 'Debate your research topic with diverse AI personas to find innovation and feasibility gaps.',
-      placeholder: 'Describe your research topic or hypothesis...',
+      subtitle: 'Simulate discussions with multiple personas.',
+      placeholder: 'Enter discussion topic...',
       btn: 'Start Discussion',
-      analyzing: 'Analyzing Topic...',
-      participantsHeader: 'PANEL PARTICIPANTS',
+      participantsHeader: 'Participants',
       addRole: 'Add Role',
+      scorecard: {
+        title: 'Innovation Scorecard',
+        theory: 'Theory',
+        method: 'Method',
+        app: 'Application'
+      },
+      feasibility: {
+        title: 'Feasibility',
+        data: 'Data',
+        tech: 'Technology',
+        ethics: 'Ethics'
+      },
       personas: {
         reviewer: 'Reviewer',
         interdisciplinary: 'Interdisciplinary',
         mentor: 'Mentor'
-      },
-      scorecard: {
-        title: 'Innovation Scorecard',
-        theory: 'Theory',
-        method: 'Methodology',
-        app: 'Application'
-      },
-      feasibility: {
-        title: 'Feasibility Check',
-        data: 'Data',
-        tech: 'Technical',
-        ethics: 'Ethics/IRB'
       }
     },
-    // New Title Prism Translations
     titlePrism: {
       title: 'Title Prism',
       subtitle: 'Optimize your research title with multi-perspective AI feedback.',
@@ -525,7 +477,6 @@ export const TRANSLATIONS = {
       analyzing: 'Analyzing...',
       copy: 'Copy'
     },
-    // Flowchart Translations
     flowchart: {
       title: 'AI Flowchart',
       subtitle: 'Convert text descriptions or images into editable flowcharts.',
@@ -538,6 +489,46 @@ export const TRANSLATIONS = {
       download: 'Download',
       chartType: 'Chart Type',
       types: { flowchart: 'Flowchart', sequence: 'Sequence Diagram', gantt: 'Gantt Chart', class: 'Class Diagram' }
+    },
+    aiWorkflow: {
+      title: 'Research Workflow',
+      subtitle: 'From broad direction to concrete framework in 3 steps.',
+      steps: {
+        1: 'Direction',
+        2: 'Problems',
+        3: 'Refinement',
+        4: 'Framework'
+      },
+      step1: {
+        label: 'Research Direction',
+        placeholder: 'e.g. Generative AI in Education, Sustainable Energy Storage...',
+        btn: 'Explore Problems'
+      },
+      step2: {
+        title: 'Select a Core Problem',
+        subtitle: 'AI identified these potential research gaps.',
+        difficulty: 'Difficulty'
+      },
+      step3: {
+        title: 'Choose an Angle',
+        subtitle: 'How do you want to approach this problem?',
+        rationale: 'Why this angle?'
+      },
+      step4: {
+        title: 'Research Framework',
+        logic: 'Logical Framework',
+        method: 'Methodology',
+        data: 'Data Sources',
+        innovation: 'Innovation Points',
+        export: 'Export Framework'
+      },
+      back: 'Back',
+      restart: 'Start Over',
+      loading: {
+        problems: 'Analyzing field...',
+        angles: 'Brainstorming angles...',
+        framework: 'Designing framework...'
+      }
     }
   },
   ZH: {
@@ -565,507 +556,459 @@ export const TRANSLATIONS = {
       aiDetector: 'AI率检测',
       discussion: '科研讨论',
       titlePrism: '标题精炼',
-      flowchart: 'AI 流程图'
+      flowchart: 'AI 流程图',
+      aiWorkflow: 'AI 工作流'
     },
     groups: {
-      discovery: '发现与追踪',
-      experiment: '实验与分析',
-      writing: '写作与绘图',
-      publish: '投稿与发表'
+      discovery: '发现与选题',
+      planning: '规划与设计',
+      execution: '实验与分析',
+      writing: '写作与发表',
+      utility: '实用工具'
     },
-    // ... existing search translations ...
     search: {
-      title: '学术文献搜索',
-      subtitle: '一站式检索多个学术数据库，获取最新文献。',
-      source: { online: '在线数据库', local: '本地文件' },
-      placeholder: '搜索关键词、标题或DOI...',
+      title: '学术搜索',
+      subtitle: '搜索论文、生成综述、分析趋势。',
+      placeholder: '搜索论文、主题或关键词...',
       btn: '搜索',
-      filters: { time: '时间范围', partition: '分区筛选', resultCount: '结果数量', dateAdded: '入库时间' },
-      sort: { label: '排序', relevance: '相关性', date: '发表日期', if: '影响因子', added: '加入时间' },
       results: '搜索结果',
       generateBtn: '生成综述',
-      batchInterpret: '批量解读',
-      upload: { btn: '上传文件', tip: '支持 PDF, Word, TXT', drag: '拖拽文件到此处' },
-      interpret: '智能解读',
-      download: '下载',
-      interpretationResult: 'AI 解读结果'
+      filters: {
+        time: '时间范围',
+        type: '论文类型',
+      },
+      sort: {
+        label: '排序',
+        relevance: '相关性',
+        date: '日期',
+        if: '影响因子',
+        added: '添加日期'
+      },
+      source: {
+        online: '在线搜索',
+        local: '本地文件'
+      },
+      upload: {
+        btn: '点击上传论文',
+        tip: '支持 PDF, DOCX, TXT'
+      },
+      interpret: 'AI 解读'
     },
-    // ... existing trends translations ...
     trends: {
       title: '趋势分析',
-      subtitle: '分析研究热点、技术趋势与未来方向。',
+      subtitle: '分析研究趋势并识别新兴主题。',
       placeholder: '输入研究领域...',
-      view: { researcher: 'Researcher View', institution: 'Institution View' },
-      timeRange: 'TIME RANGE',
       analyze: '分析趋势',
+      timeRange: '时间范围',
       emerging: '新兴技术',
       yoy: '同比增长',
       hotspots: '研究热点',
-      methodologies: '热门方法'
+      methodologies: '热门方法',
+      view: {
+        researcher: '研究者视图',
+        institution: '机构视图'
+      }
     },
-    // ... existing peer translations ...
-    peer: {
-      title: '模拟同行评审',
-      subtitle: '在投稿前获取AI模拟的同行评审意见。',
-      uploadTitle: '上传稿件',
-      uploadDesc: '上传 PDF 或 Word 文档',
-      targetLabel: '目标期刊/会议',
-      journalLabel: '期刊名称',
-      contentLabel: '或粘贴文本',
-      startBtn: '开始评审',
-      pending: '等待输入',
-      pendingDesc: '上传文件或粘贴内容以开始模拟评审。',
-      rebuttalBtn: '生成回复信',
-      coverLetterBtn: '生成投稿信'
-    },
-    // ... existing review translations ...
-    review: {
-      steps: { 1: '范围', 2: '筛选', 3: '配置', 4: '结果' },
-      scopeTitle: '定义综述范围',
-      topicLabel: '综述主题',
-      focusLabel: '综述侧重点 (AI 指令)',
-      dbLabel: '数据库',
-      timeLabel: '时间范围',
-      searchBtn: '搜索文献',
-      selectTitle: '选择文献',
-      configTitle: '生成配置',
-      wordCount: '字数要求',
-      langLabel: '输出语言',
-      genBtn: '生成综述',
-      complete: '生成完成'
-    },
-    // ... existing track translations ...
-    track: {
-      title: '引文追踪',
-      subtitle: '追踪引文网络，发现研究空白。',
-      tabSearch: '搜索论文',
-      tabUpload: '上传论文',
-      placeholder: '输入论文标题...',
-      btn: '构建网络',
-      dragDrop: '拖拽 PDF 到此处'
-    },
-    // ... existing polish translations ...
-    polish: {
-      title: '润色助手',
-      subtitle: '提升学术写作质量与地道性。',
-      tabText: '文本输入',
-      tabFile: '文件上传',
-      placeholder: '粘贴需要润色的文本...',
-      btn: '开始润色',
-      config: {
-        mode: '模式',
-        tone: '语气',
-        field: '领域',
-        glossary: '术语表 (可选)',
-        modes: { EnToEn: '英文润色', CnToEn: '中译英', EnToCn: '英译中' },
-        tones: { Academic: '学术严谨', Native: '地道表达', Concise: '简洁明了', Paraphrase: '改写降重' },
-        fields: { General: '通用', CS: '计算机科学', Medicine: '医学', Engineering: '工程学', SocialSciences: '社会科学', Economics: '经济学' }
-      },
-      control: {
-        version: '版本',
-        cleanView: '纯净版',
-        diffView: '修订版',
-        chatPlaceholder: '对结果进行微调...',
-        accept: '接受',
-        reject: '拒绝'
-      },
-      revisionNotes: '修订说明'
-    },
-    // ... existing advisor translations ...
-    advisor: {
-      title: '投稿选刊顾问',
-      subtitle: '分析稿件质量，推荐合适期刊。',
-      paperTitle: '论文标题',
-      paperAbstract: '摘要',
-      journalTitle: '目标期刊',
-      focusLabel: '评审侧重点 (可选)',
-      focusPlaceholder: '例如：重点评估统计方法、创新性或范围匹配...',
-      abstractPlaceholder: '粘贴摘要...',
-      btn: '分析匹配度',
-      history: '历史记录',
-      radar: { topic: '选题热度', method: '方法创新', novelty: '新颖性', scope: '范围匹配', style: '语言风格' },
-      apply: '采纳',
-      risks: '风险评估',
-      alternatives: '推荐期刊'
-    },
-    // ... existing ppt translations ...
-    ppt: {
-      title: 'PPT 生成器',
-      subtitle: '从论文自动生成演示文稿。',
-      uploadLabel: '上传论文',
-      nameLabel: '汇报人',
-      schoolLabel: '单位',
-      densityLabel: '内容密度',
-      densityLow: '精简',
-      densityHigh: '详细',
-      pagesLabel: '页数',
-      styleBtn: '分析风格',
-      steps: { 2: '配置', 3: '风格' },
-      analyzing: '正在分析风格...',
-      genBtn: '生成 PPT',
-      generating: '正在生成 PPT...'
-    },
-    // ... existing idea translations ...
-    idea: {
-      title: '选题向导',
-      subtitle: '激发研究灵感，生成选题方案。',
-      placeholder: '输入你的研究领域或兴趣点...',
-      focus: { label: '侧重点', general: '通用', data: '数据驱动', policy: '政策导向', theory: '理论研究' },
-      btn: '生成选题',
-      generating: '正在生成灵感...',
-      directions: '研究方向',
-      selectDirection: '深入分析',
-      methodology: '推荐方法',
-      dataSources: '数据来源',
-      titles: '推荐题目',
-      corePapers: '核心参考文献',
-      followUpPlaceholder: '对该方向提问...',
-      followUpBtn: '追问',
-      logicFlow: '逻辑链路',
-      deepDive: '深度解析',
-      keywords: '关键词',
-      journals: '推荐期刊',
-      exportProposal: '结果下载'
-    },
-    // ... existing opening translations ...
     opening: {
       title: '开题评审',
-      subtitle: '对开题报告进行预评估与优化。',
-      uploadDesc: '上传 PDF 文件',
-      targetLabel: '目标',
-      targetPlaceholder: '期刊 / 会议 / 本硕博毕业论文',
-      focusLabel: '评审侧重点 (可选)',
-      focusPlaceholder: '例如：重点关注创新点与方法论...',
-      btn: '开始评审',
-      personaLabel: 'Reviewer Persona',
-      personas: { gentle: 'Gentle Mentor', critical: 'Critical Reviewer' }
+      subtitle: '获取开题报告的反馈意见。',
+      uploadDesc: '上传您的开题报告 PDF 开始。',
+      targetLabel: '目标期刊/会议',
+      targetPlaceholder: '例如：CVPR, Nature',
+      personaLabel: '评审风格',
+      personas: {
+        gentle: '温和',
+        critical: '严厉'
+      },
+      focusLabel: '评审重点',
+      focusPlaceholder: '例如：方法论、创新性...',
+      btn: '开始评审'
     },
-    // ... existing data translations ...
+    idea: {
+      title: '选题向导',
+      subtitle: '头脑风暴并细化研究想法。',
+      placeholder: '描述您的研究兴趣...',
+      focus: {
+        label: '侧重',
+        general: '通用',
+        data: '数据驱动',
+        policy: '政策导向',
+        theory: '理论深度'
+      },
+      btn: '生成想法',
+      directions: '研究方向',
+      selectDirection: '选择',
+      methodology: '方法论',
+      dataSources: '数据来源',
+      titles: '推荐标题',
+      corePapers: '核心文献',
+      followUpPlaceholder: '追问...',
+      followUpBtn: '深度分析',
+      logicFlow: '逻辑流',
+      deepDive: '深度分析',
+      keywords: '关键词',
+      journals: '推荐期刊',
+      exportProposal: '导出提案'
+    },
+    review: {
+      steps: {
+        1: '范围',
+        2: '选择',
+        3: '配置',
+        4: '结果'
+      },
+      scopeTitle: '定义综述范围',
+      topicLabel: '研究主题',
+      focusLabel: '综述重点',
+      dbLabel: '数据库',
+      timeLabel: '时间范围',
+      searchBtn: '搜索论文',
+      selectTitle: '选择论文',
+      configTitle: '配置',
+      wordCount: '字数',
+      langLabel: '输出语言',
+      genBtn: '生成综述',
+      complete: '综述生成完成'
+    },
+    ppt: {
+      title: 'PPT 生成器',
+      subtitle: '从您的论文生成演示幻灯片。',
+      uploadLabel: '上传论文',
+      nameLabel: '演讲者姓名',
+      schoolLabel: '单位/学校',
+      densityLabel: '内容密度',
+      densityLow: '简洁',
+      densityHigh: '详细',
+      pagesLabel: '幻灯片页数',
+      styleBtn: '分析风格',
+      analyzing: '正在分析论文风格...',
+      steps: {
+        2: '配置',
+        3: '风格选择'
+      },
+      genBtn: '生成 PPT',
+      generating: '正在生成幻灯片...',
+      download: '下载 PPT'
+    },
+    track: {
+      title: '文献追踪',
+      subtitle: '追踪引用并分析研究空白。',
+      tabSearch: '搜索主题',
+      tabUpload: '上传 PDF',
+      placeholder: '输入主题或论文标题...',
+      btn: '追踪网络',
+      dragDrop: '拖拽 PDF 到此处'
+    },
+    advisor: {
+      title: '投稿顾问',
+      subtitle: '获取关于论文投稿的建议。',
+      paperTitle: '论文标题',
+      paperAbstract: '摘要',
+      abstractPlaceholder: '在此粘贴摘要...',
+      journalTitle: '目标期刊',
+      focusLabel: '评审重点',
+      focusPlaceholder: '例如：方法论、创新性...',
+      btn: '分析匹配度',
+      history: '历史记录',
+      risks: '风险评估',
+      alternatives: '替代期刊',
+      apply: '应用'
+    },
+    peer: {
+      title: '同行评审模拟',
+      subtitle: '模拟论文的同行评审过程。',
+      uploadTitle: '上传手稿',
+      uploadDesc: '支持 PDF, DOCX',
+      targetLabel: '目标期刊',
+      journalLabel: '期刊名称',
+      startBtn: '开始模拟',
+      pending: '等待文件',
+      pendingDesc: '上传文件以开始评审流程。',
+      rebuttalBtn: '起草反驳信',
+      coverLetterBtn: '起草投稿信'
+    },
+    polish: {
+      title: '润色助手',
+      subtitle: '提升您的学术写作水平。',
+      tabText: '文本输入',
+      tabFile: '文件上传',
+      placeholder: '粘贴要润色的文本...',
+      config: {
+        mode: '模式',
+        modes: { EnToEn: '英文润色', CnToEn: '中译英', EnToCn: '英译中' },
+        tone: '语气',
+        tones: { Academic: '学术', Native: '地道', Concise: '简洁', Paraphrase: '改写' },
+        field: '领域',
+        fields: { General: '通用', CS: '计算机', Medicine: '医学', Engineering: '工程', SocialSciences: '社科', Economics: '经济' },
+        glossary: '术语表 (可选)'
+      },
+      btn: '润色',
+      revisionNotes: '修改说明',
+      control: {
+        cleanView: '纯净版',
+        diffView: '对比版',
+        version: '版本',
+        chatPlaceholder: '微调此结果...',
+        accept: '接受',
+        reject: '拒绝'
+      }
+    },
+    experimentDesign: {
+      title: '实验设计',
+      subtitle: '为您的研究设计严谨的实验。',
+      hypothesisLabel: '研究假设',
+      hypothesisPlaceholder: '例如：药物 X 降低血压...',
+      ivLabel: '自变量',
+      dvLabel: '因变量',
+      fieldLabel: '领域',
+      methodologyLabel: '方法论',
+      structureLabel: '结构',
+      fields: { Psychology: '心理学', Medicine: '医学', Biology: '生物学', CS: '计算机' },
+      methodologies: { Auto: '自动检测', RCT: '随机对照试验', Survey: '调查', Lab: '实验室实验' },
+      structures: { Between: '组间设计', Within: '组内设计', Mixed: '混合设计' },
+      advancedSettings: '高级设置',
+      alpha: 'Alpha',
+      power: 'Power',
+      effectSize: '效应量',
+      effectSizes: { small: '小', medium: '中', large: '大', custom: '自定义' },
+      optimizeBtn: '优化',
+      optimizing: '正在优化...',
+      btn: '生成设计',
+      generating: '正在设计实验...',
+      sampleSize: '样本量',
+      variables: '变量',
+      analysis: '分析计划',
+      flow: '实验流程',
+      templates: {
+        title: '快速模板',
+        subtitle: '从标准设计开始',
+        rct: 'RCT',
+        rctDesc: '随机对照试验',
+        ab: 'A/B 测试',
+        abDesc: '简单对比',
+        memory: '记忆任务',
+        memoryDesc: '认知心理学'
+      }
+    },
     data: {
-      title: '智能数据分析',
-      subtitle: '上传数据，自动获取洞察与模型推荐。',
-      upload: '上传数据',
-      downloadTemplate: '下载模板',
-      setupTitle: '数据设置',
-      useHeader: '首行为表头',
-      targetVar: '目标变量',
-      noTarget: '无 (无监督)',
-      cleaning: '清洗策略',
-      cleaningStrategies: { auto: '自动', drop: '删除缺失', mean: '均值填充', zero: '零值填充' },
-      dataScope: '分析范围',
-      rows50: '随机采样 50 行 (快速)',
-      rowsAll: '全部数据 (完整)',
-      limitWarning: '警告：分析全部数据可能会消耗大量 API 配额。',
-      fastModeTip: '✅ 正在使用快速模式，消耗极少 Token。',
-      colName: '列名',
-      colType: '类型',
-      limitBanner: '预览仅显示前 20 行。',
-      reupload: '重传',
-      quickAnalysisBtn: '一键分析',
-      progress: { loading: '加载中', cleaning: '数据清洗', stats: '统计分析', ai: 'AI 建模' },
-      limitNotice: '为保证速度，将使用采样数据进行分析。',
-      exportReport: '导出报告',
-      chatData: '对话数据',
-      resultDisclaimer: 'AI 分析基于上传数据的统计摘要生成。',
-      summary: '数据概览',
-      featureImportance: '特征重要性',
-      correlations: '相关性分析',
-      models: '推荐模型',
-      selectAll: '全选',
-      deselectAll: '反选'
+      title: '数据分析',
+      subtitle: '用 AI 分析您的数据。',
+      upload: '上传数据文件'
     },
-    // ... existing code translations ...
+    chart: {
+      title: '图表提取',
+      subtitle: '从图表图像中提取数据。',
+      upload: '上传图片',
+      extracting: '正在提取...'
+    },
     code: {
       title: '代码助手',
       newSession: '新会话',
       history: '历史记录',
-      inputPlaceholder: { generate: '描述你想实现的功能...', debug: '粘贴需要调试的代码...', explain: '粘贴需要解释的代码...' },
+      inputPlaceholder: {
+        generate: '描述您需要的代码...',
+        debug: '粘贴要调试的代码...',
+        explain: '粘贴要解释的代码...'
+      },
       upload: '上传代码文件',
       stopBtn: '停止',
       btn: '运行',
-      shortcut: 'Ctrl+Enter 运行',
-      followUpPlaceholder: '继续提问...'
+      shortcut: 'Ctrl + Enter 运行',
+      followUpPlaceholder: '追问...'
     },
-    // ... existing experimentDesign translations ...
-    experimentDesign: {
-      title: '实验设计助手',
-      subtitle: '辅助设计严谨的科学实验。',
-      hypothesisLabel: '研究假设',
-      hypothesisPlaceholder: '例如：剥夺睡眠会影响认知表现。',
-      optimizeBtn: '优化',
-      optimizing: '优化中...',
-      ivLabel: '自变量 (IV)',
-      dvLabel: '因变量 (DV)',
-      fieldLabel: '所属领域',
-      fields: { Psychology: '心理学', Medicine: '医学', UX: '用户体验', Biology: '生物学' },
-      methodologyLabel: '方法论',
-      methodologies: { Auto: '智能推荐', RCT: '随机对照试验', Survey: '问卷调查', Lab: '实验室实验' },
-      structureLabel: '实验结构',
-      structures: { Between: '被试间设计', Within: '被试内设计', Mixed: '混合设计' },
-      advancedSettings: '高级设置',
-      alpha: '显著性水平 (α)',
-      power: '统计功效 (Power)',
-      effectSize: '效应量',
-      effectSizes: { small: '小', medium: '中', large: '大', custom: '自定义' },
-      btn: '生成设计方案',
-      sampleSize: '样本量计算',
-      variables: '变量定义',
-      analysis: '分析计划',
-      flow: '实验流程',
-      generating: '正在生成方案...',
-      templates: {
-        title: '快速模板',
-        subtitle: '从常用范式开始',
-        rct: 'RCT (医学)',
-        rctDesc: '随机对照试验',
-        ab: 'A/B 测试 (UX)',
-        abDesc: '用户体验测试',
-        memory: '记忆实验 (心理)',
-        memoryDesc: '认知心理学'
-      }
-    },
-    // ... existing pdfChat translations ...
     pdfChat: {
       title: '文献精读',
-      upload: '上传 PDF',
-      dragDrop: '拖拽 PDF 到此处',
-      welcome: '欢迎使用文献精读',
-      placeholder: '关于文档提问...'
+      subtitle: '与您的 PDF 文档对话。',
+      uploadDesc: '上传 PDF 开始对话。',
+      chatTitle: '对话',
+      chatWelcome: '关于文档随便问我。',
+      chatPlaceholder: '输入您的问题...'
     },
-    // ... existing knowledge translations ...
     knowledge: {
       title: '知识图谱',
-      subtitle: '可视化文献关联与知识结构。',
-      connect: '建立连接',
-      connecting: '连接中...',
-      suggestions: '智能推荐',
+      subtitle: '可视化研究关联。',
+      connect: '连接',
+      connecting: '正在连接...',
+      suggestions: '建议',
       gettingSuggestions: '思考中...',
       imageNote: '图片笔记',
       analyzingImage: '分析中...',
-      empty: '添加论文或笔记以可视化连接。',
-      acceptNode: '添加到图谱',
+      empty: '添加节点开始。',
       chatTitle: '图谱对话',
-      chatWelcome: '针对图谱中的文献进行提问。',
-      chatPlaceholder: '输入问题...'
+      chatWelcome: '询问关于连接的问题...',
+      chatPlaceholder: '输入您的问题...',
+      acceptNode: '添加到图谱'
     },
-    // ... existing figure translations ...
     figure: {
       title: '科研绘图',
-      subtitle: '生成或优化高质量科研配图。',
-      mode: { generate: '生成模式', polish: '精修模型' },
-      polishTasks: { general: '通用优化', sketchTo3D: '草图转3D', chartBeautify: '图表美化' },
+      subtitle: '生成科学配图。',
+      mode: {
+        generate: '生成',
+        polish: '润色'
+      },
+      polishTasks: {
+        general: '通用',
+        sketchTo3D: '草图转3D',
+        chartBeautify: '图表美化'
+      },
       input: {
         referenceLabel: '参考图 (可选)',
-        sourceLabel: '原图',
-        promptLabel: '描述/提示词',
-        promptPlaceholder: '描述图片内容...',
+        sourceLabel: '源图片',
+        promptLabel: '描述 / 提示词',
+        promptPlaceholder: '描述图片...',
         backgroundOnly: '仅背景',
-        backgroundOnlyTip: '仅生成背景结构。',
+        backgroundOnlyTip: '仅生成背景。',
         sizeLabel: '尺寸',
         sizes: { single: '单栏', double: '双栏' },
         dpiLabel: 'DPI'
       },
       template: {
-        title: '提示词模板',
+        title: '模板',
         subject: '主体',
-        subjectPh: '例如：神经网络',
-        action: '动作/状态',
-        actionPh: '例如：处理数据',
-        environment: '环境/背景',
-        environmentPh: '例如：抽象数字空间',
+        subjectPh: '例如：细胞',
+        action: '动作',
+        actionPh: '例如：分裂',
+        environment: '环境',
+        environmentPh: '例如：培养皿',
         perspective: '视角',
-        perspectivePh: '例如：等轴侧视图',
+        perspectivePh: '例如：俯视',
         apply: '应用模板'
       },
-      chartTypes: { Mechanism: '机理图', Flowchart: '流程图', Bar: '柱状图', Line: '折线图', Scatter: '散点图' },
-      colorPalettes: { Default: '默认', Nature: 'Nature 风格', Science: 'Science 风格', Grayscale: '黑白灰' },
+      chartTypes: { Mechanism: '机理图', Flowchart: '流程图', Data: '数据图' },
+      colorPalettes: { Default: '默认', Nature: 'Nature 风格', Science: 'Science 风格', Grayscale: '灰度' },
       btn: '生成图片',
+      generating: '正在生成...',
       result: '结果',
-      tools: { addLabel: '添加标注', saveWithLabels: '保存带标注图' },
+      tools: {
+        addLabel: '添加标签',
+        saveWithLabels: '保存带标签图'
+      },
       download: '下载',
-      generating: '绘图中...',
-      history: '历史记录',
-      refinePlaceholder: '输入修改指令...'
+      refinePlaceholder: '微调此图...',
+      history: '历史记录'
     },
-    // ... existing chart translations ...
-    chart: {
-      title: '图表提取',
-      subtitle: '从图片中提取数据并还原图表。',
-      upload: '上传图表',
-      downloadTemplate: '下载模板',
-      extracting: '提取中...',
-      resultTitle: '提取结果',
-      exportReport: '导出报告',
-      chatData: '对话数据',
-      summary: '摘要',
-      featureImportance: '特征重要性',
-      correlations: '相关性',
-      models: '模型推荐',
-      daysLeft: '天剩余',
-      website: '官网',
-      conferences: '会议',
-      journals: '期刊'
-    },
-    // ... existing grant translations ...
     grant: {
-      title: '基金项目申报助手',
-      subtitle: '专为 NSFC 等基金申请打造：立项依据生成、标书润色与形式审查。',
+      title: '基金申请',
+      subtitle: '基金提案辅助。',
       tabs: {
         rationale: '立项依据',
-        polish: '标书润色',
-        check: '形式审查',
-        review: '专家评审'
+        polish: '润色',
+        check: '格式检查',
+        review: '预评审'
       },
       rationale: {
-        title: '立项依据',
-        topic: '项目主题',
-        keywords: '核心关键词',
-        btn: '生成立项依据',
-        placeholder: '例如：肺癌靶向药物耐药的分子机制...',
-        references: '参考文献/文献库',
-        refUpload: '上传核心文献 (PDF)',
-        imgUpload: '上传架构图 (可选)',
+        title: '立项依据生成',
+        references: '参考文献',
+        refUpload: '上传 PDF',
+        fileLimit: '个文件',
+        imgUpload: '上传图片',
         refDoi: '输入 DOI (每行一个)',
-        refHint: 'AI 将基于这些文献生成综述并自动标注引用 [1]。',
-        fileLimit: '最多 10 篇 PDF',
         modeLabel: '生成模式',
-        modes: {
-          full: '全篇大纲',
-          status: '研究现状综述',
-          significance: '科学意义'
-        }
+        modes: { full: '完整依据', status: '研究现状', significance: '科学意义' }
       },
       polish: {
-        title: '标书语言润色',
-        section: '所属部分',
-        content: '文本内容',
-        btn: '优化语气与逻辑',
-        sections: {
-          abstract: '摘要',
-          significance: '科学意义',
-          innovation: '创新点',
-          plan: '研究方案',
-          feasibility: '可行性分析'
-        },
-        placeholder: '在此粘贴您的草稿文本...'
+        title: '提案润色',
+        section: '部分',
+        sections: { significance: '科学意义', innovation: '创新点', feasibility: '可行性' },
+        content: '内容',
+        placeholder: '在此粘贴文本...'
       },
       check: {
-        title: '形式与逻辑审查',
-        upload: '上传标书 (PDF/文本)',
-        btn: '开始审查',
-        issues: '检测到的问题',
-        suggestions: '修改建议',
-        score: '合规评分',
-        dash: {
-            hard: '硬伤检查',
-            logic: '逻辑检查',
-            format: '格式检查',
-            anon: '匿名检查'
-        }
+        title: '格式检查',
+        upload: '上传提案',
+        btn: '检查格式',
+        dash: { hard: '硬性规定', logic: '逻辑流' }
       },
       review: {
-        title: '基金 AI 专家评审',
-        roleLabel: '评审人角色',
-        frameworkLabel: '评审框架 / 侧重点',
-        frameworkPlaceholder: '例如：重点关注创新性和研究方案可行性...',
-        upload: '上传申请书',
-        startBtn: '开始 AI 评审',
+        title: '预评审',
+        roleLabel: '评审角色',
+        frameworkLabel: '评审框架',
+        frameworkPlaceholder: '输入评审标准...',
+        upload: '上传提案',
+        startBtn: '开始评审',
         reportTitle: '评审报告',
-        downloadPdf: '下载 PDF',
-        verdict: '最终结论'
+        downloadPdf: '下载报告',
+        verdict: '结论'
       }
     },
-    // ... existing conference translations ...
-    conference: { 
-      title: '学术征稿日历',
-      subtitle: '追踪各类学术会议（如 CVPR, AAAI）和期刊特刊的截稿日期。',
-      topicLabel: '研究方向 / 缩写 (如 ICLR)',
-      rankLabel: '等级',
-      searchBtn: '查找截稿',
+    conference: {
+      title: '学术征稿',
+      subtitle: '查找相关会议。',
+      topicLabel: '主题',
+      searchBtn: '搜索',
       searching: '搜索中...',
-      conferences: '会议征稿',
-      journals: '期刊特刊 (Special Issues)',
-      deadline: '截稿日期',
-      location: '地点',
-      website: '官网',
-      daysLeft: '天后截稿',
-      sort: { label: '排序', deadline: '紧急程度', rank: '等级高低', h5: '影响力(H5)' },
+      rankLabel: '等级',
       filters: {
-          type: '类型',
-          typeOpts: { all: '全部', conf: '会议', journal: '期刊特刊' },
-          status: '截稿状态',
-          statusOpts: { all: '全部', upcoming: '未截稿', passed: '已截稿', tba: '待定/预计' },
-          location: '举办地区',
-          locationOpts: { all: '全球', asia: '亚洲', europe: '欧洲', na: '北美', online: '线上' },
-          metrics: 'H5 指数',
-          h5Opts: { all: '全部', gt20: '> 20', gt50: '> 50', gt100: '> 100' },
-          partition: 'JCR 分区'
+        type: '类型',
+        typeOpts: { all: '全部', conf: '会议', journal: '期刊' },
+        status: '状态',
+        statusOpts: { all: '全部', upcoming: '即将截止', passed: '已截止', tba: '待定' },
+        metrics: '指标 (H5)',
+        h5Opts: { all: '全部', gt20: '> 20', gt50: '> 50', gt100: '> 100' },
+        location: '地点',
+        locationOpts: { all: '全部', asia: '亚洲', europe: '欧洲', na: '北美', online: '线上' }
+      },
+      conferences: '会议',
+      journals: '期刊',
+      website: '网站',
+      daysLeft: '天剩余',
+      sort: {
+        deadline: '截止日期',
+        rank: '等级',
+        h5: 'H5 指数'
       }
     },
-    // ... existing aiDetector translations ...
     aiDetector: {
-      title: 'AI率检测与降重',
-      subtitle: '检测文本AI生成概率，并提供去AI化润色服务。',
-      inputPlaceholder: '粘贴文本 (最少100字)...',
-      upload: '上传文件',
-      checkBtn: '检测 AI 率',
-      humanizeBtn: '去 AI 化 / 降重',
-      score: 'AI 生成概率',
-      analysis: '分析报告',
-      highlights: '高风险句子',
-      original: '原文',
-      humanized: '降重后',
-      detecting: '正在检测...',
-      humanizing: '正在降重...',
-      copy: '复制',
-      files: '支持格式: PDF, DOCX, TXT'
-    },
-    // ... existing discussion translations ...
-    discussion: {
-      title: '科研课题讨论',
-      subtitle: '与AI专家角色进行辩论，全方位评估课题创新性与可行性。',
-      placeholder: '描述你的研究课题或假设...',
-      btn: '开始讨论',
-      analyzing: '正在分析课题...',
-      participantsHeader: 'PANEL PARTICIPANTS',
-      addRole: '+ Add Role',
-      personas: {
-        reviewer: 'Reviewer',
-        interdisciplinary: 'Interdisciplinary',
-        mentor: 'Mentor'
-      },
-      scorecard: {
-        title: '创新性评分卡',
-        theory: '理论贡献',
-        method: '方法论突破',
-        app: '应用场景'
-      },
-      feasibility: {
-        title: '可行性三维检查',
-        data: '数据可行性',
-        tech: '技术可行性',
-        ethics: '伦理/合规性'
-      }
-    },
-    // New Title Prism Translations
-    titlePrism: {
-      title: 'Title Prism',
-      subtitle: '您的科研标题优化专家 (Title Optimization Expert)',
-      inputSection: '输入与配置 (Input & Configuration)',
-      draftTitle: '原标题 (Draft)',
-      draftPlaceholder: '[ 输入您的草稿标题... ]',
-      abstract: '摘要/核心贡献 (Abstract/Key Contribution)',
-      abstractPlaceholder: '[ 粘贴摘要以帮助AI 理解上下文... ]',
-      target: '目标期刊/领域 (Target Journal/Field)',
-      targetPlaceholder: '[ 选择或输入期刊名 v ]',
-      optimizeBtn: '开始多维优化',
-      resultsSection: '智能分析与结果 (Smart Analysis & Results)',
-      councilTitle: '评审团诊断 (The Council)',
-      optionsTitle: '优化方案 (Refined Options)',
-      analyzing: '正在分析中...',
+      title: 'AI 率检测',
+      subtitle: '检测 AI 生成内容。',
+      checkBtn: '检测文本',
+      humanizeBtn: '人性化',
+      highlights: '高亮',
+      humanized: '人性化文本',
       copy: '复制'
     },
-    // Flowchart Translations
+    discussion: {
+      title: '科研讨论',
+      subtitle: '与多个角色模拟讨论。',
+      placeholder: '输入讨论主题...',
+      btn: '开始讨论',
+      participantsHeader: '参与者',
+      addRole: '添加角色',
+      scorecard: {
+        title: '创新评分卡',
+        theory: '理论',
+        method: '方法',
+        app: '应用'
+      },
+      feasibility: {
+        title: '可行性',
+        data: '数据',
+        tech: '技术',
+        ethics: '伦理'
+      },
+      personas: {
+        reviewer: '审稿人',
+        interdisciplinary: '跨学科专家',
+        mentor: '导师'
+      }
+    },
+    titlePrism: {
+      title: '标题精炼',
+      subtitle: '多视角 AI 反馈优化您的研究标题。',
+      inputSection: '输入与配置',
+      draftTitle: '标题草稿',
+      draftPlaceholder: '输入您的标题草稿...',
+      abstract: '摘要 / 核心贡献 (可选)',
+      abstractPlaceholder: '粘贴摘要以帮助 AI 理解上下文...',
+      target: '目标期刊 / 领域',
+      targetPlaceholder: '选择或输入期刊名称...',
+      optimizeBtn: '开始多维优化',
+      resultsSection: '智能分析与结果',
+      councilTitle: '专家组诊断',
+      optionsTitle: '精炼选项',
+      analyzing: '分析中...',
+      copy: '复制'
+    },
     flowchart: {
       title: 'AI 流程图',
       subtitle: '将文本描述或图片一键转换为可编辑的流程图。',
@@ -1078,6 +1021,46 @@ export const TRANSLATIONS = {
       download: '下载',
       chartType: '图表类型',
       types: { flowchart: '流程图', sequence: '时序图', gantt: '甘特图', class: '类图' }
+    },
+    aiWorkflow: {
+      title: 'AI 科研工作流',
+      subtitle: '从宏观方向到具体实施方案的三步引导。',
+      steps: {
+        1: '方向输入',
+        2: '问题探索',
+        3: '角度细化',
+        4: '框架生成'
+      },
+      step1: {
+        label: '研究大方向',
+        placeholder: '例如：生成式AI在教育中的应用、新型储能材料...',
+        btn: '探索研究问题'
+      },
+      step2: {
+        title: '选择核心问题',
+        subtitle: 'AI 为您挖掘了以下潜在研究方向。',
+        difficulty: '难度'
+      },
+      step3: {
+        title: '选择切入角度',
+        subtitle: '您想如何解决这个问题？',
+        rationale: '推荐理由'
+      },
+      step4: {
+        title: '研究框架方案',
+        logic: '逻辑框架',
+        method: '研究方法',
+        data: '数据来源',
+        innovation: '创新点',
+        export: '导出方案'
+      },
+      back: '返回上一步',
+      restart: '开始新流程',
+      loading: {
+        problems: '正在扫描研究领域...',
+        angles: '正在构思切入角度...',
+        framework: '正在构建研究框架...'
+      }
     }
   }
 };
