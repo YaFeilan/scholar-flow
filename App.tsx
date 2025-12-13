@@ -26,6 +26,7 @@ import TitlePrism from './components/TitlePrism';
 import FlowchartGenerator from './components/FlowchartGenerator';
 import VirtualAssistant from './components/VirtualAssistant';
 import AIWorkflow from './components/AIWorkflow';
+import ResearchTraining from './components/ResearchTraining';
 import { ViewState, Paper, Language } from './types';
 
 export default function App() {
@@ -142,6 +143,9 @@ export default function App() {
           )}
           {currentView === ViewState.AI_WORKFLOW && (
             <AIWorkflow language={language} />
+          )}
+          {currentView === ViewState.RESEARCH_TRAINING && (
+            <ResearchTraining language={language} />
           )}
           {currentView === ViewState.CHART_EXTRACTION && (
             <ChartExtraction 

@@ -52,6 +52,7 @@ export enum ViewState {
   TITLE_PRISM = 'TITLE_PRISM',
   FLOWCHART = 'FLOWCHART',
   AI_WORKFLOW = 'AI_WORKFLOW', // New
+  RESEARCH_TRAINING = 'RESEARCH_TRAINING', // New: Research Training
 }
 
 // Trend Types
@@ -545,4 +546,17 @@ export interface WorkflowFramework {
   methodology: string;
   dataSources: string;
   innovation: string;
+}
+
+// Research Training Types (New)
+export interface TrainingSession {
+  topic: string;
+  questions: { id: string; text: string }[];
+}
+
+export interface TrainingAnalysis {
+  score: number;
+  feedback: string;
+  weaknesses: string[];
+  suggestions: string[];
 }

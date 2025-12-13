@@ -5,7 +5,7 @@ import {
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, MessagesSquare, 
   Briefcase, BarChart2, Terminal, Beaker, Table2, Network, Gem, Image as ImageIcon, 
   Calendar, ShieldAlert, Workflow, Zap, Compass, Layers, PenLine, Wrench, Layout,
-  MessageSquare
+  MessageSquare, Dumbbell
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -29,6 +29,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
       icon: Compass,
       items: [
         { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={16} /> },
+        { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={16} /> },
         { id: ViewState.SEARCH, label: t.search, icon: <Search size={16} /> },
         { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={16} /> },
         { id: ViewState.TRACK, label: t.track, icon: <BookOpen size={16} /> },
@@ -98,19 +99,20 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
     <div className="flex flex-col bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm z-30 transition-colors">
       {/* Level 1: Main Categories */}
       <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 dark:border-slate-700">
-        <div className="flex items-center gap-8">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <Workflow className="text-white" size={20} />
-            </div>
-            <h1 className="text-xl font-serif font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent hidden md:block">
-              {TRANSLATIONS[language].appName}
-            </h1>
+        
+        {/* Left: Logo */}
+        <div className="flex items-center gap-3 w-[240px] flex-shrink-0">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
+            <Workflow className="text-white" size={20} />
           </div>
+          <h1 className="text-xl font-serif font-bold bg-gradient-to-r from-slate-800 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent hidden md:block">
+            {TRANSLATIONS[language].appName}
+          </h1>
+        </div>
 
-          {/* Level 1 Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+        {/* Center: Level 1 Tabs */}
+        <div className="flex-1 flex justify-center items-center overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1">
             {navGroups.map(group => {
               const isActive = activeGroup === group.id;
               const Icon = group.icon;
@@ -118,7 +120,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
                 <button
                   key={group.id}
                   onClick={() => setActiveGroup(group.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 whitespace-nowrap
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 whitespace-nowrap justify-center
                     ${isActive 
                       ? 'bg-slate-100 dark:bg-slate-700 text-blue-600 dark:text-blue-400' 
                       : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:hover:text-slate-200'}
@@ -132,8 +134,8 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-4 pl-4 border-l border-slate-200 dark:border-slate-700">
+        {/* Right: Controls */}
+        <div className="flex items-center justify-end gap-4 w-[240px] flex-shrink-0">
           <button
             onClick={() => setLanguage(language === 'EN' ? 'ZH' : 'EN')}
             className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-2 text-sm font-bold"
@@ -154,7 +156,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
       </div>
 
       {/* Level 2: Sub-items */}
-      <div className="h-12 bg-slate-50 dark:bg-slate-900/50 flex items-center px-6 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-slate-800">
+      <div className="h-12 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center px-6 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-2">
           {navGroups.find(g => g.id === activeGroup)?.items.map(item => {
             const isActive = currentView === item.id;
@@ -162,7 +164,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
               <button
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all duration-200 whitespace-nowrap
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-bold transition-all duration-200 whitespace-nowrap justify-center
                   ${isActive 
                     ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200 dark:border-slate-700' 
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/50 dark:hover:bg-slate-800/50'}

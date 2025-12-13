@@ -1,3 +1,4 @@
+
 export const TRANSLATIONS = {
   EN: {
     appName: 'Research Assistant',
@@ -25,7 +26,8 @@ export const TRANSLATIONS = {
       discussion: 'Research Discussion',
       titlePrism: 'Title Prism',
       flowchart: 'Flowchart',
-      aiWorkflow: 'AI Workflow'
+      aiWorkflow: 'AI Workflow',
+      training: 'Research Training'
     },
     groups: {
       discovery: 'Discovery',
@@ -33,6 +35,33 @@ export const TRANSLATIONS = {
       execution: 'Execution',
       writing: 'Writing & Review',
       utility: 'Utilities'
+    },
+    training: {
+      title: 'Research Capability Training',
+      subtitle: 'Simulate a proposal defense to identify research gaps.',
+      step1: {
+        label: 'Research Direction',
+        placeholder: 'e.g. Deep Learning in Genomics',
+        btn: 'Start Training'
+      },
+      step2: {
+        title: 'Supervisor Challenge',
+        topic: 'Assigned Topic',
+        instruction: 'Please answer these critical questions to defend your proposal.',
+        submitBtn: 'Submit Defense'
+      },
+      step3: {
+        title: 'Training Report',
+        score: 'Research Capability Score',
+        feedback: 'Supervisor Feedback',
+        weaknesses: 'Identified Gaps',
+        suggestions: 'Action Plan',
+        restart: 'New Training Session'
+      },
+      loading: {
+        generating: 'Supervisor is reviewing your direction...',
+        analyzing: 'Evaluating your answers...'
+      }
     },
     search: {
       title: 'Academic Search',
@@ -557,7 +586,8 @@ export const TRANSLATIONS = {
       discussion: '科研讨论',
       titlePrism: '标题精炼',
       flowchart: 'AI 流程图',
-      aiWorkflow: 'AI 工作流'
+      aiWorkflow: 'AI 工作流',
+      training: '科研训练'
     },
     groups: {
       discovery: '发现与选题',
@@ -565,6 +595,33 @@ export const TRANSLATIONS = {
       execution: '实验与分析',
       writing: '写作与发表',
       utility: '实用工具'
+    },
+    training: {
+      title: '科研能力训练',
+      subtitle: '模拟开题答辩现场，发现科研短板。',
+      step1: {
+        label: '研究方向',
+        placeholder: '例如：深度学习在基因组学中的应用',
+        btn: '开始训练'
+      },
+      step2: {
+        title: '导师质询',
+        topic: '拟定课题',
+        instruction: '请回答以下关键问题，以捍卫你的开题设想。',
+        submitBtn: '提交答辩'
+      },
+      step3: {
+        title: '训练报告',
+        score: '科研能力评分',
+        feedback: '导师反馈',
+        weaknesses: '能力短板',
+        suggestions: '提升建议',
+        restart: '开始新训练'
+      },
+      loading: {
+        generating: '导师正在审视你的研究方向...',
+        analyzing: '正在评估你的回答...'
+      }
     },
     search: {
       title: '学术搜索',

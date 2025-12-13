@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { 
   Language, 
@@ -37,7 +38,9 @@ import {
   WorkflowProblem,
   WorkflowAngle,
   WorkflowFramework,
-  ReviewerFeedback
+  ReviewerFeedback,
+  TrainingSession,
+  TrainingAnalysis
 } from '../types';
 
 const getAiClient = () => {
@@ -48,6 +51,68 @@ const cleanJson = (text: string) => {
   if (!text) return "{}";
   return text.replace(/```json/g, "").replace(/```/g, "").trim();
 };
+
+// Research Training Services
+export async function generateTrainingTopic(direction: string, language: Language): Promise<TrainingSession | null> {
+    const ai = getAiClient();
+    const prompt = `Act as a strict and academic PhD supervisor. The student is interested in the field: "${direction}".
+    
+    1. Propose a specific, concrete, and slightly challenging research topic/title within this field.
+    2. Generate 3 critical questions that you would ask during a defense or proposal meeting to test the student's understanding of:
+       - Research Rationality/Feasibility
+       - Data Source Availability & Validity
+       - Methodology or Innovation
+    
+    Return JSON with:
+    - topic: string
+    - questions: array of { id: string, text: string }
+    
+    Language: ${language}.`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        return JSON.parse(cleanJson(response.text || "{}"));
+    } catch (e) {
+        console.error("Training Topic Error", e);
+        return null;
+    }
+}
+
+export async function analyzeTrainingAnswers(topic: string, qaPairs: {question: string, answer: string}[], language: Language): Promise<TrainingAnalysis | null> {
+    const ai = getAiClient();
+    const qaText = qaPairs.map(p => `Q: ${p.question}\nA: ${p.answer}`).join('\n\n');
+    const prompt = `Act as a strict PhD supervisor evaluating a student's defense.
+    Topic: "${topic}"
+    
+    Here is the Q&A session:
+    ${qaText}
+    
+    Analyze the student's research capability based on these answers. Identify gaps in logic, data feasibility, or theoretical understanding.
+    
+    Return JSON with:
+    - score: number (0-100)
+    - feedback: string (General assessment, strict but constructive)
+    - weaknesses: string[] (List of specific gaps identified)
+    - suggestions: string[] (Actionable advice to improve)
+    
+    Language: ${language}.`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        return JSON.parse(cleanJson(response.text || "{}"));
+    } catch (e) {
+        console.error("Training Analysis Error", e);
+        return null;
+    }
+}
 
 // AI Workflow Services
 export async function generateWorkflowProblems(direction: string, language: Language): Promise<WorkflowProblem[]> {

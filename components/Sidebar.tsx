@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { 
   Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, 
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, 
   ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, 
   PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, 
-  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap 
+  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell 
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -27,6 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, collapse
       title: groupT.discovery,
       items: [
         { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={20} /> },
+        { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={20} /> },
         { id: ViewState.SEARCH, label: t.search, icon: <Search size={20} /> },
         { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={20} /> },
         { id: ViewState.TRACK, label: t.track, icon: <BookOpen size={20} /> },
