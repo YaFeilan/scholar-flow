@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, ShieldAlert, Network, Lightbulb, Send, Loader2, BarChart2, CheckCircle2, AlertTriangle, Play, RefreshCw, Zap, Plus, X, Users, Bot, Image as ImageIcon } from 'lucide-react';
+import { MessageSquare, ShieldAlert, Network, Lightbulb, Send, Loader2, BarChart2, CheckCircle2, AlertTriangle, Play, RefreshCw, Zap, Plus, X, Users, Bot, Image as ImageIcon, Flame } from 'lucide-react';
 import { Language, DiscussionAnalysisResult, DiscussionPersonaType } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { generateResearchDiscussion, chatWithDiscussionPersona } from '../services/geminiService';
@@ -39,7 +39,8 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
   const [personas, setPersonas] = useState<PersonaConfig[]>([
       { id: 'Reviewer', name: t.personas.reviewer, description: "Critical, finds loopholes, focuses on rigor.", icon: ShieldAlert, color: 'red' },
       { id: 'Interdisciplinary', name: t.personas.interdisciplinary, description: "Suggests interdisciplinary angles, helpful, expansionist.", icon: Network, color: 'blue' },
-      { id: 'Mentor', name: t.personas.mentor, description: "Uses Socratic questioning, guides big picture thinking.", icon: Lightbulb, color: 'amber' }
+      { id: 'Mentor', name: t.personas.mentor, description: "Uses Socratic questioning, guides big picture thinking.", icon: Lightbulb, color: 'amber' },
+      { id: 'Quarrel', name: language === 'ZH' ? '苛刻审稿人 (争吵模式)' : 'Harsh Reviewer (Quarrel Mode)', description: "Extreme skeptic, ruthless critic.", icon: Flame, color: 'orange' }
   ]);
   const [activePersonaId, setActivePersonaId] = useState<string>('Reviewer');
   const [showAddPersona, setShowAddPersona] = useState(false);
@@ -133,8 +134,23 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
 
     try {
         const activeP = personas.find(p => p.id === activePersonaId);
-        // Construct a persona string that includes description for context
-        const personaContext = activeP ? `${activeP.name} (${activeP.description})` : activePersonaId;
+        
+        let personaContext = activeP ? `${activeP.name} (${activeP.description})` : activePersonaId;
+
+        // Custom intense prompt for Quarrel Mode
+        if (activePersonaId === 'Quarrel') {
+            personaContext = `
+            ROLE: Extremely Harsh Academic Reviewer (Quarrel Mode).
+            STANCE: Extreme skepticism. Fundamentally question all assumptions and methodologies.
+            BEHAVIOR:
+            1. Systematically attack: Theory, Experiment Design, Data Reliability, Conclusion Validity.
+            2. Output at least 3 specific technical critiques per response.
+            3. Use strong, provocative language (e.g., "completely untenable", "lacks rigor").
+            4. NEVER compromise. Escalate criticism upon rebuttal.
+            5. MANDATORY: Cite at least 2 authoritative references to back up your attacks.
+            TONE: Professional but aggressive, sarcastic, fiery.
+            `;
+        }
 
         const apiHistory = newHistory.map(m => ({ role: m.role, text: m.text }));
         
@@ -236,7 +252,7 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                                <div key={p.id} className="flex items-center gap-1 bg-slate-50 dark:bg-slate-700 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-600 text-xs font-bold text-slate-700 dark:text-slate-300">
                                    <p.icon size={12} className={`text-${p.color}-500`} />
                                    <span>{p.name}</span>
-                                   {!['Reviewer', 'Interdisciplinary', 'Mentor'].includes(p.id) && (
+                                   {!['Reviewer', 'Interdisciplinary', 'Mentor', 'Quarrel'].includes(p.id) && (
                                        <button onClick={() => removePersona(p.id)} className="ml-1 text-slate-400 hover:text-red-500"><X size={10}/></button>
                                    )}
                                </div>
@@ -335,7 +351,7 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                                   onClick={() => setActivePersonaId(p.id)}
                                   className={`flex-1 min-w-[100px] py-3 px-2 rounded-lg border font-bold text-xs flex items-center justify-center gap-1 transition-all
                                       ${activePersonaId === p.id 
-                                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
+                                          ? `bg-${p.color === 'red' ? 'red' : p.color === 'orange' ? 'orange' : 'indigo'}-600 text-white border-transparent shadow-md` 
                                           : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}
                                   `}
                                >
