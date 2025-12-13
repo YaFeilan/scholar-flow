@@ -10,12 +10,11 @@ import { generatePaperInterpretation, searchAcademicPapers, generateSimulatedFul
 interface SearchPanelProps {
   onReviewRequest: (papers: Paper[]) => void;
   language: Language;
-  onChatRequest?: (file: File) => void;
 }
 
 type ModalTab = 'abstract' | 'fulltext' | 'interpretation';
 
-const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, onChatRequest }) => {
+const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) => {
   const t = TRANSLATIONS[language].search;
   const appName = TRANSLATIONS[language].appName;
   const [query, setQuery] = useState('');
@@ -234,15 +233,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
           }
           
           setIsImageAnalyzing(false);
-      }
-  };
-
-  const handleChatWithFile = (e: React.MouseEvent, paper: Paper) => {
-      e.stopPropagation();
-      if (paper.file && onChatRequest) {
-          onChatRequest(paper.file);
-      } else {
-          alert("No local file available for chat. Please upload a PDF.");
       }
   };
 
@@ -634,25 +624,17 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language, on
                       {paper.abstract || "No abstract available."}
                    </p>
                    
-                   {/* Quick Link / Chat Button */}
-                   <div className="mt-2 flex justify-end gap-2">
-                       {searchSource === 'local' && (
-                           <button 
-                               onClick={(e) => handleChatWithFile(e, paper)}
-                               className="text-xs text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1 transition-colors font-bold"
-                           >
-                               <MessageCircle size={12} /> {language === 'ZH' ? '对话' : 'Chat'}
-                           </button>
-                       )}
-                       {searchSource === 'online' && (
+                   {/* Quick Link Button */}
+                   {searchSource === 'online' && (
+                       <div className="mt-2 flex justify-end gap-2">
                            <button 
                                onClick={(e) => { e.stopPropagation(); const doi = `https://doi.org/10.1038/s41586-${Math.floor(Math.random() * 10000)}`; navigator.clipboard.writeText(doi); alert(language === 'ZH' ? '链接已复制' : 'URL copied'); }}
                                className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
                            >
                                <ExternalLink size={12} /> {language === 'ZH' ? '复制链接' : 'Copy Link'}
                            </button>
-                       )}
-                   </div>
+                       </div>
+                   )}
                 </div>
              </div>
           </div>

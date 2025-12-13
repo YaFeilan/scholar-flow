@@ -41,7 +41,6 @@ export enum ViewState {
   DATA_ANALYSIS = 'DATA_ANALYSIS',
   CODE_ASSISTANT = 'CODE_ASSISTANT',
   EXPERIMENT_DESIGN = 'EXPERIMENT_DESIGN',
-  PDF_CHAT = 'PDF_CHAT',
   KNOWLEDGE_GRAPH = 'KNOWLEDGE_GRAPH',
   FIGURE_GEN = 'FIGURE_GEN',
   CHART_EXTRACTION = 'CHART_EXTRACTION',
@@ -53,6 +52,7 @@ export enum ViewState {
   FLOWCHART = 'FLOWCHART',
   AI_WORKFLOW = 'AI_WORKFLOW', // New
   RESEARCH_TRAINING = 'RESEARCH_TRAINING', // New: Research Training
+  PDF_CHAT = 'PDF_CHAT', // New: Intensive Reading
 }
 
 // Trend Types
@@ -559,4 +559,47 @@ export interface TrainingAnalysis {
   feedback: string;
   weaknesses: string[];
   suggestions: string[];
+}
+
+// Reading Mode Types
+export type ReadingMode = 'standard' | 'guided' | 'game';
+
+export interface Note {
+  id: string;
+  page: number;
+  quote: string;
+  content: string;
+  color?: string; // Color code
+  timestamp: number;
+}
+
+export interface Bookmark {
+  id: string;
+  page: number;
+  label: string;
+  timestamp: number;
+}
+
+export interface Quiz {
+  id: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+  points: number;
+}
+
+export interface GameState {
+  points: number;
+  level: number;
+  badges: string[]; // e.g., "Speed Reader", "Concept Master"
+  streak: number;
+  completedQuizzes: string[]; // IDs of completed quizzes
+}
+
+export interface GuidedStep {
+  id: string;
+  title: string;
+  description: string;
+  status: 'locked' | 'active' | 'completed';
 }

@@ -37,7 +37,8 @@ import {
   WorkflowAngle,
   WorkflowFramework,
   TrainingSession,
-  TrainingAnalysis
+  TrainingAnalysis,
+  Quiz
 } from '../types';
 import { MOCK_PAPERS } from '../constants';
 
@@ -213,7 +214,7 @@ export async function generatePaperInterpretation(paper: Paper, language: Langua
     } catch (e) { return ""; }
 }
 
-// 4. Research Training Services (Already Implemented correctly in previous turn, keeping for completeness)
+// 4. Research Training Services
 export async function generateTrainingTopic(direction: string, language: Language): Promise<TrainingSession | null> {
     const ai = getAiClient();
     const prompt = `Act as a strict PhD supervisor. Field: "${direction}".
@@ -274,7 +275,28 @@ export async function generateWorkflowFramework(problem: string, angle: string, 
     } catch (e) { return null; }
 }
 
-// 6. Other Feature Implementations (Restored from Stubs)
+// 6. Game Mode Service
+export async function generateReadingQuiz(file: File, language: Language): Promise<Quiz | null> {
+    const ai = getAiClient();
+    const filePart = await fileToGenerativePart(file);
+    const prompt = `Generate a quiz question based on this research paper. Focus on key contributions or methodology.
+    Return JSON: { id: string, question: string, options: string[], correctIndex: number, explanation: string, points: number }. 
+    Language: ${language}.`;
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: {
+                parts: [filePart, { text: prompt }]
+            },
+            config: { responseMimeType: 'application/json' }
+        });
+        const quiz = JSON.parse(cleanJson(response.text || "{}"));
+        return { ...quiz, id: Date.now().toString() };
+    } catch (e) { return null; }
+}
+
+// 7. Other Feature Implementations (Restored from Stubs)
 export async function extractChartData(file: File, language: Language): Promise<ChartExtractionResult> {
     const ai = getAiClient();
     const imagePart = await fileToGenerativePart(file);
@@ -426,9 +448,7 @@ export async function generateSlideImage(desc: string, style: string): Promise<s
     const ai = getAiClient();
     // Using flash-image for generation/editing simulation (actually requires Imagen for generation usually, but flash-2.5 can do text-to-image in some contexts or we simulate via text description return)
     // For this demo, we will use a placeholder or check if model supports image gen. 
-    // Since 'gemini-2.5-flash' is text/multimodal-in, NOT image-out, we will return a placeholder URL or use 'imagen-3.0-generate-001' if available.
-    // Assuming standard Gemini API for text, we can't generate images directly yet without Imagen.
-    // We will return a placeholder service URL based on keywords.
+    // Since 'gemini-2.5-flash' is text/multimodal-in, NOT image-out, we will return a placeholder service URL based on keywords.
     return `https://placehold.co/600x400?text=${encodeURIComponent(desc.substring(0, 20))}`;
 }
 

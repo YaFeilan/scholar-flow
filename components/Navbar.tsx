@@ -5,7 +5,7 @@ import {
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, MessagesSquare, 
   Briefcase, BarChart2, Terminal, Beaker, Table2, Network, Gem, Image as ImageIcon, 
   Calendar, ShieldAlert, Workflow, Zap, Compass, Layers, PenLine, Wrench, Layout,
-  MessageSquare, Dumbbell
+  Dumbbell, Book
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -31,6 +31,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
         { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={16} /> },
         { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={16} /> },
         { id: ViewState.SEARCH, label: t.search, icon: <Search size={16} /> },
+        { id: ViewState.PDF_CHAT, label: TRANSLATIONS[language].pdfChat.title, icon: <Book size={16} /> }, // Added here
         { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={16} /> },
         { id: ViewState.TRACK, label: t.track, icon: <BookOpen size={16} /> },
         { id: ViewState.CONFERENCE_FINDER, label: t.conference, icon: <Calendar size={16} /> },
@@ -78,7 +79,6 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
       title: groupT.utility,
       icon: Layout,
       items: [
-        { id: ViewState.PDF_CHAT, label: t.pdfChat, icon: <MessageSquare size={16} /> },
         { id: ViewState.KNOWLEDGE_GRAPH, label: t.knowledge, icon: <Network size={16} /> },
         { id: ViewState.AI_DETECTOR, label: t.aiDetector, icon: <ShieldAlert size={16} /> },
       ]

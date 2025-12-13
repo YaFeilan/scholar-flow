@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { 
   Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, 
@@ -73,7 +74,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, collapse
       id: 'utility',
       title: groupT.utility,
       items: [
-        { id: ViewState.PDF_CHAT, label: t.pdfChat, icon: <MessageSquare size={20} /> },
         { id: ViewState.KNOWLEDGE_GRAPH, label: t.knowledge, icon: <Network size={20} /> },
         { id: ViewState.AI_DETECTOR, label: t.aiDetector, icon: <ShieldAlert size={20} /> },
       ]

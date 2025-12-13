@@ -49,7 +49,6 @@ const VirtualAssistant: React.FC<VirtualAssistantProps> = ({ language, currentVi
 
       switch(currentView) {
           case ViewState.SEARCH:
-          case ViewState.PDF_CHAT:
               setExpression('focused');
               break;
           case ViewState.IDEA_GUIDE:

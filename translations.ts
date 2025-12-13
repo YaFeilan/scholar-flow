@@ -17,7 +17,6 @@ export const TRANSLATIONS = {
       data: 'Data Analysis',
       chart: 'Chart Extractor',
       code: 'Code Assistant',
-      pdfChat: 'PDF Chat',
       knowledge: 'Knowledge Graph',
       figure: 'Figure Gen',
       grant: 'Grant Application',
@@ -63,6 +62,38 @@ export const TRANSLATIONS = {
         analyzing: 'Evaluating your answers...'
       }
     },
+    pdfChat: {
+      title: 'Intensive Reading',
+      upload: 'Upload PDF',
+      modes: {
+        standard: 'Standard',
+        guided: 'Guided',
+        game: 'Game'
+      },
+      tools: {
+        outline: 'Outline',
+        notes: 'Notes',
+        bookmarks: 'Bookmarks',
+        addNote: 'Add Note',
+        addBookmark: 'Bookmark Page',
+        highlight: 'Highlight',
+        colors: { yellow: 'Yellow', green: 'Green', red: 'Red', blue: 'Blue' }
+      },
+      game: {
+        points: 'Points',
+        level: 'Level',
+        badges: 'Badges',
+        challengeBtn: 'Challenge Me',
+        quizTitle: 'Knowledge Check'
+      },
+      guided: {
+        path: 'Learning Path',
+        step: 'Step',
+        completed: 'Completed',
+        active: 'Current Focus'
+      }
+    },
+    // ... (rest of existing translations remain)
     search: {
       title: 'Academic Search',
       subtitle: 'Find papers, generate reviews, and analyze trends.',
@@ -312,14 +343,6 @@ export const TRANSLATIONS = {
       btn: 'Run',
       shortcut: 'Ctrl + Enter to Run',
       followUpPlaceholder: 'Follow up...'
-    },
-    pdfChat: {
-      title: 'PDF Chat',
-      subtitle: 'Chat with your PDF documents.',
-      uploadDesc: 'Upload a PDF to start chatting.',
-      chatTitle: 'Chat',
-      chatWelcome: 'Ask me anything about the document.',
-      chatPlaceholder: 'Type your question...'
     },
     knowledge: {
       title: 'Knowledge Graph',
@@ -577,7 +600,6 @@ export const TRANSLATIONS = {
       data: '数据分析',
       chart: '图表提取',
       code: '代码助手',
-      pdfChat: '文献精读',
       knowledge: '知识图谱',
       figure: '科研绘图',
       grant: '基金申请',
@@ -623,6 +645,38 @@ export const TRANSLATIONS = {
         analyzing: '正在评估你的回答...'
       }
     },
+    pdfChat: {
+      title: '文献精读',
+      upload: '上传 PDF',
+      modes: {
+        standard: '标准模式',
+        guided: '导读模式',
+        game: '游戏模式'
+      },
+      tools: {
+        outline: '大纲',
+        notes: '笔记',
+        bookmarks: '书签',
+        addNote: '添加笔记',
+        addBookmark: '添加书签',
+        highlight: '高亮',
+        colors: { yellow: '黄色', green: '绿色', red: '红色', blue: '蓝色' }
+      },
+      game: {
+        points: '积分',
+        level: '等级',
+        badges: '成就',
+        challengeBtn: '挑战自我',
+        quizTitle: '知识挑战'
+      },
+      guided: {
+        path: '学习路径',
+        step: '步骤',
+        completed: '已完成',
+        active: '当前重点'
+      }
+    },
+    // ... (rest of existing translations remain)
     search: {
       title: '学术搜索',
       subtitle: '搜索论文、生成综述、分析趋势。',
@@ -872,14 +926,6 @@ export const TRANSLATIONS = {
       btn: '运行',
       shortcut: 'Ctrl + Enter 运行',
       followUpPlaceholder: '追问...'
-    },
-    pdfChat: {
-      title: '文献精读',
-      subtitle: '与您的 PDF 文档对话。',
-      uploadDesc: '上传 PDF 开始对话。',
-      chatTitle: '对话',
-      chatWelcome: '关于文档随便问我。',
-      chatPlaceholder: '输入您的问题...'
     },
     knowledge: {
       title: '知识图谱',

@@ -14,7 +14,6 @@ import OpeningReview from './components/OpeningReview';
 import DataAnalysis from './components/DataAnalysis';
 import CodeAssistant from './components/CodeAssistant';
 import ExperimentDesign from './components/ExperimentDesign';
-import PDFChat from './components/PDFChat';
 import KnowledgeGraph from './components/KnowledgeGraph';
 import FigureGenerator from './components/FigureGenerator';
 import ChartExtraction from './components/ChartExtraction';
@@ -27,6 +26,7 @@ import FlowchartGenerator from './components/FlowchartGenerator';
 import VirtualAssistant from './components/VirtualAssistant';
 import AIWorkflow from './components/AIWorkflow';
 import ResearchTraining from './components/ResearchTraining';
+import PDFChat from './components/PDFChat';
 import { ViewState, Paper, Language } from './types';
 
 export default function App() {
@@ -34,7 +34,6 @@ export default function App() {
   const [language, setLanguage] = useState<Language>('EN');
   const [reviewPapers, setReviewPapers] = useState<Paper[]>([]);
   const [initialTopic, setInitialTopic] = useState<string>('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [extractedData, setExtractedData] = useState<any[][] | null>(null);
 
   const handleReviewRequest = (papers: Paper[]) => {
@@ -45,11 +44,6 @@ export default function App() {
   const handleNavigateToIdea = (topic: string) => {
     setInitialTopic(topic);
     setCurrentView(ViewState.IDEA_GUIDE);
-  };
-
-  const handleChatRequest = (file: File) => {
-    setSelectedFile(file);
-    setCurrentView(ViewState.PDF_CHAT);
   };
 
   const handleExtractedData = (data: any[][]) => {
@@ -72,7 +66,6 @@ export default function App() {
             <SearchPanel 
               onReviewRequest={handleReviewRequest} 
               language={language}
-              onChatRequest={handleChatRequest}
             />
           )}
           {currentView === ViewState.TRENDS && (
@@ -111,12 +104,6 @@ export default function App() {
           {currentView === ViewState.EXPERIMENT_DESIGN && (
             <ExperimentDesign language={language} />
           )}
-          {currentView === ViewState.PDF_CHAT && (
-            <PDFChat 
-              language={language} 
-              initialFile={selectedFile}
-            />
-          )}
           {currentView === ViewState.KNOWLEDGE_GRAPH && (
             <KnowledgeGraph language={language} />
           )}
@@ -146,6 +133,9 @@ export default function App() {
           )}
           {currentView === ViewState.RESEARCH_TRAINING && (
             <ResearchTraining language={language} />
+          )}
+          {currentView === ViewState.PDF_CHAT && (
+            <PDFChat language={language} />
           )}
           {currentView === ViewState.CHART_EXTRACTION && (
             <ChartExtraction 
