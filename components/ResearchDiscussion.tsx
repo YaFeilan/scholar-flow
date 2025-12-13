@@ -1,6 +1,6 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, ShieldAlert, Network, Lightbulb, Send, Loader2, BarChart2, CheckCircle2, AlertTriangle, Play, RefreshCw, Zap, Plus, X, Users, Bot, Image as ImageIcon, Flame } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { MessageSquare, ShieldAlert, Network, Lightbulb, Send, Loader2, BarChart2, CheckCircle2, AlertTriangle, Play, RefreshCw, Zap, Plus, X, Users, Bot, Image as ImageIcon, Flame, Search, Check, Clock } from 'lucide-react';
 import { Language, DiscussionAnalysisResult, DiscussionPersonaType } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { generateResearchDiscussion, chatWithDiscussionPersona } from '../services/geminiService';
@@ -42,6 +42,12 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
       { id: 'Mentor', name: t.personas.mentor, description: "Uses Socratic questioning, guides big picture thinking.", icon: Lightbulb, color: 'amber' },
       { id: 'Quarrel', name: language === 'ZH' ? '苛刻审稿人 (争吵模式)' : 'Harsh Reviewer (Quarrel Mode)', description: "Extreme skeptic, ruthless critic.", icon: Flame, color: 'orange' }
   ]);
+  
+  // Role Selection Mechanism
+  const [selectedPersonaIds, setSelectedPersonaIds] = useState<Set<string>>(new Set(['Reviewer', 'Interdisciplinary', 'Mentor']));
+  const [personaSearch, setPersonaSearch] = useState('');
+  const [selectionTimestamp, setSelectionTimestamp] = useState<number | null>(null);
+  
   const [activePersonaId, setActivePersonaId] = useState<string>('Reviewer');
   const [showAddPersona, setShowAddPersona] = useState(false);
   const [newPersonaName, setNewPersonaName] = useState('');
@@ -79,10 +85,11 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
   }, [loading, language]);
 
   const handleStartDiscussion = async () => {
-    if (!topic.trim() && !imageFile) return;
+    if ((!topic.trim() && !imageFile) || selectedPersonaIds.size === 0) return;
     setLoading(true);
     setResult(null);
     setChatHistory([]);
+    setSelectionTimestamp(Date.now()); // Record timestamp
     
     // Pass imageFile if present
     const analysis = await generateResearchDiscussion(topic, language, imageFile || undefined);
@@ -103,18 +110,52 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
               color: 'purple'
           };
           setPersonas([...personas, newP]);
+          
+          // Auto-select newly added persona
+          const newSet = new Set(selectedPersonaIds);
+          newSet.add(newId);
+          setSelectedPersonaIds(newSet);
+          
           setNewPersonaName('');
           setNewPersonaDesc('');
           setShowAddPersona(false);
       }
   };
 
-  const removePersona = (id: string) => {
+  const removePersona = (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
       setPersonas(prev => prev.filter(p => p.id !== id));
       if (activePersonaId === id) {
-          setActivePersonaId(personas[0]?.id || '');
+          const remaining = personas.filter(p => p.id !== id);
+          setActivePersonaId(remaining[0]?.id || '');
       }
+      const newSet = new Set(selectedPersonaIds);
+      newSet.delete(id);
+      setSelectedPersonaIds(newSet);
   };
+
+  const togglePersonaSelection = (id: string) => {
+      const newSet = new Set(selectedPersonaIds);
+      if (newSet.has(id)) {
+          newSet.delete(id);
+          // If deselecting the active tab, switch to another available one
+          if (activePersonaId === id && newSet.size > 0) {
+              const firstAvailable = Array.from(newSet)[0];
+              setActivePersonaId(firstAvailable);
+          }
+      } else {
+          newSet.add(id);
+      }
+      setSelectedPersonaIds(newSet);
+      setSelectionTimestamp(Date.now());
+  };
+
+  const filteredPersonas = useMemo(() => {
+      return personas.filter(p => 
+          p.name.toLowerCase().includes(personaSearch.toLowerCase()) || 
+          (p.description && p.description.toLowerCase().includes(personaSearch.toLowerCase()))
+      );
+  }, [personas, personaSearch]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files[0]) {
@@ -215,55 +256,97 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                        </div>
                    </div>
                    
-                   {/* Persona Configuration */}
+                   {/* Enhanced Role Selection Mechanism */}
                    <div className="mt-4 border-t border-slate-100 dark:border-slate-700 pt-4">
-                       <div className="flex justify-between items-center mb-2">
-                           <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><Users size={12}/> {t.participantsHeader}</span>
-                           <button onClick={() => setShowAddPersona(!showAddPersona)} className="text-xs text-indigo-600 hover:text-indigo-700 font-bold flex items-center gap-1">
+                       <div className="flex justify-between items-center mb-3">
+                           <div className="flex items-center gap-2">
+                               <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><Users size={12}/> {t.participantsHeader}</span>
+                               <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                   {selectedPersonaIds.size} / {personas.length}
+                               </span>
+                           </div>
+                           <button onClick={() => setShowAddPersona(!showAddPersona)} className="text-xs text-indigo-600 hover:text-indigo-700 font-bold flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100 transition-colors">
+                               {showAddPersona ? <X size={12} /> : <Plus size={12} />}
                                {showAddPersona ? 'Cancel' : t.addRole}
                            </button>
                        </div>
                        
                        {showAddPersona && (
-                           <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg mb-3 animate-fadeIn">
+                           <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg mb-3 animate-fadeIn border border-indigo-100 dark:border-indigo-800">
                                <input 
-                                  className="w-full mb-2 p-2 text-xs border border-indigo-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full mb-2 p-2 text-xs border border-indigo-200 dark:border-indigo-700 rounded focus:ring-1 focus:ring-indigo-500 outline-none bg-white dark:bg-slate-900"
                                   placeholder={language === 'ZH' ? "角色名称 (如：统计学家)" : "Role Name (e.g. Statistician)"}
                                   value={newPersonaName}
                                   onChange={e => setNewPersonaName(e.target.value)}
                                />
                                <input 
-                                  className="w-full mb-2 p-2 text-xs border border-indigo-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none"
+                                  className="w-full mb-2 p-2 text-xs border border-indigo-200 dark:border-indigo-700 rounded focus:ring-1 focus:ring-indigo-500 outline-none bg-white dark:bg-slate-900"
                                   placeholder={language === 'ZH' ? "角色描述/侧重点" : "Role Description / Focus"}
                                   value={newPersonaDesc}
                                   onChange={e => setNewPersonaDesc(e.target.value)}
                                />
                                <button 
                                   onClick={handleAddPersona}
-                                  className="w-full bg-indigo-600 text-white text-xs font-bold py-1.5 rounded hover:bg-indigo-700"
+                                  className="w-full bg-indigo-600 text-white text-xs font-bold py-1.5 rounded hover:bg-indigo-700 transition-colors"
                                >
-                                  Add to Panel
+                                  Add & Select
                                </button>
                            </div>
                        )}
 
-                       <div className="flex flex-wrap gap-2">
-                           {personas.map(p => (
-                               <div key={p.id} className="flex items-center gap-1 bg-slate-50 dark:bg-slate-700 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-600 text-xs font-bold text-slate-700 dark:text-slate-300">
-                                   <p.icon size={12} className={`text-${p.color}-500`} />
-                                   <span>{p.name}</span>
-                                   {!['Reviewer', 'Interdisciplinary', 'Mentor', 'Quarrel'].includes(p.id) && (
-                                       <button onClick={() => removePersona(p.id)} className="ml-1 text-slate-400 hover:text-red-500"><X size={10}/></button>
-                                   )}
-                               </div>
-                           ))}
+                       {/* Search & List */}
+                       <div className="relative mb-2">
+                           <Search size={12} className="absolute left-2.5 top-2.5 text-slate-400" />
+                           <input 
+                              type="text" 
+                              value={personaSearch}
+                              onChange={(e) => setPersonaSearch(e.target.value)}
+                              placeholder={language === 'ZH' ? "搜索角色..." : "Search roles..."}
+                              className="w-full pl-8 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none"
+                           />
+                       </div>
+
+                       <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1 pr-1">
+                           {filteredPersonas.map(p => {
+                               const isSelected = selectedPersonaIds.has(p.id);
+                               return (
+                                   <div 
+                                      key={p.id} 
+                                      onClick={() => togglePersonaSelection(p.id)}
+                                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
+                                          isSelected 
+                                          ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800' 
+                                          : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-slate-300'
+                                      }`}
+                                   >
+                                       <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-slate-300'}`}>
+                                           {isSelected && <Check size={10} className="text-white" />}
+                                       </div>
+                                       <div className={`p-1.5 rounded-full bg-${p.color}-100 dark:bg-${p.color}-900/50 text-${p.color}-600 dark:text-${p.color}-400`}>
+                                           <p.icon size={12} />
+                                       </div>
+                                       <div className="flex-grow min-w-0">
+                                           <div className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{p.name}</div>
+                                           <div className="text-[10px] text-slate-400 truncate">{p.description}</div>
+                                       </div>
+                                       {!['Reviewer', 'Interdisciplinary', 'Mentor', 'Quarrel'].includes(p.id) && (
+                                           <button onClick={(e) => removePersona(p.id, e)} className="text-slate-300 hover:text-red-500 transition-colors p-1">
+                                               <X size={12} />
+                                           </button>
+                                       )}
+                                   </div>
+                               );
+                           })}
+                           {filteredPersonas.length === 0 && (
+                               <div className="text-center text-xs text-slate-400 py-4">No roles found.</div>
+                           )}
                        </div>
                    </div>
 
                    <button 
                       onClick={handleStartDiscussion}
-                      disabled={loading || (!topic.trim() && !imageFile)}
-                      className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                      disabled={loading || selectedPersonaIds.size === 0 || (!topic.trim() && !imageFile)}
+                      className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 shadow-md shadow-indigo-100 dark:shadow-none"
                    >
                       {loading ? <Loader2 className="animate-spin" /> : <Play size={18} />}
                       {loading ? loadingMessage : t.btn}
@@ -338,27 +421,37 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
            <div className="lg:w-7/12 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden relative">
                {!result ? (
                    <div className="flex-grow flex flex-col items-center justify-center text-slate-300 dark:text-slate-600">
-                       <MessageSquare size={64} className="mb-4" />
+                       <MessageSquare size={64} className="mb-4 opacity-50" />
                        <p className="font-bold text-lg">Start a discussion to unlock insights.</p>
+                       <p className="text-sm mt-2">Select roles and click 'Start Discussion'.</p>
                    </div>
                ) : (
                    <>
-                       {/* Persona Tabs - Dynamic */}
-                       <div className="flex p-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 gap-2 overflow-x-auto no-scrollbar">
-                           {personas.map(p => (
+                       {/* Header Info */}
+                       <div className="p-3 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center text-xs text-slate-500">
+                           <span className="flex items-center gap-1 font-mono"><Clock size={10} /> Session Started: {selectionTimestamp ? new Date(selectionTimestamp).toLocaleTimeString() : ''}</span>
+                           <span>Participating Roles: {selectedPersonaIds.size}</span>
+                       </div>
+
+                       {/* Persona Tabs - Filtered by Selection */}
+                       <div className="flex p-2 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 gap-2 overflow-x-auto no-scrollbar">
+                           {personas.filter(p => selectedPersonaIds.has(p.id)).map(p => (
                                <button
                                   key={p.id}
                                   onClick={() => setActivePersonaId(p.id)}
                                   className={`flex-1 min-w-[100px] py-3 px-2 rounded-lg border font-bold text-xs flex items-center justify-center gap-1 transition-all
                                       ${activePersonaId === p.id 
                                           ? `bg-${p.color === 'red' ? 'red' : p.color === 'orange' ? 'orange' : 'indigo'}-600 text-white border-transparent shadow-md` 
-                                          : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'}
+                                          : 'bg-slate-50 dark:bg-slate-700 text-slate-500 border-slate-200 dark:border-slate-600 hover:bg-slate-100'}
                                   `}
                                >
                                   <p.icon size={14} />
                                   <span className="truncate">{p.name}</span>
                                </button>
                            ))}
+                           {selectedPersonaIds.size === 0 && (
+                               <div className="w-full text-center text-xs text-red-400 py-2">No roles selected. Please select roles on the left.</div>
+                           )}
                        </div>
 
                        {/* Chat Feed */}
@@ -366,19 +459,25 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                            {/* Initial Comments as System Messages */}
                            {chatHistory.length === 0 && (
                                <div className="space-y-4">
-                                   {/* Only show initial comments for the 3 base personas if they exist */}
-                                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 p-4 rounded-xl rounded-tl-none">
-                                       <div className="text-xs font-bold text-red-600 mb-1 flex items-center gap-1"><ShieldAlert size={12}/> {t.personas.reviewer} Initial Thoughts</div>
-                                       <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.reviewer}</p>
-                                   </div>
-                                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl rounded-tl-none">
-                                       <div className="text-xs font-bold text-blue-600 mb-1 flex items-center gap-1"><Network size={12}/> {t.personas.interdisciplinary} Initial Thoughts</div>
-                                       <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.collaborator}</p>
-                                   </div>
-                                   <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 p-4 rounded-xl rounded-tl-none">
-                                       <div className="text-xs font-bold text-amber-600 mb-1 flex items-center gap-1"><Lightbulb size={12}/> {t.personas.mentor} Initial Thoughts</div>
-                                       <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.mentor}</p>
-                                   </div>
+                                   {/* Only show initial comments for active selected personas */}
+                                   {selectedPersonaIds.has('Reviewer') && (
+                                       <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 p-4 rounded-xl rounded-tl-none animate-fadeIn">
+                                           <div className="text-xs font-bold text-red-600 mb-1 flex items-center gap-1"><ShieldAlert size={12}/> {t.personas.reviewer} Initial Thoughts</div>
+                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.reviewer}</p>
+                                       </div>
+                                   )}
+                                   {selectedPersonaIds.has('Interdisciplinary') && (
+                                       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl rounded-tl-none animate-fadeIn" style={{animationDelay: '100ms'}}>
+                                           <div className="text-xs font-bold text-blue-600 mb-1 flex items-center gap-1"><Network size={12}/> {t.personas.interdisciplinary} Initial Thoughts</div>
+                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.collaborator}</p>
+                                       </div>
+                                   )}
+                                   {selectedPersonaIds.has('Mentor') && (
+                                       <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 p-4 rounded-xl rounded-tl-none animate-fadeIn" style={{animationDelay: '200ms'}}>
+                                           <div className="text-xs font-bold text-amber-600 mb-1 flex items-center gap-1"><Lightbulb size={12}/> {t.personas.mentor} Initial Thoughts</div>
+                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.mentor}</p>
+                                       </div>
+                                   )}
                                </div>
                            )}
 
@@ -411,12 +510,12 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                                   value={chatInput}
                                   onChange={(e) => setChatInput(e.target.value)}
                                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                  placeholder={`Reply to ${personas.find(p => p.id === activePersonaId)?.name || 'expert'}...`}
+                                  placeholder={`Reply to ${personas.find(p => p.id === activePersonaId)?.name || 'selected role'}...`}
                                   className="w-full pl-4 pr-12 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all"
                                />
                                <button 
                                   onClick={handleSendMessage}
-                                  disabled={!chatInput.trim() || chatLoading}
+                                  disabled={!chatInput.trim() || chatLoading || selectedPersonaIds.size === 0}
                                   className="absolute right-2 top-2 p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors disabled:opacity-50"
                                >
                                   <Send size={16} />
