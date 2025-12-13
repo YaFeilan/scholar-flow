@@ -15,7 +15,6 @@ import DataAnalysis from './components/DataAnalysis';
 import CodeAssistant from './components/CodeAssistant';
 import ExperimentDesign from './components/ExperimentDesign';
 import KnowledgeGraph from './components/KnowledgeGraph';
-import FigureGenerator from './components/FigureGenerator';
 import ChartExtraction from './components/ChartExtraction';
 import GrantApplication from './components/GrantApplication';
 import ConferenceFinder from './components/ConferenceFinder';
@@ -23,10 +22,10 @@ import AIDetector from './components/AIDetector';
 import ResearchDiscussion from './components/ResearchDiscussion';
 import TitlePrism from './components/TitlePrism';
 import FlowchartGenerator from './components/FlowchartGenerator';
-import VirtualAssistant from './components/VirtualAssistant';
 import AIWorkflow from './components/AIWorkflow';
 import ResearchTraining from './components/ResearchTraining';
 import PDFChat from './components/PDFChat';
+import ScientificPlotting from './components/ScientificPlotting';
 import { ViewState, Paper, Language } from './types';
 
 export default function App() {
@@ -107,9 +106,6 @@ export default function App() {
           {currentView === ViewState.KNOWLEDGE_GRAPH && (
             <KnowledgeGraph language={language} />
           )}
-          {currentView === ViewState.FIGURE_GEN && (
-            <FigureGenerator language={language} />
-          )}
           {currentView === ViewState.GRANT_APPLICATION && (
             <GrantApplication language={language} />
           )}
@@ -143,10 +139,11 @@ export default function App() {
               onSendDataToAnalysis={handleExtractedData}
             />
           )}
+          {currentView === ViewState.SCIENTIFIC_PLOTTING && (
+            <ScientificPlotting language={language} />
+          )}
         </div>
       </main>
-
-      <VirtualAssistant language={language} currentView={currentView} />
     </div>
   );
 }

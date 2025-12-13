@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, 
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, MessagesSquare, 
-  Briefcase, BarChart2, Terminal, Beaker, Table2, Network, Gem, Image as ImageIcon, 
+  Briefcase, BarChart2, Terminal, Beaker, Table2, Network, Gem, 
   Calendar, ShieldAlert, Workflow, Zap, Compass, Layers, PenLine, Wrench, Layout,
-  Dumbbell, Book
+  Dumbbell, Book, Activity
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -31,7 +31,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
         { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={16} /> },
         { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={16} /> },
         { id: ViewState.SEARCH, label: t.search, icon: <Search size={16} /> },
-        { id: ViewState.PDF_CHAT, label: TRANSLATIONS[language].pdfChat.title, icon: <Book size={16} /> }, // Added here
+        { id: ViewState.PDF_CHAT, label: TRANSLATIONS[language].pdfChat.title, icon: <Book size={16} /> }, 
         { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={16} /> },
         { id: ViewState.TRACK, label: t.track, icon: <BookOpen size={16} /> },
         { id: ViewState.CONFERENCE_FINDER, label: t.conference, icon: <Calendar size={16} /> },
@@ -56,9 +56,9 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
       items: [
         { id: ViewState.EXPERIMENT_DESIGN, label: t.experimentDesign, icon: <Beaker size={16} /> },
         { id: ViewState.DATA_ANALYSIS, label: t.data, icon: <BarChart2 size={16} /> },
+        { id: ViewState.SCIENTIFIC_PLOTTING, label: t.plotting, icon: <Activity size={16} /> }, // New
         { id: ViewState.CODE_ASSISTANT, label: t.code, icon: <Terminal size={16} /> },
         { id: ViewState.CHART_EXTRACTION, label: t.chart, icon: <Table2 size={16} /> },
-        { id: ViewState.FIGURE_GEN, label: t.figure, icon: <ImageIcon size={16} /> },
         { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={16} /> },
       ]
     },

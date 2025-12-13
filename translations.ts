@@ -18,7 +18,6 @@ export const TRANSLATIONS = {
       chart: 'Chart Extractor',
       code: 'Code Assistant',
       knowledge: 'Knowledge Graph',
-      figure: 'Figure Gen',
       grant: 'Grant Application',
       conference: 'Conf. Finder',
       aiDetector: 'AI Detector',
@@ -26,7 +25,8 @@ export const TRANSLATIONS = {
       titlePrism: 'Title Prism',
       flowchart: 'Flowchart',
       aiWorkflow: 'AI Workflow',
-      training: 'Research Training'
+      training: 'Research Training',
+      plotting: 'Sci. Plotting'
     },
     groups: {
       discovery: 'Discovery',
@@ -35,6 +35,24 @@ export const TRANSLATIONS = {
       writing: 'Writing & Review',
       utility: 'Utilities'
     },
+    scientific: {
+      title: 'Scientific Plotting',
+      subtitle: 'Create journal-ready figures with data.',
+      import: 'Import Data',
+      config: 'Configuration',
+      style: 'Styling',
+      ai: 'AI Assistant',
+      upload: 'Upload CSV/Excel',
+      paste: 'Paste Data',
+      types: { bar: 'Bar Chart', line: 'Line Chart', scatter: 'Scatter Plot', box: 'Box Plot', heatmap: 'Heatmap', violin: 'Violin Plot' },
+      axes: { x: 'X Axis', y: 'Y Axis', group: 'Group By' },
+      stats: { mean: 'Mean + SD', sem: 'Mean + SEM', none: 'Raw Data' },
+      themes: { nature: 'Nature', science: 'Science', cell: 'Cell', classic: 'Classic' },
+      export: { png: 'Export PNG', svg: 'Export SVG', caption: 'Copy Caption' },
+      aiPrompt: 'Describe the plot you want...',
+      aiBtn: 'Generate Plot'
+    },
+    // ... existing translations ...
     training: {
       title: 'Defense Simulator',
       subtitle: 'Real-time defense battle to identify research gaps.',
@@ -385,54 +403,6 @@ export const TRANSLATIONS = {
       chatPlaceholder: 'Type your question...',
       acceptNode: 'Add to Graph'
     },
-    figure: {
-      title: 'Figure Generator',
-      subtitle: 'Generate scientific figures.',
-      mode: {
-        generate: 'Generate',
-        polish: 'Polish'
-      },
-      polishTasks: {
-        general: 'General',
-        sketchTo3D: 'Sketch to 3D',
-        chartBeautify: 'Beautify Chart'
-      },
-      input: {
-        referenceLabel: 'Reference Image (Optional)',
-        sourceLabel: 'Source Image',
-        promptLabel: 'Description / Prompt',
-        promptPlaceholder: 'Describe the figure...',
-        backgroundOnly: 'Background Only',
-        backgroundOnlyTip: 'Generate background only.',
-        sizeLabel: 'Size',
-        sizes: { single: 'Single Column', double: 'Double Column' },
-        dpiLabel: 'DPI'
-      },
-      template: {
-        title: 'Template',
-        subject: 'Subject',
-        subjectPh: 'e.g. Cell',
-        action: 'Action',
-        actionPh: 'e.g. Dividing',
-        environment: 'Environment',
-        environmentPh: 'e.g. Petri Dish',
-        perspective: 'Perspective',
-        perspectivePh: 'e.g. Top-down',
-        apply: 'Apply Template'
-      },
-      chartTypes: { Mechanism: 'Mechanism', Flowchart: 'Flowchart', Data: 'Data Plot' },
-      colorPalettes: { Default: 'Default', Nature: 'Nature Style', Science: 'Science Style', Grayscale: 'Grayscale' },
-      btn: 'Generate Figure',
-      generating: 'Generating...',
-      result: 'Result',
-      tools: {
-        addLabel: 'Add Label',
-        saveWithLabels: 'Save with Labels'
-      },
-      download: 'Download',
-      refinePlaceholder: 'Refine this figure...',
-      history: 'History'
-    },
     grant: {
       title: 'Grant Application',
       subtitle: 'Grant proposal assistance.',
@@ -627,7 +597,6 @@ export const TRANSLATIONS = {
       chart: '图表提取',
       code: '代码助手',
       knowledge: '知识图谱',
-      figure: '绘图助手',
       grant: '基金申请',
       conference: '学术征稿',
       aiDetector: 'AI 检测',
@@ -635,7 +604,8 @@ export const TRANSLATIONS = {
       titlePrism: '标题精炼',
       flowchart: '流程图',
       aiWorkflow: 'AI 工作流',
-      training: '科研训练'
+      training: '科研训练',
+      plotting: '科研绘图'
     },
     groups: {
       discovery: '发现',
@@ -644,6 +614,24 @@ export const TRANSLATIONS = {
       writing: '写作与评审',
       utility: '工具'
     },
+    scientific: {
+      title: '科研绘图',
+      subtitle: '生成期刊级别的统计图表。',
+      import: '导入数据',
+      config: '图表配置',
+      style: '外观样式',
+      ai: 'AI 助手',
+      upload: '上传 CSV/Excel',
+      paste: '粘贴数据',
+      types: { bar: '柱状图', line: '折线图', scatter: '散点图', box: '箱线图', heatmap: '热图', violin: '小提琴图' },
+      axes: { x: 'X轴 (分类/自变量)', y: 'Y轴 (数值/因变量)', group: '分组' },
+      stats: { mean: '均值 + 标准差', sem: '均值 + 标准误', none: '原始数据' },
+      themes: { nature: 'Nature 风格', science: 'Science 风格', cell: 'Cell 风格', classic: '经典黑白' },
+      export: { png: '导出 PNG', svg: '导出 SVG', caption: '复制图注' },
+      aiPrompt: '描述你想画的图...',
+      aiBtn: '生成图表'
+    },
+    // ... existing translations ...
     training: {
       title: '答辩模拟器',
       subtitle: '真实对战模式，提升科研防御能力。',
@@ -993,54 +981,6 @@ export const TRANSLATIONS = {
       chatWelcome: '询问有关连接的问题...',
       chatPlaceholder: '输入您的问题...',
       acceptNode: '添加到图谱'
-    },
-    figure: {
-      title: '绘图助手',
-      subtitle: '生成科学配图。',
-      mode: {
-        generate: '生成',
-        polish: '润色'
-      },
-      polishTasks: {
-        general: '通用',
-        sketchTo3D: '草图转 3D',
-        chartBeautify: '图表美化'
-      },
-      input: {
-        referenceLabel: '参考图片 (可选)',
-        sourceLabel: '源图片',
-        promptLabel: '描述 / 提示词',
-        promptPlaceholder: '描述图片...',
-        backgroundOnly: '仅背景',
-        backgroundOnlyTip: '仅生成背景。',
-        sizeLabel: '尺寸',
-        sizes: { single: '单栏', double: '双栏' },
-        dpiLabel: 'DPI'
-      },
-      template: {
-        title: '模板',
-        subject: '主体',
-        subjectPh: '例如：细胞',
-        action: '动作',
-        actionPh: '例如：分裂',
-        environment: '环境',
-        environmentPh: '例如：培养皿',
-        perspective: '视角',
-        perspectivePh: '例如：俯视',
-        apply: '应用模板'
-      },
-      chartTypes: { Mechanism: '机理图', Flowchart: '流程图', Data: '数据图' },
-      colorPalettes: { Default: '默认', Nature: 'Nature 风格', Science: 'Science 风格', Grayscale: '灰度' },
-      btn: '生成图片',
-      generating: '正在生成...',
-      result: '结果',
-      tools: {
-        addLabel: '添加标签',
-        saveWithLabels: '保存带标签图'
-      },
-      download: '下载',
-      refinePlaceholder: '微调此图...',
-      history: '历史记录'
     },
     grant: {
       title: '基金申请',

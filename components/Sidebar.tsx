@@ -1,12 +1,11 @@
 
-
 import React from 'react';
 import { 
   Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, 
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, 
   ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, 
-  PanelLeftOpen, Network, Image as ImageIcon, Table2, Briefcase, Calendar, 
-  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell 
+  PanelLeftOpen, Network, Table2, Briefcase, Calendar, 
+  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell, Activity 
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -53,9 +52,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, collapse
       items: [
         { id: ViewState.EXPERIMENT_DESIGN, label: t.experimentDesign, icon: <Beaker size={20} /> },
         { id: ViewState.DATA_ANALYSIS, label: t.data, icon: <BarChart2 size={20} /> },
+        { id: ViewState.SCIENTIFIC_PLOTTING, label: t.plotting, icon: <Activity size={20} /> },
         { id: ViewState.CODE_ASSISTANT, label: t.code, icon: <Terminal size={20} /> },
         { id: ViewState.CHART_EXTRACTION, label: t.chart, icon: <Table2 size={20} /> },
-        { id: ViewState.FIGURE_GEN, label: t.figure, icon: <ImageIcon size={20} /> },
         { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={20} /> },
       ]
     },

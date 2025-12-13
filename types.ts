@@ -42,7 +42,6 @@ export enum ViewState {
   CODE_ASSISTANT = 'CODE_ASSISTANT',
   EXPERIMENT_DESIGN = 'EXPERIMENT_DESIGN',
   KNOWLEDGE_GRAPH = 'KNOWLEDGE_GRAPH',
-  FIGURE_GEN = 'FIGURE_GEN',
   CHART_EXTRACTION = 'CHART_EXTRACTION',
   GRANT_APPLICATION = 'GRANT_APPLICATION',
   CONFERENCE_FINDER = 'CONFERENCE_FINDER',
@@ -53,6 +52,7 @@ export enum ViewState {
   AI_WORKFLOW = 'AI_WORKFLOW', // New
   RESEARCH_TRAINING = 'RESEARCH_TRAINING', // New: Research Training
   PDF_CHAT = 'PDF_CHAT', // New: Intensive Reading
+  SCIENTIFIC_PLOTTING = 'SCIENTIFIC_PLOTTING', // New: Scientific Plotting
 }
 
 // Trend Types
@@ -648,4 +648,19 @@ export interface GuidedStep {
   title: string;
   description: string;
   status: 'locked' | 'active' | 'completed';
+}
+
+// Scientific Plotting Types
+export interface PlotConfig {
+  type: 'bar' | 'line' | 'scatter' | 'area' | 'pie' | 'radar';
+  xAxis: string;
+  yAxis: string;
+  series?: string; // For grouping/coloring
+  title: string;
+  xLabel: string;
+  yLabel: string;
+  style: 'Nature' | 'Science' | 'Cell' | 'Generic';
+  errorBars?: boolean;
+  logScale?: boolean;
+  showLegend?: boolean;
 }

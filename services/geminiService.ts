@@ -40,7 +40,8 @@ import {
   TrainingAnalysis,
   BattleMessage,
   TrainingPersonaStyle,
-  Quiz
+  Quiz,
+  PlotConfig
 } from '../types';
 import { MOCK_PAPERS } from '../constants';
 
@@ -458,7 +459,48 @@ export async function generateReadingQuiz(file: File, language: Language): Promi
     } catch (e) { return null; }
 }
 
-// 7. Other Feature Implementations (Restored from Stubs)
+// 7. Scientific Plotting Services
+export async function generatePlotConfig(prompt: string, headers: string[], sampleData: any[], language: Language): Promise<PlotConfig | null> {
+    const ai = getAiClient();
+    const context = `Headers: ${headers.join(', ')}. Sample Data (first 3 rows): ${JSON.stringify(sampleData.slice(0, 3))}`;
+    const userPrompt = `Generate a plotting configuration for Recharts based on user request: "${prompt}".
+    Context: ${context}
+    Return JSON: {
+        type: 'bar' | 'line' | 'scatter' | 'area' | 'pie' | 'radar',
+        xAxis: string (column name),
+        yAxis: string (column name),
+        series: string (column name for grouping, optional),
+        title: string,
+        xLabel: string,
+        yLabel: string,
+        style: 'Nature' | 'Science' | 'Cell' | 'Generic',
+        errorBars: boolean,
+        logScale: boolean,
+        showLegend: boolean
+    }.
+    Lang: ${language}`;
+
+    try {
+        const res = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: userPrompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        return JSON.parse(cleanJson(res.text || "{}"));
+    } catch (e) { return null; }
+}
+
+export async function suggestChartType(headers: string[], sampleData: any[], language: Language): Promise<string> {
+    const ai = getAiClient();
+    const context = `Headers: ${headers.join(', ')}. Sample Data: ${JSON.stringify(sampleData.slice(0, 3))}`;
+    const res = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `Recommend the best scientific chart type for this data. Return JUST the type name (e.g. "Bar Chart", "Scatter Plot"). Context: ${context}. Lang: ${language}`
+    });
+    return res.text || "Bar Chart";
+}
+
+// 8. Other Feature Implementations (Restored from Stubs)
 export async function extractChartData(file: File, language: Language): Promise<ChartExtractionResult> {
     const ai = getAiClient();
     const imagePart = await fileToGenerativePart(file);
