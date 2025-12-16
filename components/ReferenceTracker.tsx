@@ -32,10 +32,10 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
   const [selectedPaper, setSelectedPaper] = useState<any | null>(null);
   const [selectedPaperIds, setSelectedPaperIds] = useState<Set<string>>(new Set());
 
-  // Flatten papers for easier access
+  // Flatten papers for easier access with defensive checks
   const allPapers = useMemo(() => {
       if (!results) return [];
-      return results.flatMap(cat => cat.papers);
+      return results.flatMap(cat => cat.papers || []).filter(p => !!p);
   }, [results]);
 
   const handleTrack = async (inputQuery: string, isFile: boolean) => {
@@ -70,16 +70,18 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
   };
 
   const handleExportBibTex = () => {
-      const selected = allPapers.filter(p => selectedPaperIds.has(p.id!));
+      const selected = allPapers.filter(p => p.id && selectedPaperIds.has(p.id));
       const targets = selected.length > 0 ? selected : allPapers;
       
       const bib = targets.map((p, i) => {
-          const id = p.author ? p.author.split(' ')[0] + p.year : `ref${i}`;
+          if (!p) return '';
+          const author = p.author || 'Unknown';
+          const id = author.split(' ')[0] + (p.year || '0000');
           return `@article{${id},
-  title={${p.title}},
-  author={${p.author}},
-  year={${p.year}},
-  note={${p.description}}
+  title={${p.title || 'Untitled'}},
+  author={${author}},
+  year={${p.year || '0000'}},
+  note={${p.description || ''}}
 }`;
       }).join('\n\n');
 
@@ -140,12 +142,13 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
     results.forEach((cat, catIdx) => {
       if (Array.isArray(cat.papers)) {
         cat.papers.forEach((paper, pIdx) => {
+            if (!paper) return; // Fix: Check if paper is null
             const nodeId = paper.id || `p-${catIdx}-${pIdx}`;
             const radius = Math.max(5, Math.min(15, (paper.citations || 0) / 10 + 5));
             nodes.push({
                 ...paper,
                 id: nodeId,
-                name: paper.title,
+                name: paper.title || "Untitled",
                 type: 'paper',
                 radius: radius,
                 category: cat.category,
@@ -277,7 +280,7 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
       .attr("dx", 0)
       .attr("dy", (d: any) => d.radius + 12)
       .text((d: any) => {
-         const txt = d.name;
+         const txt = d.name || "";
          return txt.length > 15 ? txt.substring(0, 15) + '...' : txt;
       })
       .attr("text-anchor", "middle")
@@ -484,8 +487,8 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
                     <div className="flex flex-col h-full animate-slideInRight">
                         <div className="p-4 border-b border-slate-100 flex justify-between items-start bg-slate-50">
                              <div>
-                                 <h3 className="font-bold text-slate-900 leading-snug">{selectedPaper.title}</h3>
-                                 <p className="text-xs text-slate-500 mt-1">{selectedPaper.author} • {selectedPaper.year}</p>
+                                 <h3 className="font-bold text-slate-900 leading-snug">{selectedPaper.title || 'Untitled'}</h3>
+                                 <p className="text-xs text-slate-500 mt-1">{selectedPaper.author || 'Unknown'} • {selectedPaper.year || 'N/A'}</p>
                              </div>
                              <button onClick={() => setSelectedPaper(null)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
                         </div>
@@ -510,17 +513,17 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
 
                             <div>
                                 <h4 className="text-xs font-bold text-slate-400 uppercase mb-2">Role in Research</h4>
-                                <p className="text-sm text-slate-700">{selectedPaper.description}</p>
+                                <p className="text-sm text-slate-700">{selectedPaper.description || 'No description available.'}</p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="p-3 bg-slate-50 rounded border border-slate-100">
                                     <div className="text-xs text-slate-400 font-bold uppercase">Citations</div>
-                                    <div className="text-lg font-bold text-slate-800">{selectedPaper.citations || 'N/A'}</div>
+                                    <div className="text-lg font-bold text-slate-800">{selectedPaper.citations || '0'}</div>
                                 </div>
                                 <div className="p-3 bg-slate-50 rounded border border-slate-100">
                                     <div className="text-xs text-slate-400 font-bold uppercase">Category</div>
-                                    <div className="text-sm font-bold text-blue-600 truncate">{selectedPaper.category}</div>
+                                    <div className="text-sm font-bold text-blue-600 truncate">{selectedPaper.category || 'General'}</div>
                                 </div>
                             </div>
                             
@@ -556,7 +559,9 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
                              </div>
                         </div>
                         <div className="flex-grow overflow-y-auto p-2">
-                            {allPapers.map((paper, idx) => (
+                            {allPapers.map((paper, idx) => {
+                                if (!paper) return null; // Defensive check
+                                return (
                                 <div 
                                   key={idx} 
                                   onClick={() => setSelectedPaper(paper)}
@@ -566,11 +571,11 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
                                         <div className="flex items-center gap-2 flex-grow">
                                             <input 
                                               type="checkbox" 
-                                              onClick={(e) => {e.stopPropagation(); toggleSelection(paper.id!);}} 
-                                              checked={selectedPaperIds.has(paper.id!)}
+                                              onClick={(e) => {e.stopPropagation(); if(paper.id) toggleSelection(paper.id);}} 
+                                              checked={!!paper.id && selectedPaperIds.has(paper.id)}
                                               className="rounded border-slate-300 text-blue-600 focus:ring-0"
                                             />
-                                            <h4 className="font-bold text-sm text-slate-800 line-clamp-1 group-hover:text-blue-600">{paper.title}</h4>
+                                            <h4 className="font-bold text-sm text-slate-800 line-clamp-1 group-hover:text-blue-600">{paper.title || "Untitled"}</h4>
                                         </div>
                                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap ml-2
                                             ${paper.sentiment === 'Support' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}
@@ -579,11 +584,12 @@ const ReferenceTracker: React.FC<ReferenceTrackerProps> = ({ language }) => {
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center pl-6">
-                                        <span className="text-xs text-slate-500">{paper.author} • {paper.year}</span>
+                                        <span className="text-xs text-slate-500">{paper.author || "Unknown"} • {paper.year || "N/A"}</span>
                                         <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 rounded">{paper.citations || 0} cit.</span>
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 )}

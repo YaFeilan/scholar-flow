@@ -10,10 +10,9 @@ import { TRANSLATIONS } from '../translations';
 
 interface TrendDashboardProps {
   language: Language;
-  onNavigateToIdea?: (topic: string) => void;
 }
 
-const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToIdea }) => {
+const TrendDashboard: React.FC<TrendDashboardProps> = ({ language }) => {
   const t = TRANSLATIONS[language].trends;
   const appName = TRANSLATIONS[language].appName;
   
@@ -337,15 +336,6 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                          <div className="flex justify-between items-start mb-2">
                             <p className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">{tech.type || t.emerging}</p>
                             <div className="flex gap-1">
-                                {onNavigateToIdea && (
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); onNavigateToIdea(tech.name); }}
-                                        className="text-white/40 hover:text-yellow-400 transition-colors p-1"
-                                        title="Generate Research Idea"
-                                    >
-                                        <Lightbulb size={14} />
-                                    </button>
-                                )}
                                 <button onClick={() => handleAddToPPT(`Emerging Tech: ${tech.name}`)} className="text-white/20 hover:text-white transition-colors p-1"><MonitorPlay size={14} /></button>
                             </div>
                          </div>
@@ -467,19 +457,12 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                                       <button onClick={() => setSelectedKeyword(null)} className="text-slate-400 hover:text-slate-600"><X size={14}/></button>
                                   </div>
                                   
-                                  {onNavigateToIdea && (
-                                    <button 
-                                        onClick={() => onNavigateToIdea(selectedKeyword)}
-                                        className="w-full mb-3 bg-amber-500 text-white py-2 rounded-lg font-bold text-sm hover:bg-amber-600 flex items-center justify-center gap-2 shadow-sm"
-                                    >
-                                        <Lightbulb size={16} /> Generate Research Idea
-                                    </button>
-                                  )}
-                                  
                                   {loadingPapers ? (
                                       <div className="flex justify-center py-10"><Loader2 className="animate-spin text-blue-600" /></div>
                                   ) : (
-                                      relatedPapers.map((paper) => (
+                                      relatedPapers.map((paper) => {
+                                          if (!paper) return null;
+                                          return (
                                           <div key={paper.id} className="bg-slate-50 p-3 rounded-lg border border-slate-100 hover:border-blue-300 transition-all group">
                                               <h5 className="font-bold text-sm text-slate-800 leading-tight mb-2 group-hover:text-blue-700">{paper.title}</h5>
                                               <div className="flex justify-between items-center mb-2">
@@ -499,7 +482,8 @@ const TrendDashboard: React.FC<TrendDashboardProps> = ({ language, onNavigateToI
                                                   </div>
                                               )}
                                           </div>
-                                      ))
+                                          );
+                                      })
                                   )}
                               </div>
                            ) : (

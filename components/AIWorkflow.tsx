@@ -51,7 +51,7 @@ const AIWorkflow: React.FC<AIWorkflowProps> = ({ language }) => {
   };
 
   const handleSelectAngle = async (angle: WorkflowAngle) => {
-      if (!selectedProblem) return;
+      if (!selectedProblem?.title || !angle?.title) return; // Fix: Defensive check with optional chaining
       setSelectedAngle(angle);
       setLoading(true);
       const res = await generateWorkflowFramework(selectedProblem.title, angle.title, language);
@@ -190,6 +190,7 @@ const AIWorkflow: React.FC<AIWorkflowProps> = ({ language }) => {
                    </div>
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        {problems.map((prob) => (
+                           prob ? (
                            <div 
                               key={prob.id}
                               onClick={() => handleSelectProblem(prob)}
@@ -207,6 +208,7 @@ const AIWorkflow: React.FC<AIWorkflowProps> = ({ language }) => {
                                <h4 className="font-bold text-lg text-slate-800 dark:text-slate-100 mb-2 leading-tight">{prob.title}</h4>
                                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{prob.description}</p>
                            </div>
+                           ) : null
                        ))}
                    </div>
                    {loading && (
@@ -239,6 +241,7 @@ const AIWorkflow: React.FC<AIWorkflowProps> = ({ language }) => {
 
                    <div className="space-y-4">
                        {angles.map((angle) => (
+                           angle ? (
                            <div 
                               key={angle.id}
                               onClick={() => handleSelectAngle(angle)}
@@ -256,6 +259,7 @@ const AIWorkflow: React.FC<AIWorkflowProps> = ({ language }) => {
                                </div>
                                <ArrowRight className="text-slate-300 group-hover:text-purple-500 transition-colors" />
                            </div>
+                           ) : null
                        ))}
                    </div>
                    {loading && (

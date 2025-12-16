@@ -159,7 +159,7 @@ const PPTGenerator: React.FC<PPTGeneratorProps> = ({ language }) => {
                      doc.addImage(slide.generatedImage, 'PNG', (pageWidth - imgWidth) / 2, margin + 20, imgWidth, imgHeight);
                 }
             } else if (slide.visualSuggestion) {
-                 // Print suggestion as placeholder text if no image generated
+                 // Print suggestion as placeholder text if no generated image
                  doc.setFontSize(10);
                  doc.setTextColor(100);
                  const suggLines = doc.splitTextToSize(`[Visual Idea: ${slide.visualSuggestion}]`, contentWidth);
@@ -428,6 +428,7 @@ const PPTGenerator: React.FC<PPTGeneratorProps> = ({ language }) => {
                     <div className="flex-grow overflow-y-auto bg-slate-100 rounded-xl p-8 border border-slate-200">
                        <div className="max-w-3xl mx-auto space-y-8">
                           {Array.isArray(pptContent.slides) ? pptContent.slides.map((slide: any, idx: number) => (
+                             slide ? (
                              <div key={idx} className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 aspect-video flex flex-col relative overflow-hidden group">
                                 <div className="border-b-2 border-slate-100 pb-4 mb-4 flex justify-between items-center relative z-10">
                                    <h4 className="text-xl font-bold text-slate-800">{slide.title}</h4>
@@ -485,6 +486,7 @@ const PPTGenerator: React.FC<PPTGeneratorProps> = ({ language }) => {
                                     </div>
                                 )}
                              </div>
+                             ) : null
                           )) : (
                              <div className="text-center text-slate-500 p-8">
                                 No slides generated. Please try again.
@@ -494,12 +496,15 @@ const PPTGenerator: React.FC<PPTGeneratorProps> = ({ language }) => {
                     </div>
                     
                     <div className="mt-6 flex justify-center">
-                       <button onClick={() => setStep(1)} className="text-slate-500 hover:text-blue-600 font-medium text-sm">Create Another Presentation</button>
+                        <button onClick={() => setStep(1)} className="text-slate-500 hover:text-blue-600 font-bold flex items-center gap-2 transition-colors">
+                            <ChevronLeft size={16} /> Create Another Presentation
+                        </button>
                     </div>
                  </div>
               ) : null}
            </div>
         )}
+
       </div>
     </div>
   );

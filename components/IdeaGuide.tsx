@@ -103,6 +103,11 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
     
     setFollowUpLoading(true);
     const direction = result.directions[selectedDirectionIndex];
+    if (!direction) { // Fix: Defensive check
+        setFollowUpLoading(false);
+        return;
+    }
+    
     const data = await generateIdeaFollowUp(topic, direction.angle, followUpQuery, language);
     setFollowUpResult(data);
     setFollowUpLoading(false);
@@ -346,10 +351,12 @@ const IdeaGuide: React.FC<IdeaGuideProps> = ({ language, initialTopic, onClearIn
                                      {dir.corePapers && dir.corePapers.length > 0 ? (
                                         <ul className="space-y-2">
                                             {dir.corePapers.map((paper, pIdx) => (
+                                            paper ? (
                                             <li key={pIdx} className="bg-slate-50 p-2 rounded border border-slate-100 text-xs text-slate-600">
                                                 <div className="font-bold text-slate-800">{paper.title}</div>
                                                 <div className="text-[10px] text-slate-400 mt-1">{paper.author} • {paper.year}</div>
                                             </li>
+                                            ) : null
                                             ))}
                                         </ul>
                                      ) : (

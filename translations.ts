@@ -21,7 +21,6 @@ export const TRANSLATIONS = {
       search: 'Search',
       track: 'Tracker',
       pdfChat: 'PDF Chat',
-      idea: 'Idea Guide',
       trends: 'Trends',
       experimentDesign: 'Exp. Design',
       data: 'Data Analysis',
@@ -42,7 +41,8 @@ export const TRANSLATIONS = {
       ppt: 'PPT Gen',
       flowchart: 'Flowchart',
       training: 'Training',
-      aiWorkflow: 'AI Workflow'
+      aiWorkflow: 'AI Workflow',
+      ideaGuide: 'Idea Guide'
     },
     aiWorkflow: {
       title: 'AI Research Workflow',
@@ -133,10 +133,11 @@ export const TRANSLATIONS = {
     grant: { title: 'Grant Application', subtitle: 'Drafting assistant', tabs: {rationale:'Rationale', polish:'Polish', check:'Check', review:'Review'}, rationale: {title:'Rationale', references:'References', refUpload:'Upload PDF', fileLimit:'(Max 10)', imgUpload:'Upload Image', refDoi:'Paste DOIs...', modeLabel:'Generation Mode', modes: {full:'Full Rationale', status:'Research Status', significance:'Significance'}}, polish: {title:'Polish', section:'Section', sections: {significance:'Significance', innovation:'Innovation', foundation:'Foundation'}, content:'Content', placeholder:'...'}, check: {title:'Format Check', upload:'Upload', dash: {hard:'Hard Rules', logic:'Logic'}}, review: {title:'Review Simulation', roleLabel:'Role', frameworkLabel:'Framework', frameworkPlaceholder:'...', upload:'Upload', startBtn:'Start Review', reportTitle:'Review Report', verdict:'Verdict', downloadPdf:'Download PDF'} },
     discussion: { title: 'Discussion', subtitle: 'Simulate debate', personas: {reviewer:'Reviewer', interdisciplinary:'Interdisciplinary', mentor:'Mentor'}, placeholder: 'Research topic...', participantsHeader: 'Participants', addRole: 'Add', btn: 'Start Discussion', scorecard: {title:'Scorecard', theory:'Theory', method:'Method', app:'App'}, feasibility: {title:'Feasibility', data:'Data', tech:'Tech', ethics:'Ethics'} },
     ppt: { title: 'PPT Generator', subtitle: 'Slides from paper', uploadLabel: 'Upload Paper', nameLabel: 'Name', schoolLabel: 'Affiliation', densityLabel: 'Content Density', densityLow: 'Simple', densityHigh: 'Rich', pagesLabel: 'Pages', styleBtn: 'Analyze Style', steps: {2:'Config', 3:'Style'}, analyzing: 'Analyzing...', genBtn: 'Generate PPT', generating: 'Generating...', download: 'Download' },
-    flowchart: { title: 'Flowchart Gen', subtitle: 'Text to diagram', chartType: 'Type', types: {flowchart:'Flowchart', sequence:'Sequence', class:'Class', state:'State', er:'ER', gantt:'Gantt', mindmap:'Mindmap'}, uploadImage: 'Upload Sketch', inputPlaceholder: 'Describe process...', btn: 'Generate', resultTitle: 'Result', copyCode: 'Copy Code', download: 'SVG' },
+    flowchart: { title: 'Flowchart Gen', subtitle: 'Text to diagram', chartType: 'Type', types: {flowchart:'Flowchart', sequence:'Sequence', class:'Class', state:'State', er:'ER', gantt:'Gantt', mindmap:'Mindmap'}, uploadImage: 'Upload Sketch', inputPlaceholder: 'Describe process...', btn: 'Generate', resultTitle: 'Result', copyCode: '复制代码', download: '下载 SVG' },
     training: { title: 'Research Training', subtitle: 'Defense simulation', setup: {uploadLabel:'Upload Material', topicLabel:'Topic', placeholder:'...', personaLabel:'Interviewer Persona', personas: {method:'Methodology', methodDesc:'Strict on methods', innov:'Innovation', innovDesc:'Focus on novelty', prac:'Practical', pracDesc:'Real-world application'}, btn:'Start Battle'}, battle: {turn:'Turn', aiThinking:'Thinking...', turnReport:'Turn Analysis', original:'Your Answer', better:'Optimized', strengths:'Strengths', weaknesses:'Weaknesses', nextQ:'Next Question', hint:'Hint'}, report: {title:'Training Report', actionPlan:'Action Plan', restart:'Restart'} },
     data: { title: 'Data Analysis', subtitle: 'Automated insights', upload: 'Upload Data' },
-    figure: { title: 'Figure Generator', subtitle: 'Scientific Illustrations', mode: {generate:'Generate', polish:'Polish'}, input: {referenceLabel: 'Reference Image', sourceLabel: 'Source Image', promptLabel: 'Prompt', promptPlaceholder: 'Describe figure...', sizeLabel: 'Size', dpiLabel: 'DPI', backgroundOnly: 'Background Only', backgroundOnlyTip: 'Generate background only', sizes: {single:'Single Col', double:'Double Col'}}, template: {title:'Template', subject:'Subject', action:'Action', environment:'Environment', perspective:'Perspective', subjectPh:'e.g. Protein', actionPh:'e.g. Binding', environmentPh:'e.g. Cell', perspectivePh:'e.g. 3D', apply:'Apply'}, polishTasks: {general:'General', sketchTo3D:'Sketch to 3D', chartBeautify:'Chart Beautify'}, btn: 'Generate', result: 'Result', tools: {addLabel:'Label', saveWithLabels:'Save Annotated'}, refinePlaceholder: 'Refine...', download: 'Download', history: 'History', chartTypes: {Mechanism:'Mechanism', Process:'Process', Structure:'Structure'}, colorPalettes: {Default:'Default', Nature:'Nature', Science:'Science'} }
+    figure: { title: 'Figure Generator', subtitle: 'Scientific Illustrations', mode: {generate:'Generate', polish:'Polish'}, input: {referenceLabel: 'Reference Image', sourceLabel: 'Source Image', promptLabel: 'Prompt', promptPlaceholder: 'Describe figure...', sizeLabel: 'Size', dpiLabel: 'DPI', backgroundOnly: 'Background Only', backgroundOnlyTip: 'Generate background only', sizes: {single:'Single Col', double:'Double Col'}}, template: {title:'Template', subject:'Subject', action:'Action', environment:'Environment', perspective:'Perspective', subjectPh:'e.g. Protein', actionPh:'e.g. Binding', environmentPh:'e.g. Cell', perspectivePh:'e.g. 3D', apply:'Apply'}, polishTasks: {general:'General', sketchTo3D:'Sketch to 3D', chartBeautify:'Chart Beautify'}, btn: 'Generate', result: 'Result', tools: {addLabel:'Label', saveWithLabels:'Save Annotated'}, refinePlaceholder: 'Refine...', download: 'Download', history: 'History', chartTypes: {Mechanism:'Mechanism', Process:'Process', Structure:'Structure'}, colorPalettes: {Default:'Default', Nature:'Nature', Science:'Science'} },
+    idea: { title: 'Idea Guide', subtitle: 'Brainstorming & Research Gaps', placeholder: 'Enter research topic or area...', btn: 'Generate Ideas', directions: 'Research Directions', methodology: 'Methodology', dataSources: 'Data Sources', titles: 'Recommended Titles', corePapers: 'Key References', journals: 'Target Journals', deepDive: 'Deep Dive', keywords: 'Keywords', followUpBtn: 'Explore', followUpPlaceholder: 'Ask specific questions...', logicFlow: 'Logic Flow', selectDirection: 'Select', focus: {label: 'Focus', general: 'General', data: 'Data-Driven', policy: 'Policy', theory: 'Theoretical'}, exportProposal: 'Export Proposal' }
   },
   ZH: {
     appName: '科研助手',
@@ -159,7 +160,6 @@ export const TRANSLATIONS = {
       search: '学术搜索',
       track: '文献追踪',
       pdfChat: '精读助手',
-      idea: '灵感指南',
       trends: '趋势分析',
       experimentDesign: '实验设计',
       data: '数据分析',
@@ -180,7 +180,8 @@ export const TRANSLATIONS = {
       ppt: 'PPT 生成',
       flowchart: '流程图生成',
       training: '答辩演练',
-      aiWorkflow: 'AI工作流'
+      aiWorkflow: 'AI工作流',
+      ideaGuide: '创意指南'
     },
     aiWorkflow: {
       title: 'AI 科研工作流',
@@ -274,6 +275,7 @@ export const TRANSLATIONS = {
     flowchart: { title: '流程图生成', subtitle: '文本转图表', chartType: '图表类型', types: {flowchart:'流程图', sequence:'时序图', class:'类图', state:'状态图', er:'ER图', gantt:'甘特图', mindmap:'思维导图'}, uploadImage: '上传草图', inputPlaceholder: '描述流程或粘贴代码...', btn: '生成', resultTitle: '生成结果', copyCode: '复制代码', download: '下载 SVG' },
     training: { title: '答辩演练', subtitle: '模拟防御', setup: {uploadLabel:'上传材料', topicLabel:'答辩主题', placeholder:'...', personaLabel:'评委风格', personas: {method:'方法控', methodDesc:'死磕方法细节', innov:'创新控', innovDesc:'关注创新性', prac:'应用控', pracDesc:'关注落地应用'}, btn:'开始演练'}, battle: {turn:'回合', aiThinking:'思考中...', turnReport:'回合分析', original:'你的回答', better:'优化建议', strengths:'亮点', weaknesses:'不足', nextQ:'下一题', hint:'提示'}, report: {title:'演练报告', actionPlan:'改进计划', restart:'重新开始'} },
     data: { title: '数据分析', subtitle: '自动生成见解', upload: '上传数据' },
-    figure: { title: '科研图生成', subtitle: '科学插图绘制', mode: {generate:'生成', polish:'润色'}, input: {referenceLabel: '参考图', sourceLabel: '源图片', promptLabel: '提示词', promptPlaceholder: '描述图片...', sizeLabel: '尺寸', dpiLabel: '分辨率', backgroundOnly: '仅背景', backgroundOnlyTip: '仅生成背景结构', sizes: {single:'单栏', double:'双栏'}}, template: {title:'快捷模板', subject:'主体', action:'动作', environment:'环境', perspective:'视角', subjectPh:'如：蛋白质', actionPh:'如：结合', environmentPh:'如：细胞内', perspectivePh:'如：3D', apply:'应用'}, polishTasks: {general:'通用', sketchTo3D:'草图转3D', chartBeautify:'图表美化'}, btn: '生成', result: '结果', tools: {addLabel:'标注', saveWithLabels:'保存带标注图'}, refinePlaceholder: '输入指令微调...', download: '下载', history: '历史', chartTypes: {Mechanism:'机制图', Process:'流程图', Structure:'结构图'}, colorPalettes: {Default:'默认', Nature:'Nature色', Science:'Science色'} }
+    figure: { title: '科研图生成', subtitle: '科学插图绘制', mode: {generate:'生成', polish:'润色'}, input: {referenceLabel: '参考图', sourceLabel: '源图片', promptLabel: '提示词', promptPlaceholder: '描述图片...', sizeLabel: '尺寸', dpiLabel: '分辨率', backgroundOnly: '仅背景', backgroundOnlyTip: '仅生成背景结构', sizes: {single:'单栏', double:'双栏'}}, template: {title:'快捷模板', subject:'主体', action:'动作', environment:'环境', perspective:'视角', subjectPh:'如：蛋白质', actionPh:'如：结合', environmentPh:'如：细胞内', perspectivePh:'如：3D', apply:'应用'}, polishTasks: {general:'通用', sketchTo3D:'草图转3D', chartBeautify:'图表美化'}, btn: '生成', result: '结果', tools: {addLabel:'标注', saveWithLabels:'保存带标注图'}, refinePlaceholder: '输入指令微调...', download: '下载', history: '历史', chartTypes: {Mechanism:'机制图', Process:'流程图', Structure:'结构图'}, colorPalettes: {Default:'默认', Nature:'Nature色', Science:'Science色'} },
+    idea: { title: '创意指南', subtitle: '头脑风暴与研究缺口分析', placeholder: '输入研究主题或领域...', btn: '生成创意', directions: '研究方向', methodology: '方法论', dataSources: '数据来源', titles: '推荐标题', corePapers: '核心文献', journals: '目标期刊', deepDive: '深入挖掘', keywords: '关键词', followUpBtn: '探索', followUpPlaceholder: '提出具体问题...', logicFlow: '逻辑流', selectDirection: '选择此方向', focus: {label: '侧重点', general: '通用', data: '数据驱动', policy: '政策导向', theory: '理论研究'}, exportProposal: '导出提案' }
   }
 };

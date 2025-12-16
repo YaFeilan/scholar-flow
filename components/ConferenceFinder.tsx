@@ -1,8 +1,4 @@
 
-
-
-
-
 import React, { useState } from 'react';
 import { Calendar, Search, MapPin, ExternalLink, Filter, Loader2, BookOpen, Clock, AlertTriangle, Globe, BarChart2, CheckCircle2, ListFilter, ArrowDownUp } from 'lucide-react';
 import { Language, ConferenceFinderResult } from '../types';
@@ -382,6 +378,7 @@ const ConferenceFinder: React.FC<ConferenceFinderProps> = ({ language }) => {
                         <div className="text-center text-slate-400 py-10">No special issues found.</div>
                     )}
                     {filteredJournals?.map((journal, idx) => {
+                        if (!journal) return null;
                         const isTBA = journal.deadline && journal.deadline.toLowerCase().includes('tba');
                         const daysLeft = getDaysLeft(journal.deadline);
                         return (

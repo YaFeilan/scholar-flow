@@ -167,7 +167,8 @@ const TitlePrism: React.FC<TitlePrismProps> = ({ language }) => {
                        </div>
                    ) : (
                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fadeIn">
-                           {result.council.map((member, idx) => (
+                           {result.council && result.council.map((member, idx) => (
+                               member ? (
                                <div key={idx} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex flex-col items-center text-center hover:shadow-md transition-shadow relative overflow-hidden group">
                                    <div className="mb-3 transform group-hover:scale-110 transition-transform">
                                        {getPersonaIcon(member.role)}
@@ -180,6 +181,7 @@ const TitlePrism: React.FC<TitlePrismProps> = ({ language }) => {
                                    </div>
                                    <p className="text-[10px] text-slate-500 mt-1 leading-tight">{member.feedback}</p>
                                </div>
+                               ) : null
                            ))}
                        </div>
                    )}
@@ -196,7 +198,8 @@ const TitlePrism: React.FC<TitlePrismProps> = ({ language }) => {
                        </div>
                    ) : (
                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow animate-fadeIn">
-                           {result.options.map((opt, idx) => (
+                           {result.options && result.options.map((opt, idx) => (
+                               opt ? (
                                <div key={idx} className={`rounded-xl border p-5 flex flex-col h-full relative transition-all hover:shadow-lg
                                    ${opt.type === 'Safe' ? 'bg-blue-50/50 border-blue-200 hover:border-blue-300' : 
                                      opt.type === 'Impact' ? 'bg-orange-50/50 border-orange-200 hover:border-orange-300' : 
@@ -223,6 +226,7 @@ const TitlePrism: React.FC<TitlePrismProps> = ({ language }) => {
                                        <span className="font-bold mr-1">*</span> {opt.rationale}
                                    </div>
                                </div>
+                               ) : null
                            ))}
                        </div>
                    )}

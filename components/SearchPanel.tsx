@@ -72,7 +72,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
     // Use extracted full text if available, otherwise clear to allow generation
     setFullTextContent(paper.fullText || null);
     setSimulatedPdfUrl(null);
-    setActiveTab('abstract');
+    setActiveTab(paper.fullText ? 'fulltext' : 'abstract');
   };
 
   const closePaperModal = () => {
@@ -146,7 +146,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${viewingPaper.title.replace(/\s+/g, '_')}_AI_Simulated.md`;
+        const safeTitle = viewingPaper.title ? viewingPaper.title.replace(/\s+/g, '_') : 'paper';
+        a.download = `${safeTitle}_AI_Simulated.md`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -182,8 +183,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
     } else {
        const q = query.toLowerCase();
        const fallbackMocks = MOCK_PAPERS.filter(p => 
-          p.title.toLowerCase().includes(q) || 
-          p.authors.some(a => a.toLowerCase().includes(q)) ||
+          (p.title && p.title.toLowerCase().includes(q)) || 
+          (p.authors && p.authors.some(a => a.toLowerCase().includes(q))) ||
           (p.abstract && p.abstract.toLowerCase().includes(q))
        );
        setResults(fallbackMocks);
@@ -227,6 +228,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
           if (paper) {
               setLocalPapers(prev => [...prev, paper]);
               setSearchSource('local'); // Switch to local view to see it
+              handlePaperClick(paper); // Open modal immediately
           } else {
               // Fallback if parsing fails but shouldn't happen often
               alert(language === 'ZH' ? "无法从图片解析论文内容。" : "Failed to parse paper from image.");
@@ -240,31 +242,32 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
   const sortedPapers = useMemo(() => {
     let papers = searchSource === 'online' ? [...results] : [...localPapers];
 
-    if (searchSource === 'online') {
-      const currentYear = new Date().getFullYear();
-      if (filters.timeRange === 'Last 1 Year') {
-        papers = papers.filter(p => p.year >= currentYear - 1);
-      } else if (filters.timeRange === 'Last 3 Years') {
-        papers = papers.filter(p => p.year >= currentYear - 3);
-      } else if (filters.timeRange === 'Last 5 Years') {
-        papers = papers.filter(p => p.year >= currentYear - 5);
-      } 
-      
-      // Database Filter (SCI/SSCI/CJR/EI...)
-      if (filters.databases.length > 0) {
-        papers = papers.filter(p => {
-          if (!p.badges || p.badges.length === 0) return false;
-          // Check if paper has ANY of the selected database badges
-          return p.badges.some(b => filters.databases.includes(b.type));
-        });
-      }
+    // Filter Logic
+    const currentYear = new Date().getFullYear();
+    
+    // Time Range
+    if (filters.timeRange === 'Last 1 Year') {
+      papers = papers.filter(p => p.year >= currentYear - 1);
+    } else if (filters.timeRange === 'Last 3 Years') {
+      papers = papers.filter(p => p.year >= currentYear - 3);
+    } else if (filters.timeRange === 'Last 5 Years') {
+      papers = papers.filter(p => p.year >= currentYear - 5);
+    } 
+    
+    // Database Filter (SCI/SSCI/CJR/EI...)
+    if (filters.databases.length > 0) {
+      papers = papers.filter(p => {
+        if (!p.badges || p.badges.length === 0) return false;
+        // Check if paper has ANY of the selected database badges
+        return p.badges.some(b => filters.databases.includes(b.type));
+      });
+    }
 
-      // Partition Filter (Q1-Q4)
-      if (filters.partition && filters.partition.length > 0) {
-        papers = papers.filter(p => {
-            return p.badges?.some(b => b.partition && filters.partition.includes(b.partition));
-        });
-      }
+    // Partition Filter (Q1-Q4)
+    if (filters.partition && filters.partition.length > 0) {
+      papers = papers.filter(p => {
+          return p.badges?.some(b => b.partition && filters.partition.includes(b.partition));
+      });
     }
 
     if (filterYear) {
@@ -281,10 +284,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }
     }
 
-    // Join Time Filter (Date Added)
+    // Added Date Filter
     if (addedAfter) {
       papers = papers.filter(p => {
-         // Default addedDate to current if missing in logic to be safe, though types enforce it
          const pDate = p.addedDate || '2000-01-01'; 
          return pDate >= addedAfter;
       });
@@ -298,7 +300,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
     }
 
     return papers.sort((a, b) => {
-      if (sortBy === 'date') return b.year - a.year;
+      if (sortBy === 'date') return (b.year || 0) - (a.year || 0);
       if (sortBy === 'added') return (b.addedDate || '').localeCompare(a.addedDate || '');
       if (sortBy === 'if') {
         const getIf = (p: Paper) => p.badges?.find(badge => badge.if)?.if || 0;
@@ -573,7 +575,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
            </div>
         )}
         
-        {sortedPapers.map(paper => (
+        {sortedPapers.map(paper => {
+          if (!paper) return null;
+          return (
           <div 
              key={paper.id} 
              onClick={() => handlePaperClick(paper)}
@@ -620,162 +624,119 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                       ))}
                    </div>
                    
-                   <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                      {paper.abstract || "No abstract available."}
+                   <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                      {paper.abstract}
                    </p>
-                   
-                   {/* Quick Link Button */}
-                   {searchSource === 'online' && (
-                       <div className="mt-2 flex justify-end gap-2">
-                           <button 
-                               onClick={(e) => { e.stopPropagation(); const doi = `https://doi.org/10.1038/s41586-${Math.floor(Math.random() * 10000)}`; navigator.clipboard.writeText(doi); alert(language === 'ZH' ? '链接已复制' : 'URL copied'); }}
-                               className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                           >
-                               <ExternalLink size={12} /> {language === 'ZH' ? '复制链接' : 'Copy Link'}
-                           </button>
-                       </div>
-                   )}
                 </div>
              </div>
           </div>
-        ))}
+          );
+        })}
       </div>
       </div>
       </div>
-
+      
       {/* Detail Modal */}
       {viewingPaper && (
-         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={closePaperModal}>
-            <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl animate-fadeIn border border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
-               <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start">
-                  <div>
-                     <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight mb-2">{viewingPaper.title}</h2>
-                     <p className="text-sm text-slate-500 dark:text-slate-400">{viewingPaper.authors.join(', ')} • {viewingPaper.year} • {viewingPaper.journal}</p>
-                  </div>
-                  <div className="flex gap-2">
-                      <button 
-                        onClick={copySourceUrl}
-                        className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
-                        title={language === 'ZH' ? '复制来源链接' : 'Copy Source URL'}
-                      >
-                        <ExternalLink size={16} />
-                      </button>
-                      
-                      <button 
-                        onClick={handleDownload}
-                        className="bg-slate-900 dark:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors flex items-center gap-2"
-                      >
-                        {isGeneratingFullText ? <Loader2 className="animate-spin h-4 w-4" /> : <Download className="h-4 w-4" />}
-                        {language === 'ZH' ? '下载' : 'Download'}
-                      </button>
-                      <button onClick={closePaperModal} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700">
-                        <X size={24} />
-                      </button>
-                  </div>
-               </div>
-               
-               {/* Tab Headers */}
-               <div className="flex border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-6 pt-2">
-                   <button 
-                      onClick={() => setActiveTab('abstract')}
-                      className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'abstract' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-                   >
-                       {language === 'ZH' ? '摘要' : 'Abstract'}
-                   </button>
-                   <button 
-                      onClick={() => { setActiveTab('fulltext'); if (!fullTextContent) handleGenerateFullText(); }}
-                      className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'fulltext' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-                   >
-                       <FileText size={14} /> 
-                       {language === 'ZH' ? '全文 (AI/提取)' : 'Full Text (AI/Extracted)'}
-                   </button>
-                   <button 
-                      onClick={() => { setActiveTab('interpretation'); if (!interpretation) handleInterpret(); }}
-                      className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'interpretation' ? 'border-purple-600 text-purple-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-                   >
-                       <Sparkles size={14} />
-                       {t.interpret}
-                   </button>
-               </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onClick={closePaperModal}>
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-fadeIn" onClick={e => e.stopPropagation()}>
+                <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-start">
+                    <div>
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">{viewingPaper.title}</h3>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">{viewingPaper.authors.join(', ')} • {viewingPaper.year} • {viewingPaper.journal}</p>
+                    </div>
+                    <button onClick={closePaperModal} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+                </div>
+                
+                <div className="flex border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                    <button onClick={() => setActiveTab('abstract')} className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'abstract' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Abstract</button>
+                    <button onClick={() => setActiveTab('fulltext')} className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'fulltext' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Full Text (Simulated)</button>
+                    <button onClick={() => setActiveTab('interpretation')} className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${activeTab === 'interpretation' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>AI Interpretation</button>
+                </div>
 
-               <div className="p-6 overflow-y-auto custom-scrollbar flex-grow bg-slate-50/30 dark:bg-slate-900/30">
-                  {activeTab === 'abstract' && (
-                      <div className="space-y-4">
-                          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-200 mb-4 uppercase tracking-wide opacity-50">Abstract</h3>
-                              <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base whitespace-pre-wrap">
-                                  {viewingPaper.abstract || "No abstract available for this paper."}
-                              </p>
-                          </div>
-                          <div className="flex gap-2 flex-wrap">
-                              {viewingPaper.badges?.map((b, i) => (
-                                  <span key={i} className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full text-xs font-bold border border-slate-200 dark:border-slate-600">
-                                      {b.type} {b.partition} {b.if && `IF: ${b.if}`}
-                                  </span>
-                              ))}
-                          </div>
-                          <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700 items-center">
-                              <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg border border-amber-200 w-full">
-                                  <Lock size={12} /> 
-                                  {language === 'ZH' ? '如无法直接下载，请复制链接或使用 AI 生成全文。' : 'If direct download fails, copy URL or generate AI full text.'}
-                              </div>
-                          </div>
-                      </div>
-                  )}
+                <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
+                    {activeTab === 'abstract' && (
+                        <div className="text-slate-700 dark:text-slate-300 leading-relaxed space-y-4">
+                            <h4 className="font-bold uppercase text-xs text-slate-400">Abstract</h4>
+                            <p>{viewingPaper.abstract}</p>
+                            <div className="flex gap-2 mt-4">
+                                {viewingPaper.badges?.map((b, i) => (
+                                    <span key={i} className="bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                        {b.type} {b.partition}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-                  {activeTab === 'fulltext' && (
-                      <div className="h-full flex flex-col">
-                          {isGeneratingFullText ? (
-                              <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-                                  <Loader2 className="animate-spin h-8 w-8 mb-4 text-blue-600" />
-                                  <p className="font-bold">Generating Full Text Simulation...</p>
-                                  <p className="text-sm">Synthesizing comprehensive content based on metadata.</p>
-                              </div>
-                          ) : fullTextContent ? (
-                              <div className="prose prose-sm dark:prose-invert max-w-none bg-white dark:bg-slate-800 p-8 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 relative">
-                                  {!viewingPaper.fullText && (
-                                      <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded-r text-sm text-amber-900 dark:text-amber-100 flex items-start gap-3 shadow-sm">
-                                          <AlertTriangle size={20} className="flex-shrink-0 text-amber-600 mt-0.5" />
-                                          <div>
-                                              <strong className="block mb-1">{language === 'ZH' ? '⚠️ AI 生成内容声明' : '⚠️ AI Generated Content Disclaimer'}</strong>
-                                              {language === 'ZH' 
-                                                ? '本文由人工智能根据论文元数据生成，旨在提供模拟阅读体验，并非原始文献内容。请访问原始链接获取官方版本。' 
-                                                : 'This content was generated by AI based on paper metadata to simulate a reading experience. It is NOT the original document. Please visit the source URL for the official version.'}
-                                          </div>
-                                      </div>
-                                  )}
-                                  <ReactMarkdown>{fullTextContent}</ReactMarkdown>
-                              </div>
-                          ) : (
-                              <div className="text-center py-20">
-                                  <button onClick={handleGenerateFullText} className="text-blue-600 font-bold hover:underline">Click to Generate Full Text</button>
-                              </div>
-                          )}
-                      </div>
-                  )}
+                    {activeTab === 'fulltext' && (
+                        <div className="space-y-4">
+                            {fullTextContent ? (
+                                <div className="prose prose-sm dark:prose-invert max-w-none">
+                                    <ReactMarkdown>{fullTextContent}</ReactMarkdown>
+                                </div>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <p className="text-slate-500 mb-4">{language === 'ZH' ? '全文未加载。点击生成模拟全文（由于版权限制）。' : 'Full text not loaded. Generate simulated text (due to copyright).'}</p>
+                                    <button 
+                                        onClick={handleGenerateFullText}
+                                        disabled={isGeneratingFullText}
+                                        className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
+                                    >
+                                        {isGeneratingFullText ? <Loader2 className="animate-spin" /> : <Sparkles size={16} />}
+                                        {language === 'ZH' ? '生成模拟全文' : 'Generate Simulated Full Text'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
-                  {activeTab === 'interpretation' && (
-                      <div className="h-full">
-                          {isInterpreting ? (
-                              <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-                                  <Loader2 className="animate-spin h-8 w-8 mb-4 text-purple-600" />
-                                  <p>Interpreting Paper...</p>
-                              </div>
-                          ) : interpretation ? (
-                              <div className="bg-purple-50 dark:bg-purple-900/10 rounded-xl p-6 border border-purple-100 dark:border-purple-800">
-                                  <h3 className="text-sm font-bold text-purple-900 dark:text-purple-300 mb-4 flex items-center gap-2">
-                                      <Sparkles size={16} /> {t.interpretationResult}
-                                  </h3>
-                                  <div className="prose prose-sm dark:prose-invert max-w-none text-slate-800 dark:text-slate-200">
-                                      <ReactMarkdown>{interpretation}</ReactMarkdown>
-                                  </div>
-                              </div>
-                          ) : null}
-                      </div>
-                  )}
-               </div>
+                    {activeTab === 'interpretation' && (
+                        <div className="space-y-4">
+                            {interpretation ? (
+                                <div className="prose prose-sm dark:prose-invert max-w-none bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+                                    <ReactMarkdown>{interpretation}</ReactMarkdown>
+                                </div>
+                            ) : (
+                                <div className="text-center py-10">
+                                    <button 
+                                        onClick={handleInterpret} 
+                                        disabled={isInterpreting}
+                                        className="bg-purple-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-purple-700 transition-colors flex items-center gap-2 mx-auto shadow-lg shadow-purple-200 dark:shadow-none"
+                                    >
+                                        {isInterpreting ? <Loader2 className="animate-spin" /> : <Sparkles size={18} />}
+                                        {language === 'ZH' ? '开始 AI 深度解读' : 'Start AI Deep Interpretation'}
+                                    </button>
+                                    <p className="text-xs text-slate-400 mt-3">{language === 'ZH' ? '分析核心贡献、方法论优缺点' : 'Analyzes core contributions, methodology pros/cons'}</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+                    <button onClick={copySourceUrl} className="text-slate-500 hover:text-blue-600 text-sm font-bold flex items-center gap-2">
+                        <ExternalLink size={16} /> Source Link
+                    </button>
+                    <div className="flex gap-3">
+                        <button onClick={handleDownload} className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center gap-2">
+                            <Download size={16} /> PDF
+                        </button>
+                        <button 
+                            onClick={(e) => {
+                                if (viewingPaper) {
+                                    togglePaperSelection(e as any, viewingPaper.id);
+                                    closePaperModal();
+                                }
+                            }}
+                            className={`${selectedPapers.has(viewingPaper.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-blue-600 text-white hover:bg-blue-700'} px-6 py-2 rounded-lg font-bold transition-colors border`}
+                        >
+                            {selectedPapers.has(viewingPaper.id) ? (language === 'ZH' ? '取消选择' : 'Deselect') : (language === 'ZH' ? '加入综述列表' : 'Add to Review List')}
+                        </button>
+                    </div>
+                </div>
             </div>
-         </div>
+        </div>
       )}
     </div>
   );

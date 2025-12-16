@@ -9,7 +9,6 @@ import ReviewGenerator from './components/ReviewGenerator';
 import PolishAssistant from './components/PolishAssistant';
 import Advisor from './components/Advisor';
 import PPTGenerator from './components/PPTGenerator';
-import IdeaGuide from './components/IdeaGuide';
 import OpeningReview from './components/OpeningReview';
 import DataAnalysis from './components/DataAnalysis';
 import CodeAssistant from './components/CodeAssistant';
@@ -26,6 +25,7 @@ import AIWorkflow from './components/AIWorkflow';
 import ResearchTraining from './components/ResearchTraining';
 import PDFChat from './components/PDFChat';
 import ScientificPlotting from './components/ScientificPlotting';
+import IdeaGuide from './components/IdeaGuide';
 import WelcomeModal from './components/WelcomeModal';
 import { ViewState, Paper, Language } from './types';
 
@@ -33,17 +33,11 @@ export default function App() {
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.AI_WORKFLOW);
   const [language, setLanguage] = useState<Language>('EN');
   const [reviewPapers, setReviewPapers] = useState<Paper[]>([]);
-  const [initialTopic, setInitialTopic] = useState<string>('');
   const [extractedData, setExtractedData] = useState<any[][] | null>(null);
 
   const handleReviewRequest = (papers: Paper[]) => {
     setReviewPapers(papers);
     setCurrentView(ViewState.REVIEW_GENERATION);
-  };
-
-  const handleNavigateToIdea = (topic: string) => {
-    setInitialTopic(topic);
-    setCurrentView(ViewState.IDEA_GUIDE);
   };
 
   const handleExtractedData = (data: any[][]) => {
@@ -70,7 +64,7 @@ export default function App() {
             />
           )}
           {currentView === ViewState.TRENDS && (
-            <TrendDashboard language={language} onNavigateToIdea={handleNavigateToIdea} />
+            <TrendDashboard language={language} />
           )}
           {currentView === ViewState.PEER_REVIEW && (
             <PeerReview language={language} />
@@ -89,9 +83,6 @@ export default function App() {
           )}
           {currentView === ViewState.PPT_GENERATION && (
             <PPTGenerator language={language} />
-          )}
-          {currentView === ViewState.IDEA_GUIDE && (
-            <IdeaGuide language={language} initialTopic={initialTopic} onClearInitialTopic={() => setInitialTopic('')} />
           )}
           {currentView === ViewState.OPENING_REVIEW && (
             <OpeningReview language={language} />
@@ -143,6 +134,9 @@ export default function App() {
           )}
           {currentView === ViewState.SCIENTIFIC_PLOTTING && (
             <ScientificPlotting language={language} />
+          )}
+          {currentView === ViewState.IDEA_GUIDE && (
+            <IdeaGuide language={language} />
           )}
         </div>
       </main>

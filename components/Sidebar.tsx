@@ -29,8 +29,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, collapse
       items: [
         { id: ViewState.SEARCH, label: t.search, icon: <Search size={20} /> },
         { id: ViewState.TRACK, label: t.track, icon: <BookOpen size={20} /> },
+        { id: ViewState.IDEA_GUIDE, label: t.ideaGuide, icon: <Lightbulb size={20} /> }, // Added Idea Guide
         { id: ViewState.PDF_CHAT, label: TRANSLATIONS[language].pdfChat.title, icon: <Book size={20} /> },
-        { id: ViewState.IDEA_GUIDE, label: t.idea, icon: <Lightbulb size={20} /> },
         { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={20} /> },
       ]
     },

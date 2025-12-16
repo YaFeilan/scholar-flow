@@ -83,15 +83,18 @@ export async function parsePaperFromImage(file: File, language: Language): Promi
   const ai = getAiClient();
   const imagePart = await fileToGenerativePart(file);
   
-  const prompt = `Analyze this image of a research paper. Extract the following details into a JSON object:
-  - title (string)
-  - authors (array of strings)
-  - journal (string, if visible, otherwise "Unknown")
-  - year (number, if visible, else current year)
-  - abstract (string)
-  - fullText (string): The FULL readable text content extracted from the image, formatted in Markdown with proper headers.
+  // Prompt updated to be very specific about full content extraction
+  const prompt = `Analyze this image of a research paper. Perform a comprehensive extraction (OCR) of ALL visible text.
   
-  Also, strictly infer the likely academic database and partition (e.g. SCI Q1, EI) based on the journal name or visual cues.
+  Extract the following details into a JSON object:
+  - title (string): The paper title.
+  - authors (array of strings): List of authors.
+  - journal (string): Journal name (if visible, otherwise "Unknown").
+  - year (number): Publication year (if visible, else current year).
+  - abstract (string): The abstract text.
+  - fullText (string): CRITICAL: The FULL readable text content extracted from the image, formatted in Markdown with proper headers. Do not summarize; extract the actual text content as much as possible including all sections shown in the image.
+  
+  Also, strictly infer the likely academic database and partition (e.g. SCI Q1, EI, CJR Q1) based on the journal name or visual cues.
   Return format: JSON.
   Language: ${language === 'ZH' ? 'Chinese' : 'English'}`;
 
@@ -106,6 +109,8 @@ export async function parsePaperFromImage(file: File, language: Language): Promi
     
     const data = JSON.parse(cleanJson(response.text || "{}"));
     
+    if (!data) return null; // Defensive check
+
     return {
         id: `img-${Date.now()}`,
         title: data.title || "Untitled Extracted Paper",
@@ -177,17 +182,17 @@ export async function searchAcademicPapers(query: string, language: Language, li
     // In a real app, this would call Semantic Scholar or Google Scholar API
     const q = query.toLowerCase();
     return MOCK_PAPERS.filter(p => 
-        p.title.toLowerCase().includes(q) || 
-        p.authors.some(a => a.toLowerCase().includes(q)) ||
-        p.journal.toLowerCase().includes(q)
+        (p.title && p.title.toLowerCase().includes(q)) || 
+        (p.authors && p.authors.some(a => a.toLowerCase().includes(q))) ||
+        (p.journal && p.journal.toLowerCase().includes(q))
     );
 }
 
 export async function generateSimulatedFullText(paper: Paper, language: Language): Promise<string> {
     const ai = getAiClient();
     const prompt = `Generate a realistic, full-text academic paper simulation for:
-    Title: "${paper.title}"
-    Abstract: "${paper.abstract}"
+    Title: "${paper.title || 'Untitled'}"
+    Abstract: "${paper.abstract || 'No abstract'}"
     
     Structure it with standard academic sections (Introduction, Related Work, Methodology, Experiments, Conclusion).
     Use Markdown. Make it sound highly professional and scientific.
@@ -207,8 +212,8 @@ export async function generateSimulatedFullText(paper: Paper, language: Language
 export async function generatePaperInterpretation(paper: Paper, language: Language): Promise<string> {
     const ai = getAiClient();
     const prompt = `Interpret this paper for a PhD student. Explain the core contribution, methodology, and flaws.
-    Title: ${paper.title}
-    Abstract: ${paper.abstract}
+    Title: ${paper.title || 'Untitled'}
+    Abstract: ${paper.abstract || 'No abstract'}
     Language: ${language}`;
     
     try {
@@ -575,7 +580,8 @@ export async function trackCitationNetwork(query: string, isFile: boolean, langu
 
 export async function analyzeNetworkGaps(papers: Paper[], language: Language): Promise<GapAnalysisResult> {
     const ai = getAiClient();
-    const prompt = `Analyze these papers and find research gaps: ${papers.map(p=>p.title).join(', ')}. JSON: {missingThemes:[], underrepresentedMethods:[], suggestion}. Lang: ${language}`;
+    const titles = papers.map(p => p.title || 'Untitled').join(', ');
+    const prompt = `Analyze these papers and find research gaps: ${titles}. JSON: {missingThemes:[], underrepresentedMethods:[], suggestion}. Lang: ${language}`;
     try {
         const res = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { responseMimeType: 'application/json' }});
         return JSON.parse(cleanJson(res.text || "{}"));
@@ -584,7 +590,8 @@ export async function analyzeNetworkGaps(papers: Paper[], language: Language): P
 
 export async function chatWithCitationNetwork(query: string, papers: Paper[], language: Language): Promise<string> {
     const ai = getAiClient();
-    const res = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: `Context: ${papers.map(p=>p.title).join('; ')}. Question: ${query}. Lang: ${language}`});
+    const titles = papers.map(p => p.title || 'Untitled').join('; ');
+    const res = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: `Context: ${titles}. Question: ${query}. Lang: ${language}`});
     return res.text || "";
 }
 

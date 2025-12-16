@@ -9,7 +9,7 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'Pattern Recognition',
     year: 2010,
     citations: 3500,
-    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'Q1', if: 7.8, partition: 'Q1' }],
+    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'CJR', partition: 'Q1' }],
     abstract: 'This paper proposes a novel layered ensemble framework...',
     addedDate: '2023-11-15'
   },
@@ -20,7 +20,7 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'IEEE Transactions on Neural Networks and Learning Systems',
     year: 2023,
     citations: 95,
-    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'Q1', if: 14.3, partition: 'Q1' }],
+    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'CJR', partition: 'Q1' }],
     abstract: 'We introduce an adaptive mechanism for hierarchical ensembles...',
     addedDate: '2024-01-20'
   },
@@ -31,7 +31,7 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'Journal of Biomedical Informatics',
     year: 2018,
     citations: 420,
-    badges: [{ type: 'SCI', partition: 'Q2' }, { type: 'Q2', if: 5.1, partition: 'Q2' }],
+    badges: [{ type: 'SCI', partition: 'Q2' }, { type: 'CJR', partition: 'Q2' }],
     abstract: 'Medical imaging requires high precision. This study applies stacking...',
     addedDate: '2023-09-10'
   },
@@ -42,7 +42,7 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'Expert Systems with Applications',
     year: 2024,
     citations: 12,
-    badges: [{ type: 'SCI', partition: 'Q2' }, { type: 'Q2', if: 8.5, partition: 'Q2' }],
+    badges: [{ type: 'SSCI', partition: 'Q1' }, { type: 'CJR', partition: 'Q2' }],
     abstract: 'Interpreting ensemble models is challenging. We present a framework...',
     addedDate: '2024-02-05'
   },
@@ -53,7 +53,7 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'Machine Learning',
     year: 2021,
     citations: 150,
-    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'Q1', if: 6.2, partition: 'Q1' }],
+    badges: [{ type: 'SCI', partition: 'Q1' }],
     abstract: 'Comparing XGBoost and LightGBM within hierarchical contexts...',
     addedDate: '2023-12-01'
   },
@@ -64,7 +64,7 @@ export const MOCK_PAPERS: Paper[] = [
     journal: 'Nature Physics',
     year: 2024,
     citations: 89,
-    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'Q1', if: 19.6, partition: 'Q1' }],
+    badges: [{ type: 'SCI', partition: 'Q1' }, { type: 'CJR', partition: 'Q1' }],
     abstract: 'We review the current state of Quantum Machine Learning algorithms, focusing on variational quantum circuits...',
     addedDate: '2024-02-28'
   },

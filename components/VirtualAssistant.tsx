@@ -51,7 +51,6 @@ const VirtualAssistant: React.FC<VirtualAssistantProps> = ({ language, currentVi
           case ViewState.SEARCH:
               setExpression('focused');
               break;
-          case ViewState.IDEA_GUIDE:
           case ViewState.TRENDS:
               setExpression('thinking');
               break;

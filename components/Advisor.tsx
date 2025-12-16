@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { User, BookOpen, Send, Loader2, Award, AlertTriangle, TrendingUp, TrendingDown, Minus, Copy, CheckCircle, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -315,9 +316,11 @@ const Advisor: React.FC<AdvisorProps> = ({ language }) => {
                              <h4 className="font-bold text-slate-800 mb-3 text-lg">Relevant References</h4>
                              <div className="bg-slate-50 rounded-lg p-3 space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
                                 {Array.isArray(currentReport.references) && currentReport.references.map((ref, i) => (
+                                    ref ? (
                                     <div key={i} className="text-xs text-slate-600 border-b border-slate-200 pb-2 last:border-0 last:pb-0">
                                         <span className="font-bold">{ref.title}</span> ({ref.year}) - {ref.author}
                                     </div>
+                                    ) : null
                                 ))}
                              </div>
                              <button 

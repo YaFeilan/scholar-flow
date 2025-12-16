@@ -36,7 +36,6 @@ export enum ViewState {
   POLISH = 'POLISH',
   ADVISOR = 'ADVISOR',
   PPT_GENERATION = 'PPT_GENERATION',
-  IDEA_GUIDE = 'IDEA_GUIDE',
   OPENING_REVIEW = 'OPENING_REVIEW',
   DATA_ANALYSIS = 'DATA_ANALYSIS',
   CODE_ASSISTANT = 'CODE_ASSISTANT',
@@ -53,6 +52,7 @@ export enum ViewState {
   RESEARCH_TRAINING = 'RESEARCH_TRAINING', // New: Research Training
   PDF_CHAT = 'PDF_CHAT', // New: Intensive Reading
   SCIENTIFIC_PLOTTING = 'SCIENTIFIC_PLOTTING', // New: Scientific Plotting
+  IDEA_GUIDE = 'IDEA_GUIDE', // New: Idea Guide (Brainstorming)
 }
 
 // Trend Types
@@ -548,6 +548,7 @@ export interface WorkflowAngle {
   id: string;
   title: string;
   rationale: string;
+  corePapers?: any[];
 }
 
 export interface WorkflowFramework {

@@ -30,8 +30,8 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
       items: [
         { id: ViewState.SEARCH, label: t.search, icon: <Search size={16} /> },
         { id: ViewState.TRACK, label: t.track, icon: <BookOpen size={16} /> },
+        { id: ViewState.IDEA_GUIDE, label: t.ideaGuide, icon: <Lightbulb size={16} /> }, // Added Idea Guide
         { id: ViewState.PDF_CHAT, label: TRANSLATIONS[language].pdfChat.title, icon: <Book size={16} /> },
-        { id: ViewState.IDEA_GUIDE, label: t.idea, icon: <Lightbulb size={16} /> },
         { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={16} /> },
       ]
     },
