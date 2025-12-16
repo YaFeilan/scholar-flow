@@ -5,7 +5,7 @@ import {
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, 
   ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, 
   PanelLeftOpen, Network, Table2, Briefcase, Calendar, 
-  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell, Activity, Book, Layout
+  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell, Activity, Book, Layout, Brain
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -69,6 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, collapse
         { id: ViewState.PPT_GENERATION, label: t.ppt, icon: <MonitorPlay size={20} /> },
         { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={20} /> },
         { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={20} /> },
+        { id: ViewState.LOGIC_TRAINING, label: t.logicTraining, icon: <Brain size={20} /> },
         { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={20} /> },
       ]
     }

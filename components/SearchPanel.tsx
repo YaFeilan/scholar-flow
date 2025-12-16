@@ -284,10 +284,10 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
       }
     }
 
-    // Added Date Filter
+    // Added Date Filter (New)
     if (addedAfter) {
       papers = papers.filter(p => {
-         const pDate = p.addedDate || '2000-01-01'; 
+         const pDate = p.addedDate || '1970-01-01'; 
          return pDate >= addedAfter;
       });
     }

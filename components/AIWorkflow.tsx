@@ -6,6 +6,7 @@ import { TRANSLATIONS } from '../translations';
 import { generateWorkflowProblems, generateWorkflowRefinement, generateWorkflowFramework } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface AIWorkflowProps {
   language: Language;
@@ -24,6 +25,9 @@ const AIWorkflow: React.FC<AIWorkflowProps> = ({ language }) => {
   const [angles, setAngles] = useState<WorkflowAngle[]>([]);
   const [selectedAngle, setSelectedAngle] = useState<WorkflowAngle | null>(null);
   const [framework, setFramework] = useState<WorkflowFramework | null>(null);
+
+  // Ref for PDF Export
+  const resultRef = useRef<HTMLDivElement>(null);
 
   const steps = [
       { num: 1, label: t.steps[1] },
@@ -70,59 +74,44 @@ const AIWorkflow: React.FC<AIWorkflowProps> = ({ language }) => {
       setCurrentStep(1);
   };
 
-  const exportFramework = () => {
-      if (!framework || !selectedProblem || !selectedAngle) return;
-      const doc = new jsPDF();
-      const margin = 20;
-      let y = 20;
-      const width = doc.internal.pageSize.getWidth() - margin * 2;
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(20);
-      doc.text(t.title, margin, y);
-      y += 15;
-
-      doc.setFontSize(14);
-      doc.text(`Topic: ${selectedProblem.title}`, margin, y);
-      y += 10;
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Angle: ${selectedAngle.title}`, margin, y);
-      y += 15;
-
-      doc.setFont("helvetica", "bold");
-      doc.text(t.step4.logic, margin, y);
-      y += 7;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      const logicLines = doc.splitTextToSize(framework.framework, width);
-      doc.text(logicLines, margin, y);
-      y += logicLines.length * 5 + 10;
-
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text(t.step4.method, margin, y);
-      y += 7;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      const methodLines = doc.splitTextToSize(framework.methodology, width);
-      doc.text(methodLines, margin, y);
-      y += methodLines.length * 5 + 10;
-
-      // Check page break for subsequent sections
-      if (y > 250) { doc.addPage(); y = 20; }
-
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "bold");
-      doc.text(t.step4.data, margin, y);
-      y += 7;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      const dataLines = doc.splitTextToSize(framework.dataSources, width);
-      doc.text(dataLines, margin, y);
-      y += dataLines.length * 5 + 10;
-
-      doc.save("Research_Workflow.pdf");
+  const exportFramework = async () => {
+      if (!framework || !selectedProblem || !selectedAngle || !resultRef.current) return;
+      
+      try {
+          // Use html2canvas to capture the rendered DOM element (preserves styles and Chinese fonts)
+          const canvas = await html2canvas(resultRef.current, {
+              scale: 2, // High resolution
+              useCORS: true, // Handle any external images properly
+              backgroundColor: '#ffffff'
+          });
+          
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const imgProps = pdf.getImageProperties(imgData);
+          const pdfImgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+          
+          let heightLeft = pdfImgHeight;
+          let position = 0;
+          
+          // Add first page
+          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfImgHeight);
+          heightLeft -= pdfHeight;
+          
+          // Add subsequent pages if content overflows
+          while (heightLeft >= 0) {
+            position = heightLeft - pdfImgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfImgHeight);
+            heightLeft -= pdfHeight;
+          }
+          
+          pdf.save("Research_Workflow.pdf");
+      } catch (err) {
+          console.error("PDF Export Error", err);
+          alert(language === 'ZH' ? "PDF 导出失败" : "Failed to export PDF");
+      }
   };
 
   return (
@@ -284,7 +273,8 @@ const AIWorkflow: React.FC<AIWorkflowProps> = ({ language }) => {
                        </div>
                    </div>
 
-                   <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                   {/* Wrapped with Ref for Printing */}
+                   <div ref={resultRef} className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                        <div className="bg-slate-900 text-white p-8">
                            <div className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-2">{direction}</div>
                            <h2 className="text-2xl font-bold mb-4 font-serif">{selectedProblem.title}</h2>

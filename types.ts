@@ -49,7 +49,8 @@ export enum ViewState {
   TITLE_PRISM = 'TITLE_PRISM',
   FLOWCHART = 'FLOWCHART',
   AI_WORKFLOW = 'AI_WORKFLOW', // New
-  RESEARCH_TRAINING = 'RESEARCH_TRAINING', // New: Research Training
+  RESEARCH_TRAINING = 'RESEARCH_TRAINING', // Research Training (Defense)
+  LOGIC_TRAINING = 'LOGIC_TRAINING', // New: Logic Training
   PDF_CHAT = 'PDF_CHAT', // New: Intensive Reading
   SCIENTIFIC_PLOTTING = 'SCIENTIFIC_PLOTTING', // New: Scientific Plotting
   IDEA_GUIDE = 'IDEA_GUIDE', // New: Idea Guide (Brainstorming)
@@ -600,6 +601,35 @@ export interface TrainingAnalysis {
   };
   summary: string;
   actionPlan: string[];
+}
+
+// Logic Training Types
+export type LogicTrainingMode = 'Fallacy' | 'Reconstruction' | 'StressTest';
+
+export interface LogicEvaluation {
+  accuracy: number;
+  clarity: number;
+  structure: number;
+  layer1_verdict: string;
+  layer2_logic_latex: string;
+  layer3_takeaway: string;
+}
+
+export interface FallacyExercise {
+  id: string;
+  text: string;
+  correctFallacy: string;
+  explanation: string;
+}
+
+export interface ReconstructionExercise {
+  id: string;
+  text: string; // The abstract
+  solution: {
+    premise: string;
+    evidence: string;
+    conclusion: string;
+  }
 }
 
 export interface Hint {

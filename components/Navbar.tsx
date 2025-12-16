@@ -5,7 +5,7 @@ import {
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, MessagesSquare, 
   Briefcase, BarChart2, Terminal, Beaker, Table2, Network, Gem, 
   Calendar, ShieldAlert, Workflow, Zap, Compass, Layers, PenLine, Wrench, Layout,
-  Dumbbell, Book, Activity
+  Dumbbell, Book, Activity, Brain
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -73,6 +73,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
         { id: ViewState.PPT_GENERATION, label: t.ppt, icon: <MonitorPlay size={16} /> },
         { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={16} /> },
         { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={16} /> },
+        { id: ViewState.LOGIC_TRAINING, label: t.logicTraining, icon: <Brain size={16} /> },
         { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={16} /> },
       ]
     }

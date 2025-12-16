@@ -121,7 +121,10 @@ export default function App() {
             <AIWorkflow language={language} />
           )}
           {currentView === ViewState.RESEARCH_TRAINING && (
-            <ResearchTraining language={language} />
+            <ResearchTraining language={language} initialMode="defense" />
+          )}
+          {currentView === ViewState.LOGIC_TRAINING && (
+            <ResearchTraining language={language} initialMode="logic" />
           )}
           {currentView === ViewState.PDF_CHAT && (
             <PDFChat language={language} />
