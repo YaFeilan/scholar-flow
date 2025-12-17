@@ -17,7 +17,58 @@ export const TRANSLATIONS: Record<Language, any> = {
       review: 'Review', polish: 'Polish', titlePrism: 'Title Prism', peer: 'Peer Review',
       advisor: 'Advisor', aiDetector: 'AI Detector', opening: 'Opening', conference: 'Conferences',
       grant: 'Grant', discussion: 'Discussion',
-      ppt: 'PPT', flowchart: 'Flowchart', training: 'Training', logicTraining: 'Logic', aiWorkflow: 'Thesis Builder'
+      ppt: 'PPT', flowchart: 'Flowchart', training: 'Training', logicTraining: 'Logic', aiWorkflow: 'Research Workflow', thesisWorkflow: 'Thesis Builder',
+      journalSandbox: 'Submission Sandbox'
+    },
+    journalSandbox: {
+      title: 'Journal Submission Sandbox',
+      subtitle: 'Simulate the rigorous process of top-tier publishing.',
+      steps: {
+        1: 'Targeting',
+        2: 'Theory',
+        3: 'Model',
+        4: 'Method',
+        5: 'Framework'
+      },
+      step1: {
+        title: 'Targeting & Gap Hunting',
+        domainLabel: 'Research Domain',
+        domainPlaceholder: 'e.g. Generative AI in Education',
+        journalLabel: 'Target Journal System',
+        journalPlaceholder: 'e.g. SSCI Q1, MIS Quarterly',
+        problemLabel: 'Observed Problem / Phenomenon',
+        problemPlaceholder: 'e.g. Students rely too much on AI...',
+        btn: 'Scan for Gaps',
+        redOcean: 'Red Ocean Alert',
+        blueOcean: 'Blue Ocean Paths'
+      },
+      step2: {
+        title: 'Theoretical Anchoring',
+        subtitle: 'Select a theoretical lens to ground your research.',
+        selectBtn: 'Select Theory'
+      },
+      step3: {
+        title: 'Hypothesis & Model',
+        subtitle: 'Constructing the logical chain.',
+        hypotheses: 'Hypothesis Development'
+      },
+      step4: {
+        title: 'Methodological Defense',
+        question: 'How do you plan to verify this model?',
+        placeholder: 'e.g. Survey, Experiment...',
+        btn: 'Submit Method',
+        critique: 'Reviewer Critique',
+        suggestion: 'Suggested Fix'
+      },
+      step5: {
+        title: 'Submission-Ready Framework',
+        export: 'Export Synopsis'
+      },
+      reviewer: {
+        title: 'Reviewer #2',
+        status: 'Watching...',
+        typing: 'Critiquing...'
+      }
     },
     figure: {
       title: 'Figure Generator',
@@ -63,7 +114,7 @@ export const TRANSLATIONS: Record<Language, any> = {
       },
       history: 'History'
     },
-    aiWorkflow: {
+    thesisWorkflow: {
       title: 'Thesis Workflow', subtitle: 'Step-by-step graduation thesis builder',
       steps: { 1: 'Vague Entry', 2: 'Dimensions', 3: 'Context', 4: 'Titles', 5: 'Framework' },
       step1: { label: 'Research Area', placeholder: 'e.g. Short Video E-commerce', btn: 'Start Analysis' },
@@ -73,6 +124,14 @@ export const TRANSLATIONS: Record<Language, any> = {
       step5: { title: 'Thesis Framework', subtitle: 'Generated research structure', export: 'Export PDF' },
       loading: { dimensions: 'Analyzing dimensions...', context: 'Generating context questions...', titles: 'Locking variables & titles...', framework: 'Building framework...' },
       restart: 'Restart', back: 'Back'
+    },
+    aiWorkflow: {
+        title: 'General AI Workflow', subtitle: 'Problem finding and framework construction',
+        step1: { label: 'Research Direction', placeholder: 'e.g. LLM in Healthcare', btn: 'Discover Problems' },
+        problems: 'Research Problems',
+        angles: 'Research Angles',
+        framework: 'Research Framework',
+        restart: 'Start Over'
     },
     // Fallback/Placeholders for other components to prevent crashes if accessing deeply
     pdfChat: { title: 'PDF Chat', modes: { standard: 'Standard', guided: 'Guided', game: 'Game' }, tools: { outline: 'Outline', notes: 'Notes', bookmarks: 'Bookmarks', addNote: 'Add Note', addBookmark: 'Bookmark' }, guided: { path: 'Learning Path' }, game: { points: 'Points', level: 'Level', challengeBtn: 'Challenge Quiz', quizTitle: 'Pop Quiz' } },
@@ -116,7 +175,58 @@ export const TRANSLATIONS: Record<Language, any> = {
       review: '综述生成', polish: '论文润色', titlePrism: '标题棱镜', peer: '模拟评审',
       advisor: '投稿顾问', aiDetector: 'AI 检测', opening: '开题报告', conference: '会议查询',
       grant: '标书助手', discussion: '学术讨论',
-      ppt: 'PPT 生成', flowchart: '流程图', training: '科研训练', logicTraining: '逻辑训练', aiWorkflow: '毕业论文工作流'
+      ppt: 'PPT 生成', flowchart: '流程图', training: '科研训练', logicTraining: '逻辑训练', aiWorkflow: '通用研究工作流', thesisWorkflow: '毕业论文工作流',
+      journalSandbox: '期刊投稿沙盘'
+    },
+    journalSandbox: {
+      title: '期刊投稿沙盘',
+      subtitle: '模拟顶刊发表全流程，预演投稿生死局。',
+      steps: {
+        1: '痛点扫描',
+        2: '理论锚定',
+        3: '假设构建',
+        4: '方法防御',
+        5: '投稿框架'
+      },
+      step1: {
+        title: '定位与痛点扫描',
+        domainLabel: '研究领域',
+        domainPlaceholder: '如：生成式AI在教育中的应用',
+        journalLabel: '目标期刊系统',
+        journalPlaceholder: '如：SSCI Q1/Q2, CCF-B',
+        problemLabel: '想解决的问题 / 观察到的现象',
+        problemPlaceholder: '如：学生过度依赖AI导致批判性思维下降...',
+        btn: '扫描红海预警',
+        redOcean: '红海预警',
+        blueOcean: '蓝海建议'
+      },
+      step2: {
+        title: '理论锚定',
+        subtitle: '期刊论文的灵魂：选择理论镜头。',
+        selectBtn: '选择此理论'
+      },
+      step3: {
+        title: '假设与模型推导',
+        subtitle: '构建逻辑闭环。',
+        hypotheses: '假设推导'
+      },
+      step4: {
+        title: '方法论防御',
+        question: '你计划用什么数据来验证上述模型？',
+        placeholder: '如：问卷调查，爬虫数据...',
+        btn: '提交方案',
+        critique: '风险预警',
+        suggestion: '改进方案'
+      },
+      step5: {
+        title: '投稿级框架',
+        export: '导出概要'
+      },
+      reviewer: {
+        title: '审稿人 #2 (毒舌模式)',
+        status: '正在盯着你...',
+        typing: '正在撰写尖锐意见...'
+      }
     },
     figure: {
       title: '科研绘图',
@@ -162,7 +272,7 @@ export const TRANSLATIONS: Record<Language, any> = {
       },
       history: '历史记录'
     },
-    aiWorkflow: {
+    thesisWorkflow: {
       title: '毕业论文工作流', subtitle: '分步式毕业论文构建助手',
       steps: { 1: '模糊入口', 2: '维度裂变', 3: '现状定位', 4: '变量锁定', 5: '生成框架' },
       step1: { label: '研究领域', placeholder: '例如：短视频带货', btn: '开始分析' },
@@ -172,6 +282,14 @@ export const TRANSLATIONS: Record<Language, any> = {
       step5: { title: '研究框架', subtitle: '最终生成的论文架构', export: '导出 PDF' },
       loading: { dimensions: '正在拆解维度...', context: '正在生成追问...', titles: '正在锁定变量与题目...', framework: '正在构建研究框架...' },
       restart: '重新开始', back: '返回'
+    },
+    aiWorkflow: {
+        title: '通用研究工作流', subtitle: '问题发现与框架构建',
+        step1: { label: '研究方向', placeholder: '例如：大模型在医疗中的应用', btn: '发现问题' },
+        problems: '潜在研究问题',
+        angles: '切入角度',
+        framework: '研究框架',
+        restart: '重新开始'
     },
     // Complete structure for ZH
     pdfChat: { title: 'PDF 精读', modes: { standard: '标准工具', guided: '交互导读', game: '游戏闯关' }, tools: { outline: '大纲', notes: '笔记', bookmarks: '书签', addNote: '记笔记', addBookmark: '加书签' }, guided: { path: '学习路径' }, game: { points: '积分', level: '等级', challengeBtn: '挑战问答', quizTitle: '随堂测验' } },

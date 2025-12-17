@@ -48,12 +48,14 @@ export enum ViewState {
   RESEARCH_DISCUSSION = 'RESEARCH_DISCUSSION',
   TITLE_PRISM = 'TITLE_PRISM',
   FLOWCHART = 'FLOWCHART',
-  AI_WORKFLOW = 'AI_WORKFLOW', // New
+  AI_WORKFLOW = 'AI_WORKFLOW', // General Research Workflow
+  THESIS_WORKFLOW = 'THESIS_WORKFLOW', // Graduation Thesis Builder
   RESEARCH_TRAINING = 'RESEARCH_TRAINING', // Research Training (Defense)
   LOGIC_TRAINING = 'LOGIC_TRAINING', // New: Logic Training
   PDF_CHAT = 'PDF_CHAT', // New: Intensive Reading
   SCIENTIFIC_PLOTTING = 'SCIENTIFIC_PLOTTING', // New: Scientific Plotting
   IDEA_GUIDE = 'IDEA_GUIDE', // New: Idea Guide (Brainstorming)
+  JOURNAL_SANDBOX = 'JOURNAL_SANDBOX', // New: Journal Submission Sandbox
 }
 
 // Trend Types
@@ -731,4 +733,50 @@ export interface PlotConfig {
   errorBars?: boolean;
   logScale?: boolean;
   showLegend?: boolean;
+}
+
+// Journal Sandbox Types
+export interface SandboxGapAnalysis {
+  redOceanWarning: string;
+  blueOceanPaths: {
+    id: string;
+    title: string;
+    description: string;
+    type: 'Interpretation' | 'Methodology';
+  }[];
+  reviewerComment: string;
+}
+
+export interface SandboxTheory {
+  name: string;
+  description: string;
+  relevance: string;
+}
+
+export interface SandboxModel {
+  iv: string;
+  dv: string;
+  mediator: string;
+  moderator: string;
+  hypotheses: string[];
+  reviewerComment: string;
+}
+
+export interface SandboxMethodCritique {
+  verdict: 'Risky' | 'Robust' | 'Acceptable';
+  critique: string;
+  suggestion: string;
+  reviewerComment: string;
+}
+
+export interface SandboxFramework {
+  title: string;
+  abstract: string;
+  introduction: {
+    hook: string;
+    gap: string;
+    contribution: string;
+  };
+  methodPlan: string;
+  robustness: string;
 }

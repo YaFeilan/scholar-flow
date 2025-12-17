@@ -21,16 +21,17 @@ import AIDetector from './components/AIDetector';
 import ResearchDiscussion from './components/ResearchDiscussion';
 import TitlePrism from './components/TitlePrism';
 import FlowchartGenerator from './components/FlowchartGenerator';
-import AIWorkflow from './components/AIWorkflow';
+import ThesisWorkflow from './components/ThesisWorkflow';
 import ResearchTraining from './components/ResearchTraining';
 import PDFChat from './components/PDFChat';
 import ScientificPlotting from './components/ScientificPlotting';
 import IdeaGuide from './components/IdeaGuide';
 import WelcomeModal from './components/WelcomeModal';
+import JournalSandbox from './components/JournalSandbox';
 import { ViewState, Paper, Language } from './types';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<ViewState>(ViewState.AI_WORKFLOW);
+  const [currentView, setCurrentView] = useState<ViewState>(ViewState.JOURNAL_SANDBOX);
   const [language, setLanguage] = useState<Language>('EN');
   const [reviewPapers, setReviewPapers] = useState<Paper[]>([]);
   const [extractedData, setExtractedData] = useState<any[][] | null>(null);
@@ -46,8 +47,10 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white font-sans transition-colors duration-200">
+    <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white font-sans transition-colors duration-200 overflow-hidden">
       <WelcomeModal language={language} />
+      
+      {/* Top Navigation */}
       <Navbar 
         language={language} 
         setLanguage={setLanguage} 
@@ -55,94 +58,101 @@ export default function App() {
         setCurrentView={setCurrentView}
       />
       
-      <main className="flex-grow overflow-hidden relative">
-        <div className="absolute inset-0 overflow-y-auto custom-scrollbar">
-          {currentView === ViewState.SEARCH && (
-            <SearchPanel 
-              onReviewRequest={handleReviewRequest} 
-              language={language}
-            />
-          )}
-          {currentView === ViewState.TRENDS && (
-            <TrendDashboard language={language} />
-          )}
-          {currentView === ViewState.PEER_REVIEW && (
-            <PeerReview language={language} />
-          )}
-          {currentView === ViewState.REVIEW_GENERATION && (
-            <ReviewGenerator language={language} />
-          )}
-          {currentView === ViewState.TRACK && (
-            <ReferenceTracker language={language} />
-          )}
-          {currentView === ViewState.POLISH && (
-            <PolishAssistant language={language} />
-          )}
-          {currentView === ViewState.ADVISOR && (
-            <Advisor language={language} />
-          )}
-          {currentView === ViewState.PPT_GENERATION && (
-            <PPTGenerator language={language} />
-          )}
-          {currentView === ViewState.OPENING_REVIEW && (
-            <OpeningReview language={language} />
-          )}
-          {currentView === ViewState.DATA_ANALYSIS && (
-            <DataAnalysis language={language} initialData={extractedData} />
-          )}
-          {currentView === ViewState.CODE_ASSISTANT && (
-            <CodeAssistant language={language} />
-          )}
-          {currentView === ViewState.EXPERIMENT_DESIGN && (
-            <ExperimentDesign language={language} />
-          )}
-          {currentView === ViewState.KNOWLEDGE_GRAPH && (
-            <KnowledgeGraph language={language} />
-          )}
-          {currentView === ViewState.GRANT_APPLICATION && (
-            <GrantApplication language={language} />
-          )}
-          {currentView === ViewState.CONFERENCE_FINDER && (
-            <ConferenceFinder language={language} />
-          )}
-          {currentView === ViewState.AI_DETECTOR && (
-            <AIDetector language={language} />
-          )}
-          {currentView === ViewState.RESEARCH_DISCUSSION && (
-            <ResearchDiscussion language={language} />
-          )}
-          {currentView === ViewState.TITLE_PRISM && (
-            <TitlePrism language={language} />
-          )}
-          {currentView === ViewState.FLOWCHART && (
-            <FlowchartGenerator language={language} />
-          )}
-          {currentView === ViewState.AI_WORKFLOW && (
-            <AIWorkflow language={language} />
-          )}
-          {currentView === ViewState.RESEARCH_TRAINING && (
-            <ResearchTraining language={language} initialMode="defense" />
-          )}
-          {currentView === ViewState.LOGIC_TRAINING && (
-            <ResearchTraining language={language} initialMode="logic" />
-          )}
-          {currentView === ViewState.PDF_CHAT && (
-            <PDFChat language={language} />
-          )}
-          {currentView === ViewState.CHART_EXTRACTION && (
-            <ChartExtraction 
-              language={language} 
-              onSendDataToAnalysis={handleExtractedData}
-            />
-          )}
-          {currentView === ViewState.SCIENTIFIC_PLOTTING && (
-            <ScientificPlotting language={language} />
-          )}
-          {currentView === ViewState.IDEA_GUIDE && (
-            <IdeaGuide language={language} />
-          )}
-        </div>
-      </main>
+      <div className="flex flex-grow overflow-hidden relative">
+        {/* Main Content Area */}
+        <main className="flex-grow overflow-hidden relative w-full">
+          <div className="absolute inset-0 overflow-y-auto custom-scrollbar">
+            {currentView === ViewState.SEARCH && (
+              <SearchPanel 
+                onReviewRequest={handleReviewRequest} 
+                language={language}
+              />
+            )}
+            {currentView === ViewState.TRENDS && (
+              <TrendDashboard language={language} />
+            )}
+            {currentView === ViewState.PEER_REVIEW && (
+              <PeerReview language={language} />
+            )}
+            {currentView === ViewState.REVIEW_GENERATION && (
+              <ReviewGenerator language={language} />
+            )}
+            {currentView === ViewState.TRACK && (
+              <ReferenceTracker language={language} />
+            )}
+            {currentView === ViewState.POLISH && (
+              <PolishAssistant language={language} />
+            )}
+            {currentView === ViewState.ADVISOR && (
+              <Advisor language={language} />
+            )}
+            {currentView === ViewState.PPT_GENERATION && (
+              <PPTGenerator language={language} />
+            )}
+            {currentView === ViewState.OPENING_REVIEW && (
+              <OpeningReview language={language} />
+            )}
+            {currentView === ViewState.DATA_ANALYSIS && (
+              <DataAnalysis language={language} initialData={extractedData} />
+            )}
+            {currentView === ViewState.CODE_ASSISTANT && (
+              <CodeAssistant language={language} />
+            )}
+            {currentView === ViewState.EXPERIMENT_DESIGN && (
+              <ExperimentDesign language={language} />
+            )}
+            {currentView === ViewState.KNOWLEDGE_GRAPH && (
+              <KnowledgeGraph language={language} />
+            )}
+            {currentView === ViewState.GRANT_APPLICATION && (
+              <GrantApplication language={language} />
+            )}
+            {currentView === ViewState.CONFERENCE_FINDER && (
+              <ConferenceFinder language={language} />
+            )}
+            {currentView === ViewState.AI_DETECTOR && (
+              <AIDetector language={language} />
+            )}
+            {currentView === ViewState.RESEARCH_DISCUSSION && (
+              <ResearchDiscussion language={language} />
+            )}
+            {currentView === ViewState.TITLE_PRISM && (
+              <TitlePrism language={language} />
+            )}
+            {currentView === ViewState.FLOWCHART && (
+              <FlowchartGenerator language={language} />
+            )}
+            {/* AI Workflow Removed */}
+            {currentView === ViewState.THESIS_WORKFLOW && (
+              <ThesisWorkflow language={language} />
+            )}
+            {currentView === ViewState.RESEARCH_TRAINING && (
+              <ResearchTraining language={language} initialMode="defense" />
+            )}
+            {currentView === ViewState.LOGIC_TRAINING && (
+              <ResearchTraining language={language} initialMode="logic" />
+            )}
+            {currentView === ViewState.PDF_CHAT && (
+              <PDFChat language={language} />
+            )}
+            {currentView === ViewState.CHART_EXTRACTION && (
+              <ChartExtraction 
+                language={language} 
+                onSendDataToAnalysis={handleExtractedData}
+              />
+            )}
+            {currentView === ViewState.SCIENTIFIC_PLOTTING && (
+              <ScientificPlotting language={language} />
+            )}
+            {currentView === ViewState.IDEA_GUIDE && (
+              <IdeaGuide language={language} />
+            )}
+            {currentView === ViewState.JOURNAL_SANDBOX && (
+              <JournalSandbox language={language} />
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import {
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, 
   ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, 
   PanelLeftOpen, Network, Table2, Briefcase, Calendar, 
-  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell, Activity, Book, Layout, Brain
+  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell, Activity, Book, Layout, Brain, Target
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -29,7 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, collapse
       items: [
         { id: ViewState.SEARCH, label: t.search, icon: <Search size={20} /> },
         { id: ViewState.TRACK, label: t.track, icon: <BookOpen size={20} /> },
-        { id: ViewState.IDEA_GUIDE, label: t.ideaGuide, icon: <Lightbulb size={20} /> }, // Added Idea Guide
+        { id: ViewState.IDEA_GUIDE, label: t.ideaGuide, icon: <Lightbulb size={20} /> },
         { id: ViewState.PDF_CHAT, label: TRANSLATIONS[language].pdfChat.title, icon: <Book size={20} /> },
         { id: ViewState.TRENDS, label: t.trends, icon: <TrendingUp size={20} /> },
       ]
@@ -66,11 +66,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, collapse
       id: 'utils',
       title: groupT.utils,
       items: [
+        { id: ViewState.JOURNAL_SANDBOX, label: t.journalSandbox, icon: <Target size={20} /> },
         { id: ViewState.PPT_GENERATION, label: t.ppt, icon: <MonitorPlay size={20} /> },
         { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={20} /> },
         { id: ViewState.RESEARCH_TRAINING, label: t.training, icon: <Dumbbell size={20} /> },
         { id: ViewState.LOGIC_TRAINING, label: t.logicTraining, icon: <Brain size={20} /> },
-        { id: ViewState.AI_WORKFLOW, label: t.aiWorkflow, icon: <Zap size={20} /> },
+        { id: ViewState.THESIS_WORKFLOW, label: t.thesisWorkflow, icon: <Zap size={20} /> },
       ]
     }
   ];

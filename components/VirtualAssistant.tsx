@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, MessageCircle, Minimize2, Sparkles, Heart, Loader2, ArrowRight } from 'lucide-react';
+import { X, MessageCircle, Minimize2, Sparkles, Heart, Loader2, ArrowRight, Maximize2 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { chatWithAssistant } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -70,11 +70,14 @@ const VirtualAssistant: React.FC<VirtualAssistantProps> = ({ language, currentVi
     const updateMessage = () => {
       const contextTips = tips[currentView] || tips.general;
       const allTips = [...contextTips, ...tips.general];
-      const randomTip = Math.random() > 0.7 ? tips.general[0] : allTips[Math.floor(Math.random() * allTips.length)];
+      // Default to the first motivational message more often to match screenshot vibe
+      const randomTip = Math.random() > 0.6 ? (language === 'ZH' ? "科研不易，但你很棒！🌟" : "Research is hard, but you're great! 🌟") : allTips[Math.floor(Math.random() * allTips.length)];
       setMessage(randomTip);
     };
-    updateMessage();
-    const interval = setInterval(updateMessage, 8000); 
+    // Initialize immediately
+    if (!message) updateMessage();
+    
+    const interval = setInterval(updateMessage, 10000); 
     return () => clearInterval(interval);
   }, [currentView, language, isMinimized, isChatOpen]);
 
@@ -242,8 +245,8 @@ const VirtualAssistant: React.FC<VirtualAssistantProps> = ({ language, currentVi
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
-        {/* Chat Window */}
-        <div className={`mb-2 pointer-events-auto transition-all duration-300 transform origin-bottom-right 
+        {/* Chat Window / Notification Bubble */}
+        <div className={`mb-4 pointer-events-auto transition-all duration-300 transform origin-bottom-right 
             ${isChatOpen ? 'scale-100 opacity-100' : isMinimized ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
         >
             {isChatOpen ? (
@@ -300,22 +303,30 @@ const VirtualAssistant: React.FC<VirtualAssistantProps> = ({ language, currentVi
                     </div>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 max-w-[240px] relative animate-fadeIn mb-2 cursor-pointer hover:scale-105 transition-transform" onClick={toggleChat}>
+                <div 
+                   className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-700 max-w-[260px] relative animate-fadeIn mb-2 cursor-pointer hover:-translate-y-1 transition-transform group"
+                   onClick={toggleChat}
+                >
+                    {/* Close/Minimize Button - Matching screenshot X/Arrows circle style */}
                     <button 
                        onClick={(e) => { e.stopPropagation(); setIsMinimized(true); }}
-                       className="absolute -top-2 -right-2 bg-white text-slate-300 hover:text-slate-500 rounded-full p-0.5 border border-slate-100 shadow-sm"
+                       className="absolute -top-3 -right-3 bg-white dark:bg-slate-700 text-slate-300 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-300 rounded-full p-1.5 shadow-sm border border-slate-100 dark:border-slate-600 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                        <Minimize2 size={10} />
+                        <Maximize2 size={12} className="rotate-45" /> {/* Use rotate to simulate X-like expand/collapse icon */}
                     </button>
-                    <div className="text-slate-800 dark:text-slate-200 text-sm font-medium mb-3 leading-relaxed">
+
+                    <div className="text-slate-800 dark:text-slate-100 text-base font-medium mb-4 leading-relaxed tracking-wide">
                         {message || (language === 'ZH' ? "科研不易，但你很棒！🌟" : "Research is hard, but you're doing great! 🌟")}
                     </div>
+                    
                     <div className="flex justify-between items-center">
-                        <div className="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-bold transition-colors hover:bg-blue-100">
-                            <MessageCircle size={12} />
+                        <div className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-full flex items-center gap-2 text-sm font-bold transition-colors hover:bg-blue-100 dark:hover:bg-blue-900/50">
+                            <MessageCircle size={16} />
                             <span>{language === 'ZH' ? '点击对话' : 'Click to Chat'}</span>
                         </div>
-                        <Heart size={16} className="text-pink-400 fill-pink-400" />
+                        <div className="p-2">
+                            <Heart size={24} className="text-pink-400 fill-pink-400 drop-shadow-sm" />
+                        </div>
                     </div>
                 </div>
             )}
@@ -323,7 +334,7 @@ const VirtualAssistant: React.FC<VirtualAssistantProps> = ({ language, currentVi
 
         {/* Character */}
         <div 
-           className="w-32 h-32 pointer-events-auto cursor-pointer hover:scale-105 transition-transform relative"
+           className="w-36 h-36 pointer-events-auto cursor-pointer hover:scale-105 transition-transform relative mr-4"
            onClick={() => { setAnimation('bounce'); setTimeout(() => setAnimation('idle'), 500); toggleChat(); }}
            onMouseEnter={() => setExpression('happy')}
            onMouseLeave={() => setExpression('neutral')}
