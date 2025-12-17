@@ -537,7 +537,44 @@ export interface FlowchartResult {
   explanation: string;
 }
 
-// AI Workflow Types (New)
+// THESIS WORKFLOW TYPES (New)
+export interface ThesisDimension {
+  id: string;
+  title: string;
+  description: string;
+  focus: string; // e.g. "Consumer Psychology"
+}
+
+export interface ThesisContextQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  allowCustom?: boolean;
+}
+
+export interface ThesisTitleOption {
+  id: string;
+  title: string;
+  variables: {
+    iv: string; // Independent
+    dv: string; // Dependent
+    mediator?: string;
+    object: string;
+    method: string;
+  };
+  rationale: string;
+}
+
+export interface ThesisFramework {
+  title: string;
+  abstract: string;
+  definitions: { term: string; definition: string }[];
+  hypotheses: string[];
+  chapters: string[]; // Markdown formatted tree
+  references: { title: string; author: string; year: string }[];
+}
+
+// AI Workflow Types (Legacy - Keeping for compatibility if needed, but Thesis types supersede)
 export interface WorkflowProblem {
   id: string;
   title: string;

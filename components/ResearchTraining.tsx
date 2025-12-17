@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Dumbbell, ArrowRight, Loader2, RefreshCw, CheckCircle2, ShieldAlert, BookOpen, PenTool, Mic, Send, Timer, FileText, Upload, Volume2, MessageSquare, Zap, Lightbulb, Brain, Layers, GraduationCap, X, ChevronRight, Gavel, Scale, Search, Play } from 'lucide-react';
+import { Dumbbell, ArrowRight, Loader2, RefreshCw, CheckCircle2, ShieldAlert, BookOpen, PenTool, Mic, Send, Timer, FileText, Upload, Volume2, MessageSquare, Zap, Lightbulb, Brain, Layers, GraduationCap, X, ChevronRight, Gavel, Scale, Search, Play, ExternalLink, Quote } from 'lucide-react';
 import { Language, TrainingSession, TrainingAnalysis, TrainingPersonaStyle, BattleMessage, LogicEvaluation, FallacyExercise } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { 
@@ -98,7 +97,8 @@ const ResearchTraining: React.FC<ResearchTrainingProps> = ({ language, initialMo
   const [fallacyType, setFallacyType] = useState('strawman');
   const [logicEvaluation, setLogicEvaluation] = useState<LogicEvaluation | null>(null);
 
-  const [reconstructionText, setReconstructionText] = useState('');
+  // Reconstruction State - Updated to handle object with reference
+  const [reconstructionData, setReconstructionData] = useState<{text: string, reference: string} | null>(null);
   const [reconForm, setReconForm] = useState({ premise: '', evidence: '', conclusion: '' });
   
   const [stressHypothesis, setStressHypothesis] = useState('');
@@ -219,15 +219,15 @@ const ResearchTraining: React.FC<ResearchTrainingProps> = ({ language, initialMo
       setLoading(true);
       setLogicEvaluation(null);
       setReconForm({ premise: '', evidence: '', conclusion: '' });
-      const text = await generateReconstructionExercise(language);
-      setReconstructionText(text);
+      const data = await generateReconstructionExercise(language);
+      setReconstructionData(data);
       setLoading(false);
   };
 
   const checkReconstruction = async () => {
-      if (!reconstructionText) return;
+      if (!reconstructionData) return;
       setLoading(true);
-      const evalResult = await evaluateReconstruction(reconstructionText, reconForm, language);
+      const evalResult = await evaluateReconstruction(reconstructionData.text, reconForm, language);
       setLogicEvaluation(evalResult);
       setLoading(false);
   };
@@ -373,7 +373,7 @@ const ResearchTraining: React.FC<ResearchTrainingProps> = ({ language, initialMo
                        {/* 2. Argument Reconstruction */}
                        {logicModule === 'reconstruction' && (
                            <div className="max-w-5xl mx-auto space-y-6">
-                               {!reconstructionText ? (
+                               {!reconstructionData ? (
                                    <div className="text-center py-20">
                                        <Layers size={48} className="text-purple-300 mx-auto mb-4" />
                                        <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-4">{t.reconstruction.task}</h3>
@@ -383,24 +383,45 @@ const ResearchTraining: React.FC<ResearchTrainingProps> = ({ language, initialMo
                                    </div>
                                ) : (
                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                       <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 h-fit">
-                                           <h4 className="text-sm font-bold text-slate-500 uppercase mb-4">Source Text</h4>
-                                           <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-serif">
-                                               {reconstructionText}
-                                           </p>
+                                       <div className="space-y-4">
+                                           <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 h-fit relative">
+                                               <div className="absolute top-0 right-0 bg-blue-100 text-blue-700 px-3 py-1 rounded-bl-xl text-xs font-bold flex items-center gap-1">
+                                                   <BookOpen size={12}/> Academic Abstract
+                                               </div>
+                                               <h4 className="text-sm font-bold text-slate-500 uppercase mb-4">Source Text</h4>
+                                               <p className="text-slate-800 dark:text-slate-200 leading-relaxed font-serif text-sm">
+                                                   {reconstructionData.text}
+                                               </p>
+                                               <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                                   <div className="flex items-start gap-2 text-xs text-slate-500">
+                                                       <Quote size={12} className="mt-0.5 flex-shrink-0" />
+                                                       <div className="italic">
+                                                           {reconstructionData.reference}
+                                                       </div>
+                                                   </div>
+                                                   <a 
+                                                       href={`https://scholar.google.com/scholar?q=${encodeURIComponent(reconstructionData.reference)}`} 
+                                                       target="_blank" 
+                                                       rel="noopener noreferrer"
+                                                       className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline font-bold"
+                                                   >
+                                                       Verify on Google Scholar <ExternalLink size={10} />
+                                                   </a>
+                                               </div>
+                                           </div>
                                        </div>
                                        <div className="space-y-4">
                                            <div>
                                                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{t.reconstruction.premise}</label>
-                                               <textarea value={reconForm.premise} onChange={e => setReconForm({...reconForm, premise: e.target.value})} className="w-full p-2 border rounded-lg text-sm h-20" />
+                                               <textarea value={reconForm.premise} onChange={e => setReconForm({...reconForm, premise: e.target.value})} className="w-full p-3 border rounded-lg text-sm h-24 focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Identify the core premises..." />
                                            </div>
                                            <div>
                                                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{t.reconstruction.evidence}</label>
-                                               <textarea value={reconForm.evidence} onChange={e => setReconForm({...reconForm, evidence: e.target.value})} className="w-full p-2 border rounded-lg text-sm h-20" />
+                                               <textarea value={reconForm.evidence} onChange={e => setReconForm({...reconForm, evidence: e.target.value})} className="w-full p-3 border rounded-lg text-sm h-24 focus:ring-2 focus:ring-purple-500 outline-none" placeholder="What evidence supports the premises?" />
                                            </div>
                                            <div>
                                                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">{t.reconstruction.conclusion}</label>
-                                               <textarea value={reconForm.conclusion} onChange={e => setReconForm({...reconForm, conclusion: e.target.value})} className="w-full p-2 border rounded-lg text-sm h-20" />
+                                               <textarea value={reconForm.conclusion} onChange={e => setReconForm({...reconForm, conclusion: e.target.value})} className="w-full p-3 border rounded-lg text-sm h-24 focus:ring-2 focus:ring-purple-500 outline-none" placeholder="State the final conclusion..." />
                                            </div>
                                            <button onClick={checkReconstruction} disabled={loading} className="w-full bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 disabled:opacity-50">
                                                {loading ? <Loader2 className="animate-spin mx-auto"/> : t.reconstruction.evaluate}

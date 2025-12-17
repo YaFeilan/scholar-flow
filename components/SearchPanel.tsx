@@ -501,7 +501,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                    <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">{t.upload.tip}</p>
                 </div>
                 
-                {/* Image Import Button - Supports "Image to Content" request */}
+                {/* Image Import Button - Supports "Image to Full Content" request */}
                 <div 
                    onClick={() => imageImportRef.current?.click()}
                    className={`border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-xl p-8 text-center hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors cursor-pointer relative flex flex-col items-center justify-center h-48 ${isImageAnalyzing ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}
@@ -519,9 +519,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                        <ImageIcon className="text-purple-500 w-10 h-10 mb-3" />
                    )}
                    <h3 className="text-base font-bold text-purple-700 dark:text-purple-300">
-                       {isImageAnalyzing ? (language === 'ZH' ? '正在提取全内容...' : 'Extracting Full Content...') : (language === 'ZH' ? '图片转全文 (OCR)' : 'Image to Full Text')}
+                       {isImageAnalyzing ? (language === 'ZH' ? '正在提取全内容...' : 'Extracting Full Content...') : (language === 'ZH' ? '图片转全文 (Full Text Extraction)' : 'Image to Full Text')}
                    </h3>
-                   <p className="text-purple-400 dark:text-purple-500 text-xs mt-1">{language === 'ZH' ? '识别图片中的公式与图表' : 'Parses formulas & charts'}</p>
+                   <p className="text-purple-400 dark:text-purple-500 text-xs mt-1">{language === 'ZH' ? '识别全文、公式与图表描述' : 'Extracts full text, formulas & chart descriptions'}</p>
                 </div>
             </div>
         )}
