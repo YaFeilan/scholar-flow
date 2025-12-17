@@ -1,4 +1,5 @@
 
+
 export type Language = 'ZH' | 'EN';
 export type ModelProvider = 'Gemini' | 'DeepSeek' | 'ChatGPT' | 'Doubao';
 
@@ -36,7 +37,6 @@ export enum ViewState {
   POLISH = 'POLISH',
   ADVISOR = 'ADVISOR',
   PPT_GENERATION = 'PPT_GENERATION',
-  OPENING_REVIEW = 'OPENING_REVIEW',
   DATA_ANALYSIS = 'DATA_ANALYSIS',
   CODE_ASSISTANT = 'CODE_ASSISTANT',
   EXPERIMENT_DESIGN = 'EXPERIMENT_DESIGN',
@@ -56,6 +56,8 @@ export enum ViewState {
   SCIENTIFIC_PLOTTING = 'SCIENTIFIC_PLOTTING', // New: Scientific Plotting
   IDEA_GUIDE = 'IDEA_GUIDE', // New: Idea Guide (Brainstorming)
   JOURNAL_SANDBOX = 'JOURNAL_SANDBOX', // New: Journal Submission Sandbox
+  OPENING_REVIEW = 'OPENING_REVIEW', // New: Opening Review (PDF Scan)
+  OPENING_REPORT = 'OPENING_REPORT', // New: Opening Report Creator (The requested feature)
 }
 
 // Trend Types
@@ -210,45 +212,6 @@ export interface PeerReviewResponse {
   };
   reviewers: ReviewerFeedback[];
   summary: string;
-}
-
-// Opening Review Types
-export type ReviewPersona = 'Gentle' | 'Critical'; // Deprecated in favor of multi-role
-export type ReviewRole = 'Mentor' | 'Expert' | 'Peer' | 'Committee';
-
-export interface OpeningSectionAnalysis {
-    strengths: string[];
-    weaknesses: { point: string; quote: string; suggestion: string }[];
-    score: number;
-}
-
-export interface RoleInsight {
-  role: string; // The display name of the role
-  key: ReviewRole; // The internal key
-  summary: string; // The specific feedback summary from this role
-  icon?: string; // Optional icon identifier
-}
-
-export interface OpeningReviewResponse {
-  overallScore: number;
-  radarMap: {
-    innovation: number; // 选题创新性
-    logic: number;      // 逻辑严密性
-    feasibility: number;// 方法可行性
-    literature: number; // 文献综述
-    format: number;     // 格式规范
-  };
-  executiveSummary: string;
-  roleInsights?: RoleInsight[]; // New: Individual role perspectives
-  titleAnalysis: OpeningSectionAnalysis;
-  methodologyAnalysis: OpeningSectionAnalysis;
-  logicAnalysis: OpeningSectionAnalysis;
-  literatureAnalysis: OpeningSectionAnalysis;
-  journalFit: {
-    score: number;
-    analysis: string;
-    alternativeJournals: { name: string; reason: string; if: string }[];
-  };
 }
 
 // Advisor Types
@@ -779,4 +742,87 @@ export interface SandboxFramework {
   };
   methodPlan: string;
   robustness: string;
+}
+
+// Opening Review Types (Thesis Proposal)
+export type ReviewRole = 'Mentor' | 'Expert' | 'Peer' | 'Committee';
+
+export interface OpeningReviewResponse {
+  overallScore: number;
+  executiveSummary: string;
+  radarMap: {
+    innovation: number;
+    logic: number;
+    feasibility: number;
+    literature: number;
+    format: number;
+  };
+  roleInsights: {
+    role: string;
+    key: string;
+    summary: string;
+  }[];
+  titleAnalysis: {
+    score: number;
+    strengths: string[];
+    weaknesses: { point: string; quote: string; suggestion: string }[];
+  };
+  methodologyAnalysis: {
+    score: number;
+    strengths: string[];
+    weaknesses: { point: string; quote: string; suggestion: string }[];
+  };
+  logicAnalysis: {
+    score: number;
+    strengths: string[];
+    weaknesses: { point: string; quote: string; suggestion: string }[];
+  };
+  literatureAnalysis: {
+    score: number;
+    strengths: string[];
+    weaknesses: { point: string; quote: string; suggestion: string }[];
+  };
+  journalFit?: {
+    score: number;
+    analysis: string;
+    alternativeJournals: { name: string; reason: string; if: string }[];
+  };
+}
+
+// Opening Report Creator Types (New Feature)
+export interface OpeningTopicSuggestion {
+  id: string;
+  title: string;
+  innovationScore: number; // 1-10
+  feasibilityScore: number; // 1-10
+  workloadScore: number; // 1-10
+  comment: string;
+}
+
+export interface OpeningLitReview {
+  reviewText: string; // Markdown with citations
+  researchGap: string;
+  keyReferences: { title: string; year: string; author: string }[];
+}
+
+export interface OpeningMethodology {
+  recommendedMethod: string;
+  reason: string;
+  roadmapMermaid: string;
+}
+
+export interface OpeningOutlineItem {
+  id: string;
+  title: string;
+  content: string; // Auto-filled content
+  children?: OpeningOutlineItem[];
+}
+
+export interface OpeningSimulatedDefense {
+  questions: {
+    question: string;
+    weakness: string;
+    suggestedAnswer: string;
+  }[];
+  overallComment: string;
 }

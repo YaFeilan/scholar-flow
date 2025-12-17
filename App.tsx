@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import SearchPanel from './components/SearchPanel';
@@ -9,7 +10,6 @@ import ReviewGenerator from './components/ReviewGenerator';
 import PolishAssistant from './components/PolishAssistant';
 import Advisor from './components/Advisor';
 import PPTGenerator from './components/PPTGenerator';
-import OpeningReview from './components/OpeningReview';
 import DataAnalysis from './components/DataAnalysis';
 import CodeAssistant from './components/CodeAssistant';
 import ExperimentDesign from './components/ExperimentDesign';
@@ -28,10 +28,11 @@ import ScientificPlotting from './components/ScientificPlotting';
 import IdeaGuide from './components/IdeaGuide';
 import WelcomeModal from './components/WelcomeModal';
 import JournalSandbox from './components/JournalSandbox';
+import OpeningReport from './components/OpeningReport';
 import { ViewState, Paper, Language } from './types';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<ViewState>(ViewState.JOURNAL_SANDBOX);
+  const [currentView, setCurrentView] = useState<ViewState>(ViewState.OPENING_REPORT);
   const [language, setLanguage] = useState<Language>('EN');
   const [reviewPapers, setReviewPapers] = useState<Paper[]>([]);
   const [extractedData, setExtractedData] = useState<any[][] | null>(null);
@@ -88,9 +89,6 @@ export default function App() {
             )}
             {currentView === ViewState.PPT_GENERATION && (
               <PPTGenerator language={language} />
-            )}
-            {currentView === ViewState.OPENING_REVIEW && (
-              <OpeningReview language={language} />
             )}
             {currentView === ViewState.DATA_ANALYSIS && (
               <DataAnalysis language={language} initialData={extractedData} />
@@ -149,6 +147,9 @@ export default function App() {
             )}
             {currentView === ViewState.JOURNAL_SANDBOX && (
               <JournalSandbox language={language} />
+            )}
+            {currentView === ViewState.OPENING_REPORT && (
+              <OpeningReport language={language} />
             )}
           </div>
         </main>

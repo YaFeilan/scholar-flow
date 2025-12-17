@@ -1,17 +1,20 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
   Language, Paper, TrendAnalysisResult, PeerReviewResponse, PolishResult, PolishConfig, 
-  AdvisorReport, IdeaGuideResult, IdeaFollowUpResult, OpeningReviewResponse, 
+  AdvisorReport, IdeaGuideResult, IdeaFollowUpResult, 
   DataAnalysisResult, ExperimentDesignResult, GraphNode, GraphLink, ChartExtractionResult, 
   GrantCheckResult, GrantReviewResult, LogicNode, ConferenceFinderResult, AIDetectionResult, 
   AIHumanizeResult, DiscussionAnalysisResult, TitleRefinementResult, FlowchartResult, 
   WorkflowProblem, WorkflowAngle, WorkflowFramework, TrainingSession, TrainingAnalysis, 
-  LogicEvaluation, FallacyExercise, PlotConfig, ReviewRole, TrainingPersonaStyle, 
+  LogicEvaluation, FallacyExercise, PlotConfig, TrainingPersonaStyle, 
   BattleMessage, TrackedReference, GapAnalysisResult, CodeSession, CodeMessage, 
-  TrendTimeRange, TrendPersona, GuidedStep, Quiz, GameState, GraphSuggestionsResult,
+  TrendTimeRange, TrendPersona, Quiz, GraphSuggestionsResult,
   ThesisDimension, ThesisContextQuestion, ThesisTitleOption, ThesisFramework,
-  SandboxGapAnalysis, SandboxTheory, SandboxModel, SandboxMethodCritique, SandboxFramework
+  SandboxGapAnalysis, SandboxTheory, SandboxModel, SandboxMethodCritique, SandboxFramework,
+  OpeningReviewResponse,
+  OpeningTopicSuggestion, OpeningLitReview, OpeningMethodology, OpeningOutlineItem, OpeningSimulatedDefense
 } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -48,15 +51,19 @@ export async function parsePaperFromImage(file: File, language: Language): Promi
   try {
     const b64 = await fileToBase64(file);
     const prompt = `You are an advanced academic OCR and content extraction engine.
-    Task: Analyze the provided image of a research paper (or part of it).
+    Task: Analyze the provided image of a research paper (or part of it) and convert it into a structured Paper object.
     
-    1. EXTRACT ALL TEXT visible in the image verbatim into the 'fullText' field. Do not summarize. 
-       - Include all headers, body paragraphs, and formulas.
-       - If there are figures or charts, describe them in detail within the text flow (e.g., "[Figure 1: Description...]").
-       - If there are tables, transcribe them as Markdown tables.
-    2. Extract metadata: title, authors, journal, year, abstract.
-    3. If the abstract is not explicitly labeled, infer it from the first few paragraphs.
-    4. Language: ${language}.
+    1. **FULL TEXT EXTRACTION**: Extract ALL visible text verbatim into the 'fullText' field. 
+       - Do not summarize. Capture every paragraph, header, and footnote.
+       - **Figures & Charts**: Identify every figure, chart, or diagram. In the 'fullText', insert a detailed description of the visual content at its location (e.g., "[Figure 1: Line chart showing accuracy increasing from 70% to 95% over 100 epochs...]").
+       - **Tables**: Transcribe tables into Markdown format within the text.
+       - **Formulas**: Convert mathematical formulas into LaTeX format (wrapped in $) where possible.
+    
+    2. **METADATA**: Extract title, authors, journal, year, and abstract.
+       - If the abstract is not explicitly labeled, infer it from the first section.
+       - If journal/year are missing, estimate based on layout or return "Unknown" / current year.
+    
+    3. **Language**: The output analysis should be in ${language === 'ZH' ? 'Chinese (Simplified)' : 'English'}, but keep the extracted 'fullText' in its original language (unless it's mixed, then prioritize English).
     
     Return JSON Paper format:
     {
@@ -66,7 +73,7 @@ export async function parsePaperFromImage(file: File, language: Language): Promi
       "journal": "Journal Name (or 'Unknown')",
       "year": 2024,
       "abstract": "Abstract content...",
-      "fullText": "The complete extracted content including text, figure descriptions, and tables...",
+      "fullText": "# Title\n\n## Abstract\n...\n\n## Introduction\n... [Figure 1: Description] ...",
       "badges": [{"type": "LOCAL"}]
     }`;
     
@@ -87,6 +94,7 @@ export async function parsePaperFromImage(file: File, language: Language): Promi
     
     return data;
   } catch (error) {
+    console.error("Parse Paper Error:", error);
     return null;
   }
 }
@@ -283,6 +291,142 @@ export async function generateThesisFramework(title: string, context: any, langu
     try { const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { responseMimeType: 'application/json' } }); return JSON.parse(cleanJson(response.text || "{}")); } catch (e) { return null; }
 }
 
+// --- OPENING REPORT CREATOR (NEW FEATURE) ---
+
+export async function generateOpeningTopicSuggestions(broadArea: string, language: Language): Promise<OpeningTopicSuggestion[]> {
+    const prompt = `
+    Role: Senior Thesis Advisor.
+    Task: Refine the broad research area "${broadArea}" into specific, viable thesis topics.
+    Language: ${language}.
+    
+    1. Identify 3 specific, innovative angles.
+    2. Score them on Innovation, Feasibility, and Workload (1-10).
+    3. Provide a brief comment on the "Research Gap" for each.
+    
+    Return JSON array of:
+    { id: string, title: string, innovationScore: number, feasibilityScore: number, workloadScore: number, comment: string }
+    `;
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        return JSON.parse(cleanJson(response.text || "[]"));
+    } catch (e) { return []; }
+}
+
+export async function generateOpeningLitReview(title: string, language: Language): Promise<OpeningLitReview | null> {
+    const prompt = `
+    Task: Generate a Literature Review section for the thesis topic "${title}".
+    Language: ${language}.
+    
+    Requirements:
+    1. Search for key themes (simulated).
+    2. Write a coherent review paragraph citing at least 3 simulated but realistic references.
+    3. Explicitly state the "Research Gap" that this thesis will fill.
+    
+    Return JSON:
+    {
+      "reviewText": "Markdown text with citations...",
+      "researchGap": "Summary of the gap...",
+      "keyReferences": [ { "title": "Paper Title", "year": "2023", "author": "Name" } ]
+    }
+    `;
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        return JSON.parse(cleanJson(response.text || "{}"));
+    } catch (e) { return null; }
+}
+
+export async function recommendOpeningMethod(title: string, domain: string, type: string, language: Language): Promise<OpeningMethodology | null> {
+    const prompt = `
+    Task: Recommend a methodology for thesis "${title}".
+    Context: Domain=${domain}, Type=${type}.
+    Language: ${language}.
+    
+    1. Suggest the most suitable specific method (e.g. DID, Transformer, Case Study).
+    2. Explain why.
+    3. Generate a Mermaid flowchart code for the "Technical Roadmap" (Data -> Process -> Result).
+    
+    Return JSON:
+    { "recommendedMethod": "string", "reason": "string", "roadmapMermaid": "string" }
+    `;
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        return JSON.parse(cleanJson(response.text || "{}"));
+    } catch (e) { return null; }
+}
+
+export async function generateOpeningOutline(title: string, method: string, language: Language): Promise<OpeningOutlineItem[]> {
+    const prompt = `
+    Task: Generate a standard Opening Report Outline for "${title}" using method "${method}".
+    Language: ${language}.
+    
+    Structure should typically include:
+    1. Introduction (Background, Significance)
+    2. Literature Review
+    3. Research Content & Objectives
+    4. Methodology (Technical Route)
+    5. Key Difficulties & Innovations
+    6. Schedule
+    
+    Return JSON array of tree nodes: { id, title, content (brief placeholder description), children? }
+    `;
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        return JSON.parse(cleanJson(response.text || "[]"));
+    } catch (e) { return []; }
+}
+
+export async function fillOpeningContent(outlineItemTitle: string, topic: string, language: Language): Promise<string> {
+    const prompt = `Draft content for the section "${outlineItemTitle}" of the opening report for topic "${topic}". Language: ${language}. Keep it academic and concise.`;
+    try {
+        const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+        return response.text || "";
+    } catch (e) { return ""; }
+}
+
+export async function simulateOpeningDefense(framework: any, language: Language): Promise<OpeningSimulatedDefense | null> {
+    const prompt = `
+    Role: Strict Thesis Proposal Review Committee.
+    Input: Opening Report Framework: ${JSON.stringify(framework).substring(0, 5000)}.
+    Language: ${language}.
+    
+    Task:
+    1. Identify 3 potential weaknesses.
+    2. Ask 3 sharp questions a professor would ask.
+    3. Provide suggested answers.
+    4. Give an overall pass/fail comment.
+    
+    Return JSON:
+    {
+      "questions": [ { "question": "string", "weakness": "string", "suggestedAnswer": "string" } ],
+      "overallComment": "string"
+    }
+    `;
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        return JSON.parse(cleanJson(response.text || "{}"));
+    } catch (e) { return null; }
+}
+
 // --- Journal Submission Sandbox Functions ---
 
 export async function scanResearchGap(domain: string, targetJournal: string, problem: string, language: Language): Promise<SandboxGapAnalysis | null> {
@@ -388,12 +532,84 @@ export async function generateSubmissionFramework(allData: any, language: Langua
     } catch (e) { return null; }
 }
 
+// Opening Review (Thesis Proposal) Functions
+export async function generateOpeningReview(
+  file: File, 
+  target: string, 
+  language: Language, 
+  roles: string[], 
+  focus: string
+): Promise<OpeningReviewResponse | null> {
+  try {
+    const b64 = await fileToBase64(file);
+    const prompt = `
+    Role: Multi-perspective Academic Review Board for Thesis Proposal (Opening Report).
+    Target Audience/Journal: ${target}.
+    Roles Involved: ${roles.join(', ')}.
+    Special Focus: ${focus}.
+    Language: ${language}.
+
+    Task: Analyze the uploaded PDF thesis proposal.
+    1. Generate an Executive Summary synthesizing all roles' views.
+    2. For each role (${roles.join(', ')}), provide a specific insight summary.
+    3. Evaluate specific sections: Title, Methodology, Logic, Literature Review. For each, give a score (0-10), strengths, and weaknesses (with quote from text and suggestion).
+    4. Assess Journal/Target Fit.
+    5. Generate scores for Radar Chart (Innovation, Logic, Feasibility, Literature, Format).
+
+    Return JSON structure matching OpeningReviewResponse interface:
+    {
+      "overallScore": number,
+      "executiveSummary": "string",
+      "radarMap": { "innovation": number, "logic": number, "feasibility": number, "literature": number, "format": number },
+      "roleInsights": [ { "role": "string", "key": "string (Mentor/Expert/Peer/Committee)", "summary": "string" } ],
+      "titleAnalysis": { "score": number, "strengths": [], "weaknesses": [{ "point": "", "quote": "", "suggestion": "" }] },
+      "methodologyAnalysis": { "score": number, "strengths": [], "weaknesses": [] },
+      "logicAnalysis": { "score": number, "strengths": [], "weaknesses": [] },
+      "literatureAnalysis": { "score": number, "strengths": [], "weaknesses": [] },
+      "journalFit": { "score": number, "analysis": "", "alternativeJournals": [{ "name": "", "reason": "", "if": "" }] }
+    }
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: {
+        parts: [
+          { inlineData: { mimeType: 'application/pdf', data: b64 } },
+          { text: prompt }
+        ]
+      },
+      config: { responseMimeType: 'application/json' }
+    });
+    return JSON.parse(cleanJson(response.text || "{}"));
+  } catch (error) {
+    console.error("Opening Review Error:", error);
+    return null;
+  }
+}
+
+export async function optimizeOpeningSection(section: string, context: string, language: Language): Promise<string> {
+  const prompt = `
+  Task: Optimize the "${section}" of an academic proposal based on these weaknesses: "${context}".
+  Language: ${language}.
+  
+  Provide a rewritten, improved version of this section (or a template if original text is missing) that addresses the weaknesses. 
+  Maintain academic rigor.
+  `;
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+    return response.text || "";
+  } catch (error) {
+    return "Optimization failed.";
+  }
+}
+
 // Other essential exports
 export async function generatePPTStyleSuggestions(file: File, language: Language): Promise<any[]> { return []; }
 export async function generatePPTContent(file: File, config: any, language: Language): Promise<any> { return {}; }
 export async function generateSlideImage(visualSuggestion: string, styleDescription: string): Promise<string | null> { return null; }
-export async function generateOpeningReview(file: File, target: string, language: Language, roles: string[], focus: string): Promise<OpeningReviewResponse | null> { return null; }
-export async function optimizeOpeningSection(section: string, context: string, language: Language): Promise<string> { return ""; }
 export async function performDataAnalysis(payload: any, language: Language): Promise<DataAnalysisResult | null> { return null; }
 export async function chatWithDataAnalysis(msg: string, stats: any, language: Language): Promise<string> { return ""; }
 export async function performCodeAssistance(text: string, mode: string, lang: string, language: Language, history: any[], file: File | undefined, onStream: (text: string) => void, signal: AbortSignal): Promise<string> { return ""; }

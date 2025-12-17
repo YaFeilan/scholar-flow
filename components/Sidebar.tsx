@@ -1,11 +1,12 @@
 
+
 import React from 'react';
 import { 
   Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, 
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, BarChart2, ChevronDown, 
   ChevronRight, Menu, Terminal, Beaker, MessageSquare, PanelLeftClose, 
   PanelLeftOpen, Network, Table2, Briefcase, Calendar, 
-  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell, Activity, Book, Layout, Brain, Target
+  ShieldAlert, Bot, Sparkles, MessagesSquare, Gem, Workflow, Zap, Dumbbell, Activity, Book, Layout, Brain, Target, FileType
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -56,7 +57,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, collapse
         { id: ViewState.PEER_REVIEW, label: t.peer, icon: <CheckSquare size={20} /> },
         { id: ViewState.ADVISOR, label: t.advisor, icon: <User size={20} /> },
         { id: ViewState.AI_DETECTOR, label: t.aiDetector, icon: <ShieldAlert size={20} /> },
-        { id: ViewState.OPENING_REVIEW, label: t.opening, icon: <ClipboardCheck size={20} /> },
         { id: ViewState.CONFERENCE_FINDER, label: t.conference, icon: <Calendar size={20} /> },
         { id: ViewState.GRANT_APPLICATION, label: t.grant, icon: <Briefcase size={20} /> },
         { id: ViewState.RESEARCH_DISCUSSION, label: t.discussion, icon: <MessagesSquare size={20} /> },
@@ -66,6 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, collapse
       id: 'utils',
       title: groupT.utils,
       items: [
+        { id: ViewState.OPENING_REPORT, label: t.openingReport, icon: <FileType size={20} /> },
         { id: ViewState.JOURNAL_SANDBOX, label: t.journalSandbox, icon: <Target size={20} /> },
         { id: ViewState.PPT_GENERATION, label: t.ppt, icon: <MonitorPlay size={20} /> },
         { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={20} /> },

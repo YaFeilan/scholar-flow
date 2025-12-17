@@ -519,9 +519,9 @@ const SearchPanel: React.FC<SearchPanelProps> = ({ onReviewRequest, language }) 
                        <ImageIcon className="text-purple-500 w-10 h-10 mb-3" />
                    )}
                    <h3 className="text-base font-bold text-purple-700 dark:text-purple-300">
-                       {isImageAnalyzing ? (language === 'ZH' ? '正在提取全内容...' : 'Extracting Full Content...') : (language === 'ZH' ? '图片转全文 (Full Text Extraction)' : 'Image to Full Text')}
+                       {isImageAnalyzing ? (language === 'ZH' ? '正在提取全内容...' : 'Extracting Full Content...') : (language === 'ZH' ? '图片转全文 (含图表描述)' : 'Image to Full Text (w/ Charts)')}
                    </h3>
-                   <p className="text-purple-400 dark:text-purple-500 text-xs mt-1">{language === 'ZH' ? '识别全文、公式与图表描述' : 'Extracts full text, formulas & chart descriptions'}</p>
+                   <p className="text-purple-400 dark:text-purple-500 text-xs mt-1">{language === 'ZH' ? '识别全文、公式与图表详细内容' : 'Extracts full text, formulas & chart details'}</p>
                 </div>
             </div>
         )}

@@ -26,7 +26,21 @@ interface PersonaConfig {
 }
 
 const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => {
-  const t = TRANSLATIONS[language].discussion;
+  // Defensive access to translations with default fallback
+  const t = useMemo(() => {
+      const discussion = TRANSLATIONS[language]?.discussion;
+      return discussion || {
+          title: 'Research Discussion',
+          subtitle: 'Simulate academic debate',
+          placeholder: 'Describe your research idea...',
+          participantsHeader: 'Participants',
+          addRole: 'Add Role',
+          btn: 'Start Discussion',
+          scorecard: { title: 'Scorecard', theory: 'Theory', method: 'Method', app: 'Application' },
+          feasibility: { title: 'Feasibility', data: 'Data', tech: 'Tech', ethics: 'Ethics' },
+          personas: { reviewer: 'Reviewer', interdisciplinary: 'Collaborator', mentor: 'Mentor' }
+      };
+  }, [language]);
   
   // State
   const [topic, setTopic] = useState('');
@@ -37,11 +51,23 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
   
   // Persona Management State
   const [personas, setPersonas] = useState<PersonaConfig[]>([
-      { id: 'Reviewer', name: t.personas.reviewer, description: "Critical, finds loopholes, focuses on rigor.", icon: ShieldAlert, color: 'red' },
-      { id: 'Interdisciplinary', name: t.personas.interdisciplinary, description: "Suggests interdisciplinary angles, helpful, expansionist.", icon: Network, color: 'blue' },
-      { id: 'Mentor', name: t.personas.mentor, description: "Uses Socratic questioning, guides big picture thinking.", icon: Lightbulb, color: 'amber' },
+      { id: 'Reviewer', name: 'Reviewer', description: "Critical, finds loopholes, focuses on rigor.", icon: ShieldAlert, color: 'red' },
+      { id: 'Interdisciplinary', name: 'Collaborator', description: "Suggests interdisciplinary angles, helpful, expansionist.", icon: Network, color: 'blue' },
+      { id: 'Mentor', name: 'Mentor', description: "Uses Socratic questioning, guides big picture thinking.", icon: Lightbulb, color: 'amber' },
       { id: 'Quarrel', name: language === 'ZH' ? '苛刻审稿人 (争吵模式)' : 'Harsh Reviewer (Quarrel Mode)', description: "Extreme skeptic, ruthless critic.", icon: Flame, color: 'orange' }
   ]);
+  
+  // Update personas when language changes to reflect translation updates
+  useEffect(() => {
+      setPersonas(prev => prev.map(p => {
+          // Explicit safety checks for translations
+          if (p.id === 'Reviewer') return { ...p, name: t?.personas?.reviewer ?? 'Reviewer' };
+          if (p.id === 'Interdisciplinary') return { ...p, name: t?.personas?.interdisciplinary ?? 'Collaborator' };
+          if (p.id === 'Mentor') return { ...p, name: t?.personas?.mentor ?? 'Mentor' };
+          if (p.id === 'Quarrel') return { ...p, name: language === 'ZH' ? '苛刻审稿人 (争吵模式)' : 'Harsh Reviewer (Quarrel Mode)' };
+          return p;
+      }));
+  }, [language, t]);
   
   // Role Selection Mechanism
   const [selectedPersonaIds, setSelectedPersonaIds] = useState<Set<string>>(new Set(['Reviewer', 'Interdisciplinary', 'Mentor']));
@@ -204,20 +230,20 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
     setChatLoading(false);
   };
 
-  // Radar Data
+  // Radar Data - Safe Access with Optional Chaining and Number conversion
   const radarData = result ? [
-      { subject: t.scorecard.theory, A: Number(result.scorecard.theory) || 0, fullMark: 10 },
-      { subject: t.scorecard.method, A: Number(result.scorecard.method) || 0, fullMark: 10 },
-      { subject: t.scorecard.app, A: Number(result.scorecard.application) || 0, fullMark: 10 },
+      { subject: t?.scorecard?.theory ?? 'Theory', A: Number(result.scorecard?.theory) || 0, fullMark: 10 },
+      { subject: t?.scorecard?.method ?? 'Method', A: Number(result.scorecard?.method) || 0, fullMark: 10 },
+      { subject: t?.scorecard?.app ?? 'App', A: Number(result.scorecard?.application) || 0, fullMark: 10 },
   ] : [];
 
   return (
     <div className="max-w-[1600px] mx-auto px-6 py-8 h-[calc(100vh-80px)] overflow-hidden flex flex-col">
        <div className="flex-shrink-0 mb-6">
           <h2 className="text-2xl font-serif font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <MessageSquare className="text-indigo-600" /> {t.title}
+              <MessageSquare className="text-indigo-600" /> {t?.title || 'Research Discussion'}
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">{t.subtitle}</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">{t?.subtitle || 'Simulate academic debate'}</p>
        </div>
 
        <div className="flex-grow flex flex-col lg:flex-row gap-8 overflow-hidden">
@@ -228,7 +254,7 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                        <textarea 
                           value={topic}
                           onChange={(e) => setTopic(e.target.value)}
-                          placeholder={t.placeholder}
+                          placeholder={t?.placeholder || 'Describe idea...'}
                           className="w-full h-32 p-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none bg-transparent"
                        />
                        {/* Image Upload Button inside textarea area */}
@@ -260,14 +286,14 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                    <div className="mt-4 border-t border-slate-100 dark:border-slate-700 pt-4">
                        <div className="flex justify-between items-center mb-3">
                            <div className="flex items-center gap-2">
-                               <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><Users size={12}/> {t.participantsHeader}</span>
+                               <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><Users size={12}/> {t?.participantsHeader || 'Participants'}</span>
                                <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
                                    {selectedPersonaIds.size} / {personas.length}
                                </span>
                            </div>
                            <button onClick={() => setShowAddPersona(!showAddPersona)} className="text-xs text-indigo-600 hover:text-indigo-700 font-bold flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100 transition-colors">
                                {showAddPersona ? <X size={12} /> : <Plus size={12} />}
-                               {showAddPersona ? 'Cancel' : t.addRole}
+                               {showAddPersona ? 'Cancel' : (t?.addRole || 'Add Role')}
                            </button>
                        </div>
                        
@@ -349,7 +375,7 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                       className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 shadow-md shadow-indigo-100 dark:shadow-none"
                    >
                       {loading ? <Loader2 className="animate-spin" /> : <Play size={18} />}
-                      {loading ? loadingMessage : t.btn}
+                      {loading ? loadingMessage : (t?.btn || 'Start')}
                    </button>
                </div>
 
@@ -358,7 +384,7 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                        {/* Innovation Scorecard */}
                        <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                            <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-                               <BarChart2 className="text-blue-500" size={18} /> {t.scorecard.title}
+                               <BarChart2 className="text-blue-500" size={18} /> {t?.scorecard?.title || 'Scorecard'}
                            </h3>
                            <div className="flex items-center">
                                <div className="w-1/2 h-40">
@@ -373,12 +399,12 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                                </div>
                                <div className="w-1/2 text-xs space-y-2">
                                    <div className="bg-slate-50 dark:bg-slate-700 p-2 rounded">
-                                       <span className="font-bold text-slate-700 dark:text-slate-200 block">{t.scorecard.theory}: {result.scorecard.theory}/10</span>
-                                       <span className="text-slate-500 dark:text-slate-400">{result.scorecard.theoryReason}</span>
+                                       <span className="font-bold text-slate-700 dark:text-slate-200 block">{t?.scorecard?.theory || 'Theory'}: {result.scorecard?.theory || 0}/10</span>
+                                       <span className="text-slate-500 dark:text-slate-400">{result.scorecard?.theoryReason}</span>
                                    </div>
                                    <div className="bg-slate-50 dark:bg-slate-700 p-2 rounded">
-                                       <span className="font-bold text-slate-700 dark:text-slate-200 block">{t.scorecard.method}: {result.scorecard.method}/10</span>
-                                       <span className="text-slate-500 dark:text-slate-400">{result.scorecard.methodReason}</span>
+                                       <span className="font-bold text-slate-700 dark:text-slate-200 block">{t?.scorecard?.method || 'Method'}: {result.scorecard?.method || 0}/10</span>
+                                       <span className="text-slate-500 dark:text-slate-400">{result.scorecard?.methodReason}</span>
                                    </div>
                                </div>
                            </div>
@@ -387,28 +413,28 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                        {/* Feasibility Check */}
                        <div className="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                            <h3 className="font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-                               <CheckCircle2 className="text-green-500" size={18} /> {t.feasibility.title}
+                               <CheckCircle2 className="text-green-500" size={18} /> {t?.feasibility?.title || 'Feasibility'}
                            </h3>
                            <div className="space-y-3">
                                <div className="flex gap-3">
                                    <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg h-fit"><AlertTriangle size={16} className="text-blue-600" /></div>
                                    <div>
-                                       <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t.feasibility.data}</h4>
-                                       <p className="text-xs text-slate-600 dark:text-slate-400">{result.feasibility.data}</p>
+                                       <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t?.feasibility?.data || 'Data'}</h4>
+                                       <p className="text-xs text-slate-600 dark:text-slate-400">{result.feasibility?.data}</p>
                                    </div>
                                </div>
                                <div className="flex gap-3">
                                    <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg h-fit"><Zap size={16} className="text-purple-600" /></div>
                                    <div>
-                                       <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t.feasibility.tech}</h4>
-                                       <p className="text-xs text-slate-600 dark:text-slate-400">{result.feasibility.tech}</p>
+                                       <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t?.feasibility?.tech || 'Tech'}</h4>
+                                       <p className="text-xs text-slate-600 dark:text-slate-400">{result.feasibility?.tech}</p>
                                    </div>
                                </div>
                                <div className="flex gap-3">
                                    <div className="bg-amber-100 dark:bg-amber-900/30 p-2 rounded-lg h-fit"><ShieldAlert size={16} className="text-amber-600" /></div>
                                    <div>
-                                       <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t.feasibility.ethics}</h4>
-                                       <p className="text-xs text-slate-600 dark:text-slate-400">{result.feasibility.ethics}</p>
+                                       <h4 className="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase">{t?.feasibility?.ethics || 'Ethics'}</h4>
+                                       <p className="text-xs text-slate-600 dark:text-slate-400">{result.feasibility?.ethics}</p>
                                    </div>
                                </div>
                            </div>
@@ -457,25 +483,26 @@ const ResearchDiscussion: React.FC<ResearchDiscussionProps> = ({ language }) => 
                        {/* Chat Feed */}
                        <div className="flex-grow overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-50/30 dark:bg-slate-900/30">
                            {/* Initial Comments as System Messages */}
-                           {chatHistory.length === 0 && (
+                           {chatHistory.length === 0 && result.initialComments && (
                                <div className="space-y-4">
                                    {/* Only show initial comments for active selected personas */}
+                                   {/* Use safe access on result.initialComments */}
                                    {selectedPersonaIds.has('Reviewer') && (
                                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 p-4 rounded-xl rounded-tl-none animate-fadeIn">
-                                           <div className="text-xs font-bold text-red-600 mb-1 flex items-center gap-1"><ShieldAlert size={12}/> {t.personas.reviewer} Initial Thoughts</div>
-                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.reviewer}</p>
+                                           <div className="text-xs font-bold text-red-600 mb-1 flex items-center gap-1"><ShieldAlert size={12}/> {t?.personas?.reviewer ?? 'Reviewer'} Initial Thoughts</div>
+                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments?.reviewer ?? 'No comments.'}</p>
                                        </div>
                                    )}
                                    {selectedPersonaIds.has('Interdisciplinary') && (
                                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 p-4 rounded-xl rounded-tl-none animate-fadeIn" style={{animationDelay: '100ms'}}>
-                                           <div className="text-xs font-bold text-blue-600 mb-1 flex items-center gap-1"><Network size={12}/> {t.personas.interdisciplinary} Initial Thoughts</div>
-                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.collaborator}</p>
+                                           <div className="text-xs font-bold text-blue-600 mb-1 flex items-center gap-1"><Network size={12}/> {t?.personas?.interdisciplinary ?? 'Collaborator'} Initial Thoughts</div>
+                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments?.collaborator ?? 'No comments.'}</p>
                                        </div>
                                    )}
                                    {selectedPersonaIds.has('Mentor') && (
                                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 p-4 rounded-xl rounded-tl-none animate-fadeIn" style={{animationDelay: '200ms'}}>
-                                           <div className="text-xs font-bold text-amber-600 mb-1 flex items-center gap-1"><Lightbulb size={12}/> {t.personas.mentor} Initial Thoughts</div>
-                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments.mentor}</p>
+                                           <div className="text-xs font-bold text-amber-600 mb-1 flex items-center gap-1"><Lightbulb size={12}/> {t?.personas?.mentor ?? 'Mentor'} Initial Thoughts</div>
+                                           <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{result.initialComments?.mentor ?? 'No comments.'}</p>
                                        </div>
                                    )}
                                </div>

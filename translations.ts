@@ -1,4 +1,5 @@
 
+
 import { Language } from './types';
 
 export const TRANSLATIONS: Record<Language, any> = {
@@ -15,10 +16,53 @@ export const TRANSLATIONS: Record<Language, any> = {
       experimentDesign: 'Experiment', data: 'Data Analysis', code: 'Code', plotting: 'Plotting',
       knowledge: 'Knowledge Graph', chart: 'Chart Extraction',
       review: 'Review', polish: 'Polish', titlePrism: 'Title Prism', peer: 'Peer Review',
-      advisor: 'Advisor', aiDetector: 'AI Detector', opening: 'Opening', conference: 'Conferences',
+      advisor: 'Advisor', aiDetector: 'AI Detector', conference: 'Conferences',
       grant: 'Grant', discussion: 'Discussion',
       ppt: 'PPT', flowchart: 'Flowchart', training: 'Training', logicTraining: 'Logic', aiWorkflow: 'Research Workflow', thesisWorkflow: 'Thesis Builder',
-      journalSandbox: 'Submission Sandbox'
+      journalSandbox: 'Submission Sandbox', openingReport: 'Opening Report'
+    },
+    openingReport: {
+      title: 'Opening Report Creator',
+      subtitle: 'From topic selection to defense simulation.',
+      steps: {
+        1: 'Topic',
+        2: 'Literature',
+        3: 'Methodology',
+        4: 'Outline',
+        5: 'Defense'
+      },
+      step1: {
+        label: 'Broad Research Area',
+        placeholder: 'e.g. Deep Learning in Finance',
+        btn: 'Analyze & Brainstorm',
+        innov: 'Innovation',
+        feas: 'Feasibility',
+        work: 'Workload',
+        select: 'Select Topic'
+      },
+      step2: {
+        generating: 'Conducting Literature Review...',
+        gap: 'Research Gap Identified'
+      },
+      step3: {
+        domainLabel: 'Domain',
+        typeLabel: 'Type',
+        domains: { Science: 'Science', Engineering: 'Engineering', Social: 'Social Science', Business: 'Business' },
+        types: { Empirical: 'Empirical', Theory: 'Theoretical', Design: 'Design/System' },
+        btn: 'Recommend Method',
+        roadmap: 'Technical Roadmap'
+      },
+      step4: {
+        genOutline: 'Generate Outline',
+        fillContent: 'AI Fill Content',
+        dragTip: 'Drag to reorder sections.'
+      },
+      step5: {
+        title: 'Simulated Professor Review',
+        start: 'Start Pre-Defense',
+        question: 'Professor\'s Question',
+        answer: 'Suggested Answer'
+      }
     },
     journalSandbox: {
       title: 'Journal Submission Sandbox',
@@ -151,7 +195,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     peer: { title: 'Peer Review', subtitle: 'Simulate academic peer review', uploadTitle: 'Upload Manuscript', uploadDesc: 'Click to upload PDF/Word', targetLabel: 'Target', journalLabel: 'Journal Name', startBtn: 'Start Review', pending: 'Waiting for Input', pendingDesc: 'Upload a file to start.', rebuttalBtn: 'Draft Rebuttal', coverLetterBtn: 'Draft Cover Letter' },
     advisor: { title: 'Submission Advisor', subtitle: 'Find the right journal', paperTitle: 'Paper Title', paperAbstract: 'Abstract', abstractPlaceholder: 'Paste abstract...', journalTitle: 'Target Journal', focusLabel: 'Review Focus', focusPlaceholder: 'e.g. Methodology', btn: 'Analyze Fit', history: 'History', risks: 'Risk Assessment', alternatives: 'Alternatives', apply: 'Apply' },
     aiDetector: { title: 'AI Detector', subtitle: 'Detect AI-generated text', checkBtn: 'Check Text', humanizeBtn: 'Humanize', highlights: 'AI Highlights', humanized: 'Humanized Version', copy: 'Copy' },
-    opening: { title: 'Opening Review', subtitle: 'Thesis proposal check', targetLabel: 'Degree/Target', targetPlaceholder: 'e.g. PhD Thesis', rolesLabel: 'Review Roles', focusLabel: 'Focus', focusPlaceholder: 'e.g. Feasibility', btn: 'Start Review', uploadDesc: 'Upload Proposal PDF' },
     conference: { title: 'Conference Finder', subtitle: 'Find upcoming events', topicLabel: 'Topic', searchBtn: 'Find Events', searching: 'Searching...', daysLeft: 'days left', website: 'Website', rankLabel: 'Rank', conferences: 'Conferences', journals: 'Special Issues', sort: { deadline: 'Deadline', rank: 'Rank', h5: 'H5 Index' }, filters: { type: 'Type', status: 'Status', metrics: 'Metrics', location: 'Location', typeOpts: { all: 'All', conf: 'Conference', journal: 'Journal' }, statusOpts: { all: 'All', upcoming: 'Upcoming', passed: 'Passed', tba: 'TBA' }, h5Opts: { all: 'All', gt20: '> 20', gt50: '> 50', gt100: '> 100' }, locationOpts: { all: 'All', asia: 'Asia', europe: 'Europe', na: 'North America', online: 'Online' } } },
     grant: { title: 'Grant Assistant', subtitle: 'Write winning proposals', tabs: { rationale: 'Rationale', polish: 'Polish', check: 'Format Check', review: 'Review' }, rationale: { refUpload: 'Upload References', fileLimit: 'files' }, polish: { title: 'Polish Section', placeholder: 'Paste section text...', sections: { significance: 'Significance', innovation: 'Innovation', feasibility: 'Feasibility', foundation: 'Foundation' } } },
     discussion: { title: 'Research Discussion', subtitle: 'Simulate academic debate', placeholder: 'Describe your research idea...', participantsHeader: 'Participants', addRole: 'Add Role', btn: 'Start Discussion', scorecard: { title: 'Scorecard', theory: 'Theory', method: 'Method', app: 'Application' }, feasibility: { title: 'Feasibility', data: 'Data', tech: 'Tech', ethics: 'Ethics' }, personas: { reviewer: 'Reviewer', interdisciplinary: 'Collaborator', mentor: 'Mentor' } },
@@ -173,10 +216,53 @@ export const TRANSLATIONS: Record<Language, any> = {
       experimentDesign: '实验设计', data: '数据分析', code: '代码助手', plotting: '科研绘图',
       knowledge: '知识图谱', chart: '图表提取',
       review: '综述生成', polish: '论文润色', titlePrism: '标题棱镜', peer: '模拟评审',
-      advisor: '投稿顾问', aiDetector: 'AI 检测', opening: '开题报告', conference: '会议查询',
+      advisor: '投稿顾问', aiDetector: 'AI 检测', conference: '会议查询',
       grant: '标书助手', discussion: '学术讨论',
       ppt: 'PPT 生成', flowchart: '流程图', training: '科研训练', logicTraining: '逻辑训练', aiWorkflow: '通用研究工作流', thesisWorkflow: '毕业论文工作流',
-      journalSandbox: '期刊投稿沙盘'
+      journalSandbox: '期刊投稿沙盘', openingReport: '开题报告助手'
+    },
+    openingReport: {
+      title: '开题报告助手',
+      subtitle: '从选题破题到模拟答辩的一站式工具。',
+      steps: {
+        1: '选题',
+        2: '综述',
+        3: '方法',
+        4: '大纲',
+        5: '预答辩'
+      },
+      step1: {
+        label: '研究领域',
+        placeholder: '如：深度学习在金融领域的应用',
+        btn: '分析与破题',
+        innov: '创新性',
+        feas: '可行性',
+        work: '工作量',
+        select: '选择此题'
+      },
+      step2: {
+        generating: '正在进行文献综述与RAG检索...',
+        gap: '自动生成的研究缺口 (Research Gap)'
+      },
+      step3: {
+        domainLabel: '学科领域',
+        typeLabel: '研究类型',
+        domains: { Science: '理科', Engineering: '工科', Social: '社科', Business: '商科' },
+        types: { Empirical: '实证研究', Theory: '理论研究', Design: '系统设计' },
+        btn: '推荐方法论',
+        roadmap: '生成技术路线图'
+      },
+      step4: {
+        genOutline: '生成标准大纲',
+        fillContent: 'AI 填充内容',
+        dragTip: '拖拽可调整章节顺序。'
+      },
+      step5: {
+        title: '导师模拟审稿',
+        start: '开始预答辩',
+        question: '导师提问',
+        answer: '建议回答'
+      }
     },
     journalSandbox: {
       title: '期刊投稿沙盘',
@@ -309,7 +395,6 @@ export const TRANSLATIONS: Record<Language, any> = {
     peer: { title: '模拟评审', subtitle: 'AI 模拟同行评审', uploadTitle: '上传稿件', uploadDesc: '点击上传 PDF/Word', targetLabel: '目标', journalLabel: '期刊名称', startBtn: '开始评审', pending: '等待输入', pendingDesc: '上传文件以开始。', rebuttalBtn: '草拟回信', coverLetterBtn: '草拟 Cover Letter' },
     advisor: { title: '投稿顾问', subtitle: '期刊匹配分析', paperTitle: '论文标题', paperAbstract: '摘要', abstractPlaceholder: '粘贴摘要...', journalTitle: '目标期刊', focusLabel: '评审侧重', focusPlaceholder: '例如：方法论创新', btn: '分析匹配度', history: '历史记录', risks: '风险评估', alternatives: '推荐备选', apply: '应用建议' },
     aiDetector: { title: 'AI 检测', subtitle: '检测 AI 生成痕迹', checkBtn: '开始检测', humanizeBtn: '去 AI 化', highlights: '高亮显示', humanized: '优化版本', copy: '复制' },
-    opening: { title: '开题报告', subtitle: '开题质量检查', targetLabel: '学位/目标', targetPlaceholder: '例如：博士学位论文', rolesLabel: '评审角色', focusLabel: '侧重点', focusPlaceholder: '例如：可行性分析', btn: '开始审查', uploadDesc: '上传开题报告 PDF' },
     conference: { title: '会议查询', subtitle: '发现学术会议', topicLabel: '主题', searchBtn: '查询', searching: '查询中...', daysLeft: '天截止', website: '官网', rankLabel: '等级', conferences: '学术会议', journals: '特刊征稿', sort: { deadline: '截稿日', rank: '等级', h5: 'H5 指数' }, filters: { type: '类型', status: '状态', metrics: '指标', location: '地点', typeOpts: { all: '全部', conf: '会议', journal: '期刊' }, statusOpts: { all: '全部', upcoming: '即将截稿', passed: '已截稿', tba: '待定' }, h5Opts: { all: '全部', gt20: '> 20', gt50: '> 50', gt100: '> 100' }, locationOpts: { all: '全部', asia: '亚洲', europe: '欧洲', na: '北美', online: '线上' } } },
     grant: { title: '标书助手', subtitle: '撰写高命中率标书', tabs: { rationale: '立项依据', polish: '润色', check: '形式审查', review: '模拟评审' }, rationale: { refUpload: '上传参考文献', fileLimit: '文件' }, polish: { title: '润色段落', placeholder: '粘贴段落文本...', sections: { significance: '研究意义', innovation: '创新点', feasibility: '可行性', foundation: '研究基础' } } },
     discussion: { title: '学术讨论', subtitle: '多角色模拟辩论', placeholder: '描述你的研究想法...', participantsHeader: '参与角色', addRole: '添加角色', btn: '开始讨论', scorecard: { title: '创新性评分', theory: '理论性', method: '方法论', app: '应用性' }, feasibility: { title: '可行性评估', data: '数据', tech: '技术', ethics: '伦理' }, personas: { reviewer: '审稿人', interdisciplinary: '跨学科专家', mentor: '导师' } },

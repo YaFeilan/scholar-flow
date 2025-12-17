@@ -1,11 +1,12 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { 
   Search, FileText, TrendingUp, BookOpen, User, Globe, PenTool, CheckSquare, 
   MonitorPlay, Lightbulb, ClipboardCheck, Moon, Sun, MessagesSquare, 
   Briefcase, BarChart2, Terminal, Beaker, Table2, Network, Gem, 
   Calendar, ShieldAlert, Workflow, Zap, Compass, Layers, PenLine, Wrench, Layout,
-  Dumbbell, Book, Activity, Brain, Target
+  Dumbbell, Book, Activity, Brain, Target, FileType
 } from 'lucide-react';
 import { ViewState, Language } from '../types';
 import { TRANSLATIONS } from '../translations';
@@ -59,7 +60,6 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
         { id: ViewState.PEER_REVIEW, label: t.peer, icon: <CheckSquare size={16} /> },
         { id: ViewState.ADVISOR, label: t.advisor, icon: <User size={16} /> },
         { id: ViewState.AI_DETECTOR, label: t.aiDetector, icon: <ShieldAlert size={16} /> },
-        { id: ViewState.OPENING_REVIEW, label: t.opening, icon: <ClipboardCheck size={16} /> },
         { id: ViewState.CONFERENCE_FINDER, label: t.conference, icon: <Calendar size={16} /> },
         { id: ViewState.GRANT_APPLICATION, label: t.grant, icon: <Briefcase size={16} /> },
         { id: ViewState.RESEARCH_DISCUSSION, label: t.discussion, icon: <MessagesSquare size={16} /> },
@@ -70,6 +70,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
       title: groupT.utils,
       icon: Layout,
       items: [
+        { id: ViewState.OPENING_REPORT, label: t.openingReport, icon: <FileType size={16} /> },
         { id: ViewState.JOURNAL_SANDBOX, label: t.journalSandbox, icon: <Target size={16} /> },
         { id: ViewState.PPT_GENERATION, label: t.ppt, icon: <MonitorPlay size={16} /> },
         { id: ViewState.FLOWCHART, label: t.flowchart, icon: <Network size={16} /> },
@@ -80,7 +81,7 @@ const Navbar: React.FC<NavbarProps> = ({ language, setLanguage, currentView, set
     }
   ];
 
-  const [activeGroup, setActiveGroup] = useState<string>('input');
+  const [activeGroup, setActiveGroup] = useState<string>('utils');
 
   // Sync active group with currentView
   useEffect(() => {
